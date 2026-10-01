@@ -2,7 +2,7 @@
   "model": "M0_Majority_Baseline",
   "majority_class": 0,
   "melanoma_prior": 0.2179176755447942,
-  "summary": "Training samples: 413 (Class 0: 323, Class 1: 90)\nMajority class: 0 (Non-Melanoma), Melanoma Prior: 0.2179\n\n--- Validation Set ---\nTotal:             203 (Class 0: 142, Class 1: 61)\nAccuracy:          69.95%\nBalanced Accuracy: 50.00%\nSensitivity:       0.00%\nSpecificity:       100.00%\nPrecision:         0.00%\nF1 (Melanoma):     0.0000\nF1 (Macro):        0.4116\nROC-AUC:           0.5000\nConfusion Matrix:  TN=142, FP=0, FN=61, TP=0\n\n--- Test Set ---\nTotal:             395 (Class 0: 294, Class 1: 101)\nAccuracy:          74.43%\nBalanced Accuracy: 50.00%\nSensitivity:       0.00%\nSpecificity:       100.00%\nPrecision:         0.00%\nF1 (Melanoma):     0.0000\nF1 (Macro):        0.4267\nROC-AUC:           0.5000\nConfusion Matrix:  TN=294, FP=0, FN=101, TP=0",
+  "summary": "Training samples: 413 (Class 0: 323, Class 1: 90)\nMajority class: 0 (Non-Melanoma), Melanoma Prior: 0.2179\n\n--- Validation Set ---\nTotal:             203 (Class 0: 142, Class 1: 61)\nAccuracy:          69.95%\nBalanced Accuracy: 50.00%\nSensitivity:       0.00%\nSpecificity:       100.00%\nPrecision:         0.00%\nF1 (Melanoma):     0.0000\nF1 (Macro):        0.4116\nROC-AUC:           0.5000\nPR-AUC (AP):       0.3005\nConfusion Matrix:  TN=142, FP=0, FN=61, TP=0\n\n--- Test Set ---\nTotal:             395 (Class 0: 294, Class 1: 101)\nAccuracy:          74.43%\nBalanced Accuracy: 50.00%\nSensitivity:       0.00%\nSpecificity:       100.00%\nPrecision:         0.00%\nF1 (Melanoma):     0.0000\nF1 (Macro):        0.4267\nROC-AUC:           0.5000\nPR-AUC (AP):       0.2557\nConfusion Matrix:  TN=294, FP=0, FN=101, TP=0",
   "validation_metrics": {
     "accuracy": 0.6995073891625616,
     "balanced_accuracy": 0.5,
@@ -12,6 +12,7 @@
     "f1_melanoma": 0.0,
     "f1_macro": 0.4115942028985507,
     "roc_auc": 0.5,
+    "pr_auc": 0.30049261083743845,
     "confusion_matrix": {
       "tn": 142,
       "fp": 0,
@@ -31,6 +32,7 @@
     "f1_melanoma": 0.0,
     "f1_macro": 0.42670537010159654,
     "roc_auc": 0.5,
+    "pr_auc": 0.25569620253164554,
     "confusion_matrix": {
       "tn": 294,
       "fp": 0,
