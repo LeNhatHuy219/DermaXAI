@@ -1,12 +1,11 @@
-"""Tiêu chí chọn model/checkpoint thống nhất, độc lập với việc chọn ngưỡng."""
-# Các runners M1–M4 dùng chung quy tắc ở đây để chọn checkpoint nhất quán.
-# Runner tính metrics trên validation mỗi epoch, lấy điểm qua selection_score(),
-# rồi so sánh với điểm tốt nhất để quyết định lưu checkpoint.
+# Tiêu chí chọn checkpoint tốt nhất trên tập validation theo metric chỉ định.
 import math
 from pathlib import Path
 
-# Mặc định mới: trung bình F1 của hai lớp melanoma và non-melanoma.
-# Balanced Accuracy được giữ lại để có thể tái lập các thí nghiệm theo tiêu chí cũ.
+from src.naming import DATASET
+
+# Metric mặc định để chọn checkpoint (Macro-F1 hoặc Balanced Accuracy).
+
 DEFAULT_CHECKPOINT_METRIC = "f1_macro"
 CHECKPOINT_METRICS = ("f1_macro", "balanced_accuracy")
 
@@ -46,27 +45,6 @@ def metric_from_config(config):
     raise ValueError("Unknown checkpoint selection metadata")
 
 
-def selection_suffix(metric):
-    # Tên riêng cho F1 để không trộn checkpoint/kết quả mới với các runs BAcc.
-    selection_name(metric)
-    # BAcc giữ tên weights cũ; F1 thêm hậu tố trước phần _best.pth/.joblib.
-    return "_ckptf1macro" if metric == "f1_macro" else ""
-
-
-def checkpoint_directory(project_root, metric):
-    """Lưu weights theo tiêu chí chọn checkpoint đã dùng trên validation."""
-    selection_name(metric)
-    directory = Path(project_root) / "checkpoints"
-    return directory / "bacc" / "baseline" if metric == "balanced_accuracy" else directory / "f1_macro"
-
-
-def results_directory(project_root, metric):
-    """Đường dẫn kết quả theo tiêu chí đã dùng để chọn checkpoint."""
-    selection_name(metric)
-    folder = "bacc" if metric == "balanced_accuracy" else "f1_macro"
-    return Path(project_root) / "results" / folder
-
-
 # Tên thư mục cho một cấu hình; seed nằm trong tên JSON để ba runs ở cùng cohort.
 def configuration_name(head, epochs, diagnosis_lr=None, *, augmentation_preset="legacy_letterbox",
                        concept_loss_weight=1., lr=1e-4, default_lr=1e-4, weight_decay=.01):
@@ -84,9 +62,63 @@ def configuration_name(head, epochs, diagnosis_lr=None, *, augmentation_preset="
     return name
 
 
-# Đường dẫn thống nhất: results/<metric>/<model>/<cấu hình>/seed<seed>.json.
-def results_run_path(project_root, metric, model, configuration, seed):
-    return results_directory(project_root, metric) / model / configuration / f"seed{seed}.json"
+# Tiêu chí chọn ngưỡng quyết định trên validation; mặc định Macro F1, cùng tiêu chí chọn checkpoint.
+THRESHOLD_METRICS = ("f1_macro", "balanced_accuracy")
+DEFAULT_THRESHOLD_METRIC = "f1_macro"
+
+
+def threshold_selection_name(metric):
+    if metric not in THRESHOLD_METRICS:
+        raise ValueError("threshold_metric must be f1_macro or balanced_accuracy")
+    return f"maximize_validation_{metric}_tie_nearest_0.5"
+
+
+def threshold_metric_from_config(config):
+    # Config cũ chưa ghi tiêu chí ngưỡng đều đã chọn theo BAcc.
+    name = config.get("threshold_selection", threshold_selection_name("balanced_accuracy"))
+    for metric in THRESHOLD_METRICS:
+        if name == threshold_selection_name(metric):
+            return metric
+    raise ValueError("Unknown threshold selection metadata")
+
+
+# Thử mọi xác suất validation (cộng 0.5 và 1.0) làm ngưỡng; giữ điểm cao nhất, hòa ưu tiên gần 0.5.
+def select_threshold(y_true, y_prob, metric=DEFAULT_THRESHOLD_METRIC):
+    import numpy as np
+    from src.metrics import compute_metrics  # nạp muộn: runner import torch trước sklearn
+    threshold_selection_name(metric)
+    y_true = np.asarray(y_true, dtype=int)
+    y_prob = np.asarray(y_prob, dtype=float)
+    if len(y_true) != len(y_prob) or len(np.unique(y_true)) != 2:
+        raise ValueError("Threshold selection requires aligned validation scores from both classes")
+    if not np.all(np.isfinite(y_prob)) or np.any((y_prob < 0) | (y_prob > 1)):
+        raise ValueError("Predicted probabilities must be finite and in [0, 1]")
+    best_threshold, best_score = 0.5, -1.0
+    for threshold in np.unique(np.concatenate([y_prob, [0.5, 1.0]])):
+        score = compute_metrics(y_true, (y_prob >= threshold).astype(int))[metric]
+        if score > best_score + 1e-12 or (
+            abs(score - best_score) <= 1e-12
+            and (abs(threshold - 0.5), threshold) < (abs(best_threshold - 0.5), best_threshold)
+        ):
+            best_threshold, best_score = float(threshold), float(score)
+    return best_threshold, best_score
+
+
+# Đường dẫn run mới: checkpoints|results/<dataset>/<model>/[<backbone>_]<cấu hình>[_ckptbacc][_thrbacc]/seed<seed>.
+# Model black-box dùng id backbone làm <model> nên không lặp tiền tố; CBM/ECBM truyền backbone làm tiền tố.
+# Kết quả cũ theo tên M1–M5 (results/f1_macro, checkpoints/f1_macro, ...) giữ nguyên; xem results/NAME_MAPPING.md.
+def run_paths(project_root, metric, model, configuration, seed, checkpoint_suffix=".pth",
+              threshold_metric=DEFAULT_THRESHOLD_METRIC, backbone=None):
+    selection_name(metric)
+    threshold_selection_name(threshold_metric)
+    folder = configuration if backbone is None else f"{backbone}_{configuration}"
+    if metric != DEFAULT_CHECKPOINT_METRIC:
+        folder += "_ckptbacc"
+    if threshold_metric != DEFAULT_THRESHOLD_METRIC:
+        folder += "_thrbacc"
+    root = Path(project_root)
+    return (str(root / "checkpoints" / DATASET / model / folder / f"seed{seed}{checkpoint_suffix}"),
+            str(root / "results" / DATASET / model / folder / f"seed{seed}.json"))
 
 
 def add_selection_argument(parser):
@@ -95,3 +127,8 @@ def add_selection_argument(parser):
     parser.add_argument("--checkpoint_metric", choices=CHECKPOINT_METRICS,
         default=DEFAULT_CHECKPOINT_METRIC,
         help="Diagnosis metric trên validation @0.5 để chọn checkpoint; hòa giữ epoch đầu")
+
+
+def add_threshold_argument(parser):
+    parser.add_argument("--threshold_metric", choices=THRESHOLD_METRICS, default=DEFAULT_THRESHOLD_METRIC,
+        help="Metric trên validation để chọn ngưỡng quyết định; balanced_accuracy để tái lập protocol cũ")

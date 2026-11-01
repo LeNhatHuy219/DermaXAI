@@ -1,9 +1,5 @@
-# Tổng hợp metrics test của ít nhất ba seeds khác nhau, cùng model và protocol.
-# Đầu vào: --results là JSON các runs; --manifest_path xác nhận test cases/labels.
-# Kiểm tra config/ngưỡng/predictions rồi tính lại metrics trước khi gộp.
-# Đầu ra: JSON summary tại --output_path, chứa values/mean/sample_sd từng metric.
-# SD dùng ddof=1, mô tả dao động giữa seeds; không tạo ensemble predictions.
-# Không gộp runs khác head, LR, epochs hoặc tiêu chí checkpoint; không train model.
+# Tổng hợp kết quả đánh giá đa seed (mean và độ lệch chuẩn SD).
+
 
 import argparse
 import json
@@ -14,9 +10,10 @@ if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 from src.protocol import validate_manifest, validate_concept_schema, manifest_fingerprint
 from src.metrics import compute_metrics
+from src.naming import canonical_model
 import numpy as np
 import pandas as pd
-from experiments.run_m2_lr import _prepare_output, _save_json
+from experiments.run_oracle_lr import _prepare_output, _save_json
 
 
 # Kiểm tra các JSON test cùng protocol rồi tính values/mean/sample SD và ghi summary riêng.
@@ -74,10 +71,10 @@ def summarize_seeds(result_paths, manifest_path, output_path, overwrite=False):
         verified = compute_metrics([row["y_true"] for row in rows], preds, probs)
         if any(not np.isclose(run["test_metrics"][key], verified[key], atol=1e-10) for key in keys):
             raise ValueError("Export metrics do not match per-case predictions")
-        if model in {"M4_HardJointCBM", "M4_HardStopGradientCBM"}:
-            # M4 nhận hard concepts: kiểm tra argmax/GT và tính lại concept metrics.
-            from experiments.m4_common import validate_m4_test_export
-            validate_m4_test_export(run, manifest_path)
+        if canonical_model(model) == "hard_cbm":
+            # Hard CBM nhận hard concepts: kiểm tra argmax/GT và tính lại concept metrics.
+            from experiments.hard_cbm_common import validate_hard_cbm_test_export
+            validate_hard_cbm_test_export(run, manifest_path)
     # Mỗi giá trị là metric của một model/seed riêng, không gộp xác suất để dự đoán.
     metrics = {}
     for key in keys:

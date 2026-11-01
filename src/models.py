@@ -7,40 +7,52 @@ import torchvision.models as models
 # Các CBM được định nghĩa trong cbm.py; giữ import qua src.models cho code đang dùng.
 from src.cbm import (
     HardJointCBM,
-    HardStopGradientCBM,
     SoftJointCBM,
     get_hard_joint_cbm,
-    get_hard_stop_gradient_cbm,
     hard_categorical,
+    make_diagnosis_head,
 )
+
+from src.naming import BACKBONES, DEFAULT_BACKBONE
+
+# Head của Black-box nhận 1280 chiều đặc trưng ảnh; mô tả được lưu vào config checkpoint.
+BLACKBOX_HEADS = {"linear": "Linear(1280, 2)", "mlp128": "MLP(1280, 128, 2)"}
+
+
+# Dựng phần trích xuất đặc trưng (features + pooling) của backbone; thêm backbone mới bằng một nhánh tại đây.
+def build_backbone(name: str = DEFAULT_BACKBONE, pretrained: bool = True):
+    if name not in BACKBONES:
+        raise ValueError(f"Unknown backbone {name}; supported: {sorted(BACKBONES)}")
+    weights = models.EfficientNet_B0_Weights.DEFAULT if pretrained else None
+    network = models.efficientnet_b0(weights=weights)
+    return nn.Sequential(network.features, network.avgpool), network.classifier[1].in_features  # 1280 chiều
 
 
 class BlackBoxClassifier(nn.Module):
-    # Mô hình phân loại trực tiếp từ ảnh sang nhãn chẩn đoán (Black-box EfficientNet-B0 Baseline)
+    # Mô hình phân loại trực tiếp từ ảnh sang nhãn chẩn đoán (black-box); tên model là id backbone
     def __init__(
         self,
         num_classes: int = 2,
         pretrained: bool = True,
         dropout: float = 0.2,
+        head: str = "linear",
+        backbone: str = DEFAULT_BACKBONE,
     ):
         super().__init__()
         self.num_classes = num_classes
+        self.backbone_name = backbone
 
-        # Nạp mạng EfficientNet-B0 chuẩn với trọng số ImageNet
-        weights = models.EfficientNet_B0_Weights.DEFAULT if pretrained else None
-        backbone = models.efficientnet_b0(weights=weights)
-        in_features = backbone.classifier[1].in_features  # 1280 chiều
-
-        # Tách phần trích xuất đặc trưng (features + avgpool)
-        self.features = nn.Sequential(
-            backbone.features,
-            backbone.avgpool,
-        )
+        # Backbone với trọng số ImageNet; giữ phần trích xuất đặc trưng (features + pooling)
+        self.features, in_features = build_backbone(backbone, pretrained)
 
         # Lớp phân loại chẩn đoán nhị phân (0: Non-Melanoma, 1: Melanoma)
+        # Linear là baseline; mlp128 dùng cùng head MLP với Soft CBM/Hard CBM để so sánh cùng cấu hình.
+        if head not in BLACKBOX_HEADS:
+            raise ValueError("Unknown Black-box classifier head; expected linear or mlp128")
         self.classifier = nn.Sequential(
             nn.Dropout(p=dropout),
-            nn.Linear(in_features, num_classes),
+            nn.Linear(in_features, num_classes) if head == "linear"
+            else make_diagnosis_head(in_features, num_classes, head),
         )
 
     def extract_features(self, x: torch.Tensor) -> torch.Tensor:
@@ -57,7 +69,7 @@ class BlackBoxClassifier(nn.Module):
 
 
 def load_blackbox_state_dict(model: BlackBoxClassifier, state_dict: Mapping[str, torch.Tensor]) -> None:
-    """Load current or legacy M1 weights; legacy checkpoints registered backbone twice."""
+    # Nạp trọng số Black-box hiện tại hoặc kế thừa; loại bỏ tiền tố backbone cũ nếu có.
     if any(key.startswith("backbone.") for key in state_dict):
         state_dict = {key: value for key, value in state_dict.items() if not key.startswith("backbone.")}
     model.load_state_dict(state_dict, strict=True)
@@ -77,7 +89,7 @@ def get_model(
 
 
 def load_soft_joint_cbm_state_dict(model: SoftJointCBM, state_dict: Mapping[str, torch.Tensor]) -> None:
-    """Load M3 checkpoint weights (giữ đối xứng với load_blackbox_state_dict của M1)."""
+    # Nạp trọng số checkpoint Soft CBM (giữ đối xứng với load_blackbox_state_dict của Black-box).
     model.load_state_dict(state_dict, strict=True)
 
 
@@ -89,7 +101,7 @@ def get_soft_joint_cbm(
     dropout: float = 0.2,
     diagnosis_head: str = "linear",
 ) -> SoftJointCBM:
-    # Khởi tạo mô hình M3 - Soft Joint CBM
+    # Khởi tạo mô hình Soft CBM (Soft Joint CBM)
     return SoftJointCBM(
         concept_names=concept_names,
         concept_num_classes=concept_num_classes,

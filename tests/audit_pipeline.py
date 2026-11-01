@@ -170,9 +170,8 @@ lb = LetterboxResize((224, 224))
 result = lb(test_img)
 check("LetterboxResize output is 224x224", result.size == (224, 224))
 
-# With 768x512 (3:2), scale = 224/768 = 0.2917
-# new_w = 224, new_h = round(512 * 0.2917) = 149
-# So padding should exist on top/bottom but not left/right
+# Tỉ lệ 3:2 cần đệm padding trên và dưới để đạt kích thước 224x224.
+
 arr = np.array(result)
 # Top row should be padding (black)
 top_is_pad = np.all(arr[0, :, :] == 0)

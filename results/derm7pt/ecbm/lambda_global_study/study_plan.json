@@ -1,0 +1,46 @@
+{
+  "created": "2026-10-31",
+  "question": "Với λ_global suy luận 0.01 của paper, chẩn đoán ECBM trùng nhánh E_class và can thiệp concept không đổi nhãn nào trên validation. Tăng λ_global có làm can thiệp hiệu quả mà không giảm chẩn đoán tự động quá mức cho phép không?",
+  "fixed": {
+    "cohort": "results/derm7pt/ecbm/efficientnet_b0_unified_exact_e50",
+    "checkpoints": {
+      "42": {"path": "checkpoints/derm7pt/ecbm/efficientnet_b0_unified_exact_e50/seed42.pth",
+             "sha256": "9d84939f616d374cd91c32c97394277dd33ce05b3a1a3efc55057efd661eab94"},
+      "123": {"path": "checkpoints/derm7pt/ecbm/efficientnet_b0_unified_exact_e50/seed123.pth",
+              "sha256": "b6420f586b2f4165c13ea5297261a28c1dbf73f20a543e6dbd5d0b32e9bc667e"},
+      "2026": {"path": "checkpoints/derm7pt/ecbm/efficientnet_b0_unified_exact_e50/seed2026.pth",
+               "sha256": "3c2b51c8c0ea612800c02e1f84f0ccde16b2e4a243ede33b3c5f87fdd49f8855"}
+    },
+    "split": "valid (203 ca); không đọc test",
+    "inference": "exact enumeration (8.640 profiles × 2 nhãn), src/ecbm.py exact_inference",
+    "lambda_class": 1.0,
+    "lambda_concept": 1.0,
+    "threshold_selection": "maximize_validation_f1_macro_tie_nearest_0.5 (src/selection.py select_threshold), chọn riêng cho từng λ và seed ở m=0, đóng băng khi can thiệp",
+    "intervention": "clamp nhóm concept được sửa về trạng thái GT trong exact_inference; duyệt đủ 128 tổ hợp của 7 nhóm",
+    "seeds": [42, 123, 2026]
+  },
+  "candidates": {"lambda_global": [0.01, 0.03, 0.1, 0.3, 1.0, 3.0]},
+  "baseline_check": "λ_global=0.01 phải tái hiện scores validation đã lưu trong JSON cohort (max |Δp| ≤ 1e-4) và cùng Macro F1 tại ngưỡng đã chọn; nếu không khớp thì dừng study",
+  "selection_rule": {
+    "constraint": "mean qua 3 seeds của validation Macro F1 khi không can thiệp (m=0, ngưỡng đã chọn) ≥ giá trị đó tại λ_global=0.01 trừ 0.01",
+    "objective": "trong các λ thỏa ràng buộc, chọn λ có mean qua 3 seeds của intervention-curve AUC Macro F1 lớn nhất (trapezoid của mean F1 theo m/7 với m=0…7, trung bình mọi tổ hợp; cùng định nghĩa src/intervention.py)",
+    "aggregation": "một λ chung cho cả 3 seeds",
+    "tie": "chênh objective < 1e-4 thì chọn λ nhỏ hơn"
+  },
+  "report_only": [
+    "validation BAcc, ROC-AUC, sensitivity, specificity ở m=0",
+    "Macro F1 khi sửa đủ 7 nhóm (m=7)",
+    "số ca đổi nhãn khi sửa đủ 7 nhóm",
+    "tỷ lệ trùng nhãn với chẩn đoán chỉ từ E_class"
+  ],
+  "caveats": [
+    "Best epoch của các checkpoint đã được chọn với λ_global=0.01; study không chọn lại epoch.",
+    "Validation dùng cho cả chọn ngưỡng và chọn λ, nên điểm validation của λ được chọn lạc quan.",
+    "Nếu λ được chọn vẫn là 0.01 thì ghi nhận đánh đổi can thiệp/độ chính xác và cân nhắc đổi trọng số khi train."
+  ],
+  "test_policy": "Study không đọc test. Sau khi ghi frozen_selection.json, λ đã chọn và ngưỡng của nó được dùng để chấm test một lần cùng các model của protocol unified.",
+  "outputs": {
+    "script": "experiments/run_ecbm_lambda_study.py",
+    "results": "results/derm7pt/ecbm/lambda_global_study/"
+  }
+}

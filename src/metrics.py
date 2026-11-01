@@ -12,9 +12,7 @@ from sklearn.metrics import (
 )
 
 
-# ---------------------------------------------------------------------------
-# Metrics cấp Diagnosis (Y): phân loại nhị phân Melanoma vs Non-Melanoma
-# ---------------------------------------------------------------------------
+# Metrics cấp Diagnosis (Y): phân loại nhị phân Melanoma vs Non-Melanoma.
 
 def compute_metrics(
     y_true: Union[np.ndarray, list],
@@ -103,12 +101,8 @@ def print_metrics_table(metrics: Dict[str, Any], title: str = "Metrics") -> str:
     return table_str
 
 
-# ---------------------------------------------------------------------------
-# Metrics cấp Concept (C): Macro-F1 theo từng concept Ci rồi mean qua 7 concept
-# Công thức theo EDA: F1_macro(Ci) tính trên state space của Ci,
-# rồi Overall = (1/7) * sum(F1_macro(Ci))
-# Báo cáo song song: all-defined (28 states) và train-observed (27 states)
-# ---------------------------------------------------------------------------
+# Metrics cấp Concept (C): Macro-F1 từng nhóm concept và trung bình qua 7 concepts.
+
 
 def compute_concept_metrics(
     concept_true: Dict[str, np.ndarray],
@@ -116,16 +110,8 @@ def compute_concept_metrics(
     concept_num_classes: Dict[str, int],
     train_observed_states: Optional[Dict[str, List[int]]] = None,
 ) -> Dict[str, Any]:
-    """
-    Tính Macro-F1 cho từng concept Ci trên state space tương ứng,
-    rồi lấy trung bình cộng qua 7 concepts.
-
-    concept_true: dict tên concept -> mảng nhãn ground-truth (int)
-    concept_pred: dict tên concept -> mảng nhãn dự đoán (int)
-    concept_num_classes: dict tên concept -> số trạng thái (Ki)
-    train_observed_states: dict tên concept -> danh sách index trạng thái có mặt trong train
-                           Nếu None, chỉ tính all-defined; nếu có, tính thêm train-observed.
-    """
+    # Tính Macro-F1 cho từng concept C_i trên state space tương ứng, rồi lấy trung bình qua 7 concepts.
+    # Báo cáo song song cả all-defined (28 states) và train-observed (27 states).
     if not concept_true or set(concept_true) != set(concept_pred):
         raise ValueError("Concept ground-truth and predictions must define the same nonempty groups")
     sample_counts = {len(np.asarray(v)) for v in list(concept_true.values()) + list(concept_pred.values())}

@@ -1,0 +1,136 @@
+{
+  "created_from": "results/derm7pt/test_plan.json",
+  "test_plan_sha256": "62296b0a40c7eabb9082656376f56943e4d21247443f159ca7a9e9b87e7f2f73",
+  "lambda_selection_sha256": "a3de422e57cc2ce0ed8c58dc8a14fba54eca7d19673e9ebdbbf52fa54f90633f",
+  "threshold_selection": "maximize_validation_f1_macro_tie_nearest_0.5",
+  "checkpoints": {
+    "42": {
+      "path": "checkpoints/derm7pt/ecbm/efficientnet_b0_unified_exact_e50/seed42.pth",
+      "sha256": "9d84939f616d374cd91c32c97394277dd33ce05b3a1a3efc55057efd661eab94"
+    },
+    "123": {
+      "path": "checkpoints/derm7pt/ecbm/efficientnet_b0_unified_exact_e50/seed123.pth",
+      "sha256": "b6420f586b2f4165c13ea5297261a28c1dbf73f20a543e6dbd5d0b32e9bc667e"
+    },
+    "2026": {
+      "path": "checkpoints/derm7pt/ecbm/efficientnet_b0_unified_exact_e50/seed2026.pth",
+      "sha256": "3c2b51c8c0ea612800c02e1f84f0ccde16b2e4a243ede33b3c5f87fdd49f8855"
+    }
+  },
+  "modes": {
+    "ecbm_full": {
+      "role": "model chính",
+      "energy_weights": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "decision_thresholds": {
+        "42": 0.498605877161026,
+        "123": 0.8646581768989563,
+        "2026": 0.7901392579078674
+      },
+      "validation_metrics": {
+        "42": {
+          "f1_macro": 0.7890787347033017,
+          "balanced_accuracy": 0.7890787347033017,
+          "roc_auc": 0.8493419533595012,
+          "sensitivity": 0.7049180327868853,
+          "specificity": 0.8732394366197183
+        },
+        "123": {
+          "f1_macro": 0.8033007220329447,
+          "balanced_accuracy": 0.7833063957515585,
+          "roc_auc": 0.8232509812976218,
+          "sensitivity": 0.6229508196721312,
+          "specificity": 0.9436619718309859
+        },
+        "2026": {
+          "f1_macro": 0.7855456127268208,
+          "balanced_accuracy": 0.7680674209189564,
+          "roc_auc": 0.8456476564303855,
+          "sensitivity": 0.6065573770491803,
+          "specificity": 0.9295774647887324
+        }
+      }
+    },
+    "ecbm_paper": {
+      "role": "tham chiếu: λ suy luận của paper",
+      "energy_weights": [
+        1.0,
+        1.0,
+        0.01
+      ],
+      "decision_thresholds": {
+        "42": 0.12761744856834412,
+        "123": 0.5,
+        "2026": 0.5
+      },
+      "validation_metrics": {
+        "42": {
+          "f1_macro": 0.7832171762589928,
+          "balanced_accuracy": 0.791387670283999,
+          "roc_auc": 0.8387208496882937,
+          "sensitivity": 0.7377049180327869,
+          "specificity": 0.8450704225352113
+        },
+        "123": {
+          "f1_macro": 0.8033007220329447,
+          "balanced_accuracy": 0.7833063957515585,
+          "roc_auc": 0.8218656199492035,
+          "sensitivity": 0.6229508196721312,
+          "specificity": 0.9436619718309859
+        },
+        "2026": {
+          "f1_macro": 0.7829559748427672,
+          "balanced_accuracy": 0.7633918263680444,
+          "roc_auc": 0.8317940429462017,
+          "sensitivity": 0.5901639344262295,
+          "specificity": 0.9366197183098591
+        }
+      }
+    },
+    "ecbm_concept_only": {
+      "role": "báo cáo phụ: chẩn đoán chỉ qua concept (bỏ E_class)",
+      "energy_weights": [
+        0.0,
+        1.0,
+        1.0
+      ],
+      "decision_thresholds": {
+        "42": 0.8314523696899414,
+        "123": 0.8148016333580017,
+        "2026": 0.7575441598892212
+      },
+      "validation_metrics": {
+        "42": {
+          "f1_macro": 0.778061224489796,
+          "balanced_accuracy": 0.7657007619487417,
+          "roc_auc": 0.8403371045947817,
+          "sensitivity": 0.6229508196721312,
+          "specificity": 0.9084507042253521
+        },
+        "123": {
+          "f1_macro": 0.7215210711150132,
+          "balanced_accuracy": 0.7351073655045024,
+          "roc_auc": 0.8017778803971369,
+          "sensitivity": 0.6885245901639344,
+          "specificity": 0.7816901408450704
+        },
+        "2026": {
+          "f1_macro": 0.7576960444136016,
+          "balanced_accuracy": 0.7691064419302702,
+          "roc_auc": 0.840221657815747,
+          "sensitivity": 0.7213114754098361,
+          "specificity": 0.8169014084507042
+        }
+      }
+    }
+  },
+  "e_class_only_thresholds": {
+    "42": 0.12657028436660767,
+    "123": 0.5,
+    "2026": 0.5
+  },
+  "test_read": false
+}
