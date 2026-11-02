@@ -1,0 +1,90 @@
+{
+  "created": "2026-10-31",
+  "purpose": "Chấm test một lần cho bộ quy trình chung 50 epochs (29/10/2026). Mọi checkpoint, ngưỡng và chế độ suy luận dưới đây được chốt trên validation trước khi đọc test.",
+  "protocol": {
+    "split": "test 395 ca (294 non-melanoma, 101 melanoma)",
+    "seeds": [42, 123, 2026],
+    "checkpoint_selection": "validation_f1_macro_at_0.5",
+    "threshold_selection": "maximize_validation_f1_macro_tie_nearest_0.5, đóng băng cho test và can thiệp",
+    "report": "mean ± sample SD (ddof=1) qua 3 seeds"
+  },
+  "models": {
+    "efficientnet_b0": {
+      "role": "black-box baseline",
+      "cohort": "results/derm7pt/efficientnet_b0/linear_e50_headlr0.001",
+      "command": "python3 experiments/run_blackbox.py --mode test --seed <seed> --overwrite",
+      "checkpoints": {
+        "42": "7ae0599e5879dd10916890bd57d7a49ad8bc9baf0383efc8a7ba062fca3414a6",
+        "123": "457bb6308f33aee18f14d643ab431c448923404b764768cfe1da84854b9d6c27",
+        "2026": "12ea6127fa498fb8d2f7531a16913747a5ad71bcaff4baa8882b04501732d453"
+      }
+    },
+    "soft_cbm": {
+      "role": "concept bottleneck baseline",
+      "cohort": "results/derm7pt/soft_cbm/efficientnet_b0_mlp128_e50_headlr0.001",
+      "command": "python3 experiments/run_soft_cbm.py --mode test --seed <seed> --overwrite",
+      "checkpoints": {
+        "42": "2496a4d4c87763f4bcf4cb2149e419a598cbff740dd4a42afa52529074288c09",
+        "123": "0b361a78aac917a9fc081f2551ef4da5b20b9d08575b310593b8ac513a931725",
+        "2026": "531f31a1675ff314bd46a7d17e819467818e469025e0c8d59288efd58dc2ed0f"
+      }
+    },
+    "hard_cbm": {
+      "role": "concept bottleneck baseline",
+      "cohort": "results/derm7pt/hard_cbm/efficientnet_b0_mlp128_e50_headlr0.001",
+      "command": "python3 experiments/run_hard_cbm.py --mode test --seed <seed> --overwrite",
+      "checkpoints": {
+        "42": "740f8353837371c0f36f501f16a8b150cbaee24c357828f8ba9afe26969603ac",
+        "123": "d0496859f412e3873e4d1b8e2d79b9c0ad5f68e2f9d58dedffed415771951496",
+        "2026": "fdfc64422317b56ba70cf065aa72147db9dfc1fd2be7289622394e992dff8204"
+      }
+    },
+    "ecbm": {
+      "cohort": "results/derm7pt/ecbm/efficientnet_b0_unified_exact_e50",
+      "command": "python3 experiments/run_ecbm_modes.py --stage freeze, rồi --stage test",
+      "inference": "exact enumeration; ngưỡng từng seed chốt trong results/derm7pt/ecbm/test_modes/frozen_modes.json",
+      "checkpoints": {
+        "42": "9d84939f616d374cd91c32c97394277dd33ce05b3a1a3efc55057efd661eab94",
+        "123": "b6420f586b2f4165c13ea5297261a28c1dbf73f20a543e6dbd5d0b32e9bc667e",
+        "2026": "3c2b51c8c0ea612800c02e1f84f0ccde16b2e4a243ede33b3c5f87fdd49f8855"
+      },
+      "modes": {
+        "ecbm_full": {"role": "model chính", "energy_weights": [1.0, 1.0, 1.0],
+                      "threshold_source": "results/derm7pt/ecbm/lambda_global_study/frozen_selection.json"},
+        "ecbm_paper": {"role": "tham chiếu: λ suy luận của paper", "energy_weights": [1.0, 1.0, 0.01],
+                       "threshold_source": "decision_thresholds.exact trong checkpoint"},
+        "ecbm_concept_only": {"role": "báo cáo phụ: chẩn đoán chỉ qua concept (bỏ E_class)", "energy_weights": [0.0, 1.0, 1.0],
+                              "threshold_source": "chọn trên validation ở stage freeze theo cùng quy tắc ngưỡng"}
+      },
+      "diagnostics": "chỉ báo cáo: tỷ lệ trùng nhãn của từng chế độ với nhánh E_class; ngưỡng E_class chọn trên validation ở stage freeze"
+    }
+  },
+  "interventions": {
+    "definition": "thay đủ nhóm concept bằng trạng thái GT, duyệt 128 tổ hợp của 7 nhóm, ngưỡng đóng băng; intervention-curve AUC theo src/intervention.py",
+    "soft_cbm": "python3 experiments/run_soft_cbm_interventions.py",
+    "hard_cbm": "python3 experiments/run_hard_cbm_interventions.py",
+    "ecbm": "cả ba chế độ ECBM, clamp concept GT trong exact inference (run_ecbm_modes.py --stage test)"
+  },
+  "metrics": ["diagnosis Macro F1 (chính)", "BAcc", "ROC-AUC", "sensitivity", "specificity", "concept Macro F1 all-defined",
+              "intervention-curve AUC Macro F1", "Macro F1 khi sửa đủ 7 nhóm"],
+  "comparisons": {
+    "method": "paired stratified case bootstrap 2000 lần, seed lấy mẫu 20261005; delta của mean test Macro F1 qua 3 seeds; khoảng percentile 95%",
+    "pairs": [
+      ["ecbm_full", "efficientnet_b0"],
+      ["ecbm_full", "soft_cbm"],
+      ["ecbm_full", "hard_cbm"],
+      ["ecbm_concept_only", "soft_cbm"],
+      ["ecbm_concept_only", "hard_cbm"]
+    ]
+  },
+  "not_included": [
+    "Oracle LR: tham chiếu concept GT, giữ kết quả đã có, không xếp hạng",
+    "ECBM gradient / gradient_soft: không chấm test trong lần này",
+    "Không chọn lại model, seed, ngưỡng hay chế độ suy luận theo test"
+  ],
+  "test_exposure": [
+    "Test đã được xem với các cohort cũ (10/20 epochs, checkpoint khác); 12 checkpoint ở trên chưa từng chấm test.",
+    "λ_global=1 được chọn trên validation trong lambda_global_study trước khi lập kế hoạch này.",
+    "Validation F1 của chế độ ecbm_concept_only (~0.753) đã được xem trước khi thêm chế độ này vào kế hoạch."
+  ]
+}

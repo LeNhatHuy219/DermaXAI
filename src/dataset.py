@@ -169,11 +169,8 @@ def compute_concept_statistics(
     manifest_path: str,
     project_root: str,
 ) -> Dict[str, Dict[str, Any]]:
-    """Compute train-only class counts and balanced weights for every concept.
-
-    An unseen state receives weight 0 instead of triggering a division by zero.
-    The remaining observed states are balanced with ``N / (K_observed * N_c)``.
-    """
+    # Tính số lượng mẫu và trọng số cân bằng cho từng concept chỉ trên tập train.
+    # Trạng thái chưa gặp nhận trọng số 0; các trạng thái quan sát được cân bằng theo N / (K_observed * N_c).
     if not os.path.isabs(manifest_path):
         manifest_path = os.path.join(project_root, manifest_path)
     manifest_path = os.path.abspath(manifest_path)

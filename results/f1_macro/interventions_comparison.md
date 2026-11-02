@@ -1,71 +1,69 @@
-# Intervention M3, M4-ST và M4-SG MLP128 — 05/10/2026
+# Intervention M3 (Soft CBM) và M4-ST (Hard CBM) MLP128 — 05/10/2026
 
-Đây là báo cáo intervention chung. Bảng đầu dùng cohort F1 MLP128 20 epochs; các kết quả BAcc cũ nằm riêng cuối tài liệu. [Bảng test tự động chính](../README.md).
+Đây là báo cáo intervention chung. Bảng đầu dùng cohort F1 MLP128 20 epochs; các kết quả BAcc cũ nằm riêng cuối tài liệu. Biến thể M4-SG (stop-gradient) đã được bỏ khỏi khóa luận ngày 27/10/2026; Hard CBM chỉ còn M4-ST (straight-through). [Bảng test tự động chính](../README.md).
 
-Đi tới: [M3 — phân tích](#m3-analysis), [M3 — curve](#m3-details), [ST — curve](#m4-st-details), [SG — curve](#m4-sg-details), [M3 BAcc cũ](#bacc-m3), [M4 BAcc cũ](#bacc-m4).
+Đi tới: [M3 — phân tích](#m3-analysis), [M3 — curve](#m3-details), [ST — curve](#m4-st-details), [M3 BAcc cũ](#bacc-m3), [M4 BAcc cũ](#bacc-m4).
 
-Đã hoàn tất cả ba cohorts cho seeds **42/123/2026**, mỗi seed **128 subsets × 395 ca test**. ST và SG là kết quả chạy bổ sung trong lượt này; M3 dùng nguyên kết quả đã kiểm tra trước đó.
+Đã hoàn tất cả hai cohorts cho seeds **42/123/2026**, mỗi seed **128 subsets × 395 ca test**. ST là kết quả chạy bổ sung trong lượt này; M3 dùng nguyên kết quả đã kiểm tra trước đó.
 
-Intervention thay toàn bộ categorical group được chọn bằng **GT concept one-hot của chính ca test đó**; không sửa annotation, không đưa GT diagnosis vào head. Diagnosis label chỉ dùng chấm điểm. Giữ head, weights và threshold validation; các groups chưa sửa giữ nguyên. M3 bắt đầu từ soft probabilities, ST/SG bắt đầu từ predicted one-hot.
+Intervention thay toàn bộ categorical group được chọn bằng **GT concept one-hot của chính ca test đó**; không sửa annotation, không đưa GT diagnosis vào head. Diagnosis label chỉ dùng chấm điểm. Giữ head, weights và threshold validation; các groups chưa sửa giữ nguyên. M3 bắt đầu từ soft probabilities, ST bắt đầu từ predicted one-hot.
 
-**Đây là GT-assisted intervention, được trình bày riêng với automatic test.** Cùng MLP128, LRs/ngân sách nhưng runtime train ST 2.12 và M3/SG 2.14, cũng như representation/gradient, còn khác nhau; bảng chưa xác định hiệu quả riêng của từng yếu tố.
+**Đây là GT-assisted intervention, được trình bày riêng với automatic test.** Cùng MLP128, LRs/ngân sách nhưng runtime train ST 2.12 và M3 2.14, cũng như soft/hard representation, còn khác nhau; bảng chưa xác định hiệu quả riêng của từng yếu tố.
 
 | Model | F1 tự động | F1 sửa đủ 7 groups | Delta mean F1 | BAcc tự động (%) | BAcc sửa đủ (%) |
 |---|---:|---:|---:|---:|---:|
 | M3 | 0.7207 ± 0.0110 | 0.6677 ± 0.1296 | -0.0530 | 75.94 ± 2.07 | 74.53 ± 9.76 |
 | M4-ST | 0.7131 ± 0.0071 | 0.7862 ± 0.0279 | +0.0731 | 72.66 ± 2.09 | 77.44 ± 3.02 |
-| M4-SG | 0.7091 ± 0.0437 | 0.8212 ± 0.0228 | +0.1121 | 72.53 ± 3.12 | 83.43 ± 1.52 |
 
 Mỗi subset được chấm trên toàn bộ 395 ca; lấy mean qua tất cả subsets tại cùng m trong từng seed rồi lấy mean ± sample SD giữa seeds, ddof=1. SD này không phải bootstrap CI; chưa có kiểm định chênh lệch intervention giữa models. Không ensemble và không chọn subset tốt nhất trên test làm chính sách.
 
-| Seed | M3: automatic → full GT F1 | ST: automatic → full GT F1 | SG: automatic → full GT F1 |
-|---:|---:|---:|---:|
-| 42 | 0.7100 → 0.6836 | 0.7164 → 0.7687 | 0.6986 → 0.8293 |
-| 123 | 0.7320 → 0.5309 | 0.7050 → 0.8183 | 0.7570 → 0.8388 |
-| 2026 | 0.7203 → 0.7886 | 0.7180 → 0.7715 | 0.6716 → 0.7955 |
+| Seed | M3: automatic → full GT F1 | ST: automatic → full GT F1 |
+|---:|---:|---:|
+| 42 | 0.7100 → 0.6836 | 0.7164 → 0.7687 |
+| 123 | 0.7320 → 0.5309 | 0.7050 → 0.8183 |
+| 2026 | 0.7203 → 0.7886 | 0.7180 → 0.7715 |
 
-![Intervention curves ba cohorts](intervention_models_comparison.png)
+![Intervention curves M3 và M4-ST](intervention_models_comparison.png)
 
-| Số groups sửa | M3 mean F1 | ST mean F1 | SG mean F1 |
-|---:|---:|---:|---:|
-| 0 | 0.7207 | 0.7131 | 0.7091 |
-| 1 | 0.7043 | 0.7311 | 0.7217 |
-| 2 | 0.6934 | 0.7485 | 0.7368 |
-| 3 | 0.6846 | 0.7647 | 0.7548 |
-| 4 | 0.6809 | 0.7794 | 0.7753 |
-| 5 | 0.6807 | 0.7882 | 0.7955 |
-| 6 | 0.6719 | 0.7900 | 0.8117 |
-| 7 | 0.6677 | 0.7862 | 0.8212 |
+| Số groups sửa | M3 mean F1 | ST mean F1 |
+|---:|---:|---:|
+| 0 | 0.7207 | 0.7131 |
+| 1 | 0.7043 | 0.7311 |
+| 2 | 0.6934 | 0.7485 |
+| 3 | 0.6846 | 0.7647 |
+| 4 | 0.6809 | 0.7794 |
+| 5 | 0.6807 | 0.7882 |
+| 6 | 0.6719 | 0.7900 |
+| 7 | 0.6677 | 0.7862 |
 
 **Nhận xét đã đo được.**
 
 - **ST:** full correction tăng F1 ở cả ba seeds. Mean Accuracy **77.05% → 84.47%**, AUC **0.8302 → 0.8986**. Sensitivity mean **63.70% → 63.04%**, specificity **81.63% → 91.84%**: gain chủ yếu gắn với giảm false positives, sensitivity không tăng nhất quán. Curve F1 đạt mean 0.7900 tại m=6 rồi còn 0.7862 tại m=7; không suy ra sửa thêm luôn tốt hơn và không chọn m=6 từ test.
-- **SG:** full correction tăng F1 ở cả ba seeds, mean Accuracy **76.20% → 85.82%**, AUC **0.8001 → 0.9249**, sensitivity **65.02% → 78.55%**, specificity **80.05% → 88.32%**. Mean F1 curve tăng qua m=0…7. SG có full-intervention F1 cao nhất quan sát trong ba cohorts; đây không phải accuracy tự động cao nhất hoặc ưu thế đã kiểm định.
 - **M3:** full F1 giảm ở seeds 42/123, tăng ở 2026; mean **0.7207 → 0.6677**. Giữ kết quả âm/không ổn định này làm Soft CBM reference. Soft → GT one-hot mismatch là giả thuyết, chưa phải nguyên nhân đã chứng minh.
 
-**Correction vẫn có thể làm diagnosis đúng thành sai.** Full intervention ST có mean **55.33 ca tốt lên / 26.00 ca xấu đi**; SG **64.00 / 26.00**; M3 **54.33 / 83.00**. Ở cấp subset, ST có 1/0/1 subsets giảm F1 tại seeds 42/123/2026; SG có 1/6/0. Vì vậy gain trung bình không bảo đảm mọi case/subset đều hưởng lợi.
+**Correction vẫn có thể làm diagnosis đúng thành sai.** Full intervention ST có mean **55.33 ca tốt lên / 26.00 ca xấu đi**; M3 **54.33 / 83.00**. Ở cấp subset, ST có 1/0/1 subsets giảm F1 tại seeds 42/123/2026. Vì vậy gain trung bình không bảo đảm mọi case/subset đều hưởng lợi.
 
-| Group sửa riêng | Delta mean F1 M3 | Delta mean F1 ST | Delta mean F1 SG |
-|---|---:|---:|---:|
-| pigment_network | -0.0252 | +0.0165 | +0.0207 |
-| streaks | +0.0222 | +0.0246 | +0.0151 |
-| pigmentation | -0.0148 | +0.0114 | +0.0064 |
-| regression_structures | -0.0219 | +0.0112 | -0.0009 |
-| dots_and_globules | -0.0475 | +0.0292 | +0.0287 |
-| blue_whitish_veil | +0.0176 | +0.0163 | +0.0085 |
-| vascular_structures | -0.0457 | +0.0170 | +0.0096 |
+| Group sửa riêng | Delta mean F1 M3 | Delta mean F1 ST |
+|---|---:|---:|
+| pigment_network | -0.0252 | +0.0165 |
+| streaks | +0.0222 | +0.0246 |
+| pigmentation | -0.0148 | +0.0114 |
+| regression_structures | -0.0219 | +0.0112 |
+| dots_and_globules | -0.0475 | +0.0292 |
+| blue_whitish_veil | +0.0176 | +0.0163 |
+| vascular_structures | -0.0457 | +0.0170 |
 
-ST có delta single-group mean dương ở cả bảy groups; SG có `regression_structures` hơi âm (khoảng −0.0009). Đây là phân tích mô tả; không dùng bảng này để chọn lại intervention policy từ test. Strategy/granularity có thể thay đổi kết quả. [Shin et al., ICML 2023](https://proceedings.mlr.press/v202/shin23a.html).
+ST có delta single-group mean dương ở cả bảy groups; M3 âm ở năm groups. Đây là phân tích mô tả; không dùng bảng này để chọn lại intervention policy từ test. Strategy/granularity có thể thay đổi kết quả. [Shin et al., ICML 2023](https://proceedings.mlr.press/v202/shin23a.html).
 
-Kết quả ủng hộ giữ ST/SG làm Hard CBM đối chứng về correction, nhưng chưa cô lập nguyên nhân chênh lệch soft/hard/gradient. Concept và task accuracy trước intervention không đủ xác định hiệu quả correction; predicted→GT input shift là vấn đề đã được nghiên cứu. [Koh et al., ICML 2020, §6](https://proceedings.mlr.press/v119/koh20a/koh20a.pdf).
+Kết quả ủng hộ giữ M4-ST làm Hard CBM đối chứng về correction, nhưng chưa cô lập nguyên nhân chênh lệch soft/hard. Concept và task accuracy trước intervention không đủ xác định hiệu quả correction; predicted→GT input shift là vấn đề đã được nghiên cứu. [Koh et al., ICML 2020, §6](https://proceedings.mlr.press/v119/koh20a/koh20a.pdf).
 
-M3/ST/SG không cập nhật groups chưa sửa. Điểm concept ở groups được nạp GT tăng không chứng minh lan truyền correction. Đây là mốc để M5 đánh giá độ đúng trên **groups chưa sửa**, diagnosis và latency.
+M3/M4-ST không cập nhật groups chưa sửa. Điểm concept ở groups được nạp GT tăng không chứng minh lan truyền correction. Đây là mốc đối chứng để đánh giá độ đúng trên **groups chưa sửa**, diagnosis và latency.
 
-**Đối chiếu đã hoàn tất.** CPU head replay độc lập tái tạo đúng scores/predictions của **768 subsets mới / 303.360 case-subset pairs**, sai lệch score tối đa 0 trong lượt audit này. Kiểm tra official GT, one-hot/group replacement, frozen baseline, no-op cases, remaining groups, metrics, case transitions, curve aggregation và provenance. **147 artifacts cũ** gồm source JSON, metadata và BAcc/new-cohort checkpoints giữ nguyên SHA-256.
+**Đối chiếu đã hoàn tất.** CPU head replay độc lập tái tạo đúng scores/predictions của **384 subsets ST / 151.680 case-subset pairs**, sai lệch score tối đa 0 trong lượt audit này. Kiểm tra official GT, one-hot/group replacement, frozen baseline, no-op cases, remaining groups, metrics, case transitions, curve aggregation và provenance.
 
-[M3 analysis](#m3-analysis) · [ST report](#m4-st-details) · [SG report](#m4-sg-details) · [SVG](intervention_models_comparison.svg).
+[M3 analysis](#m3-analysis) · [ST report](#m4-st-details) · [SVG](intervention_models_comparison.svg).
 
-**Bước tiếp theo:** baseline diagnosis/concept/intervention M0–M4 đã đủ để chuyển sang prototype M5 categorical ECBM. Giữ các kết quả và hạn chế hiện tại; không train lại để đạt thứ hạng định trước.
+**Tổng kết:** hệ thống baseline diagnosis/concept/intervention M0–M4 đã hoàn thiện và giữ nguyên các kết quả đối chứng.
 
 
 ## Bảng chi tiết và kết quả đối chiếu
@@ -79,7 +77,7 @@ Các bảng bổ sung giữ SD giữa seeds, chuyển trạng thái diagnosis v�
 <details>
 <summary>Mở bảng và ghi nhận chi tiết</summary>
 
-Intervention ST/SG tương ứng hiện đã hoàn tất và nằm trong bảng chung phía trên; hướng nghiên cứu tiếp theo là M5.
+Intervention M4-ST tương ứng hiện đã hoàn tất và nằm trong bảng chung phía trên.
 
 Intervention đã hoàn tất: **128 subsets × 395 ca × ba seeds 42/123/2026**. Mean Macro F1 giảm khi thay thêm nhóm concept bằng annotation one-hot; kết quả giữa seeds khác nhau rõ. Giữ cohort này làm Soft CBM baseline, đồng thời báo cáo khả năng hưởng lợi từ intervention chưa ổn định dưới protocol hiện tại.
 
@@ -131,7 +129,7 @@ M3 head được train trên soft probability vectors; intervention thay toàn b
 
 Intervention dùng thêm annotation concept của ca test, mô phỏng chuyên gia cung cấp thông tin đúng; nhãn diagnosis chỉ dùng để chấm điểm. Báo cáo intervention riêng với test tự động **0.7207 ± 0.0110**. M2 oracle được train riêng trên GT concepts nên không đồng nhất với M3 khi sửa đủ bảy groups.
 
-Giữ weights, epochs, thresholds và baseline hiện tại. Bước so sánh tiếp theo là intervention của M4-SG MLP128 cùng cohort head/LRs/ngân sách, M4-ST cấu hình tương ứng và M5 categorical ECBM. Mọi thay đổi protocol/head/threshold trong nghiên cứu sau cần được chọn bằng train/validation trước khi đánh giá; không sửa cohort này theo điểm test/intervention đã xem.
+Giữ weights, epochs, thresholds và baseline hiện tại. Bước so sánh tiếp theo là intervention của M4-ST MLP128 cùng cohort head/LRs/ngân sách (đã hoàn tất, xem bảng chung phía trên). Mọi thay đổi protocol/head/threshold trong nghiên cứu sau cần được chọn bằng train/validation trước khi đánh giá; không sửa cohort này theo điểm test/intervention đã xem.
 
 #### Đối chiếu kết quả
 
@@ -225,44 +223,6 @@ Các file đi kèm: `m4_st/mlp128_e20_headlr0.001/intervention/summary.json`, `m
 `m4_st/mlp128_e20_headlr0.001/intervention/per_concept.csv` đo tác động sửa riêng từng group, không đo tầm quan trọng tổng quát hoặc quan hệ nhân quả. Với M4, groups chưa sửa giữ nguyên dự đoán nên accuracy của chúng không thay đổi khi giữ cùng group. Trung bình qua các group còn lại có thể thay đổi theo subset; tại m=7 chỉ số này không áp dụng.
 
 Đây là mô phỏng hiệu chỉnh annotation. Kết quả sửa toàn bộ concepts dùng diagnosis head M4 đã học và không đồng nhất với oracle classifier M2 được huấn luyện riêng.
-
-</details>
-
-
-<a id="m4-sg-details"></a>
-### M4-SG MLP128 — bảng curve và ca tốt lên/xấu đi
-
-<details>
-<summary>Mở bảng và ghi nhận chi tiết</summary>
-
-| Số groups sửa | Balanced Accuracy (%) | Macro-F1 | Ca tốt lên (TB) | Ca xấu đi (TB) |
-|---|---:|---:|---:|---:|
-| 0 | 72.53 ± 3.12 | 0.7091 ± 0.0437 | 0.00 | 0.00 |
-| 1 | 73.64 ± 2.45 | 0.7217 ± 0.0375 | 9.19 | 4.33 |
-| 2 | 74.96 ± 1.90 | 0.7368 ± 0.0320 | 18.44 | 7.87 |
-| 3 | 76.62 ± 1.51 | 0.7548 ± 0.0274 | 28.04 | 11.17 |
-| 4 | 78.62 ± 1.35 | 0.7753 ± 0.0245 | 38.31 | 14.60 |
-| 5 | 80.63 ± 1.23 | 0.7955 ± 0.0220 | 48.60 | 18.35 |
-| 6 | 82.30 ± 1.17 | 0.8117 ± 0.0200 | 57.67 | 22.33 |
-| 7 | 83.43 ± 1.52 | 0.8212 ± 0.0228 | 64.00 | 26.00 |
-
-![Intervention curve](m4_sg/mlp128_e20_headlr0.001/intervention/intervention_curve.png)
-
-| Sửa toàn bộ 7 groups | Balanced Accuracy (%) | Macro-F1 | Tốt lên | Xấu đi |
-|---|---:|---:|---:|---:|
-| Seed 42 | 83.36 | 0.8293 | 66 | 21 |
-| Seed 123 | 85.00 | 0.8388 | 52 | 28 |
-| Seed 2026 | 81.95 | 0.7955 | 74 | 29 |
-
-Sửa đủ bảy groups làm Balanced Accuracy trung bình thay đổi +10.90 điểm phần trăm (72.53% → 83.43%). Đây là kết quả mô tả trên các checkpoints hiện có.
-
-Diagnosis head M4-SG được học từ predicted one-hot concepts và nhận ground-truth one-hot khi intervention. Hai đầu vào cùng dạng rời rạc, nhưng phân bố tổ hợp concept dự đoán và concept GT vẫn có thể khác nhau. Cùng representation không bảo đảm hiệu chỉnh có lợi. Kết quả chưa tự xác lập nguyên nhân của chênh lệch M3–M4, ảnh hưởng của inconsistency hoặc ưu thế của ECBM. Khi huấn luyện M4-SG, gradient của loss chẩn đoán dừng tại bottleneck; concept heads và backbone được cập nhật bằng concept loss.
-
-Các file đi kèm: `m4_sg/mlp128_e20_headlr0.001/intervention/summary.json`, `m4_sg/mlp128_e20_headlr0.001/intervention/curve.csv`, `m4_sg/mlp128_e20_headlr0.001/intervention/per_concept.csv`, `m4_sg/mlp128_e20_headlr0.001/intervention/full_intervention_cases.csv` và JSON chi tiết cho từng seed.
-
-`m4_sg/mlp128_e20_headlr0.001/intervention/per_concept.csv` đo tác động sửa riêng từng group, không đo tầm quan trọng tổng quát hoặc quan hệ nhân quả. Với M4-SG, groups chưa sửa giữ nguyên dự đoán nên accuracy của chúng không thay đổi khi giữ cùng group. Trung bình qua các group còn lại có thể thay đổi theo subset; tại m=7 chỉ số này không áp dụng.
-
-Đây là mô phỏng hiệu chỉnh annotation. Kết quả sửa toàn bộ concepts dùng diagnosis head M4-SG đã học và không đồng nhất với oracle classifier M2 được huấn luyện riêng.
 
 </details>
 

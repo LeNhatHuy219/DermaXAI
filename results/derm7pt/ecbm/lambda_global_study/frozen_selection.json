@@ -1,0 +1,169 @@
+{
+  "created_from": "results/derm7pt/ecbm/lambda_global_study/study_plan.json",
+  "study_plan_sha256": "83d4c9280e6c3e4f971750eeaec9a362c7e57127a548ca3b0b14b31309b0a60e",
+  "selection_rule": {
+    "constraint": "mean qua 3 seeds của validation Macro F1 khi không can thiệp (m=0, ngưỡng đã chọn) ≥ giá trị đó tại λ_global=0.01 trừ 0.01",
+    "objective": "trong các λ thỏa ràng buộc, chọn λ có mean qua 3 seeds của intervention-curve AUC Macro F1 lớn nhất (trapezoid của mean F1 theo m/7 với m=0…7, trung bình mọi tổ hợp; cùng định nghĩa src/intervention.py)",
+    "aggregation": "một λ chung cho cả 3 seeds",
+    "tie": "chênh objective < 1e-4 thì chọn λ nhỏ hơn"
+  },
+  "constraint_floor_m0_f1_macro": 0.7798246243782349,
+  "chosen_lambda_global": 1.0,
+  "chosen_decision_thresholds": {
+    "42": 0.498605877161026,
+    "123": 0.8646581768989563,
+    "2026": 0.7901392579078674
+  },
+  "inference_energy_weights": [
+    1.0,
+    1.0,
+    1.0
+  ],
+  "test_read": false,
+  "summary": [
+    {
+      "lambda_global": 0.01,
+      "m0_f1_macro": 0.7898246243782349,
+      "m7_f1_macro": 0.7914263872698436,
+      "m0_balanced_accuracy": 0.7793619641345341,
+      "m7_balanced_accuracy": 0.7805356730547217,
+      "m0_roc_auc": 0.8307935041945663,
+      "m7_roc_auc": 0.8317940429462017,
+      "m0_sensitivity": 0.6502732240437158,
+      "m7_sensitivity": 0.6502732240437158,
+      "m0_specificity": 0.908450704225352,
+      "m7_specificity": 0.9107981220657276,
+      "m0_f1_macro_sd": 0.011671373635712943,
+      "curve_auc_f1_macro": 0.7900829260896214,
+      "curve_auc_f1_macro_sd": 0.011458663813701527,
+      "flips_m7_mean": 0.3333333333333333,
+      "agreement_with_e_class_mean": 1.0,
+      "decision_thresholds": {
+        "42": 0.1276175081729889,
+        "123": 0.5,
+        "2026": 0.5
+      },
+      "feasible": true
+    },
+    {
+      "lambda_global": 0.03,
+      "m0_f1_macro": 0.790554159260402,
+      "m7_f1_macro": 0.7881059737885027,
+      "m0_balanced_accuracy": 0.7735319017932732,
+      "m7_balanced_accuracy": 0.7707996613561149,
+      "m0_roc_auc": 0.8311013622719926,
+      "m7_roc_auc": 0.8333718155930115,
+      "m0_sensitivity": 0.6174863387978142,
+      "m7_sensitivity": 0.6120218579234973,
+      "m0_specificity": 0.9295774647887324,
+      "m7_specificity": 0.9295774647887324,
+      "m0_f1_macro_sd": 0.011106598683756517,
+      "curve_auc_f1_macro": 0.788577709707092,
+      "curve_auc_f1_macro_sd": 0.012778981073918155,
+      "flips_m7_mean": 0.3333333333333333,
+      "agreement_with_e_class_mean": 0.9753694581280788,
+      "decision_thresholds": {
+        "42": 0.4851449131965637,
+        "123": 0.5,
+        "2026": 0.5
+      },
+      "feasible": true
+    },
+    {
+      "lambda_global": 0.1,
+      "m0_f1_macro": 0.7897477856679863,
+      "m7_f1_macro": 0.7931563352714406,
+      "m0_balanced_accuracy": 0.7793619641345341,
+      "m7_balanced_accuracy": 0.7817093819749097,
+      "m0_roc_auc": 0.8322943123220196,
+      "m7_roc_auc": 0.8408373739705995,
+      "m0_sensitivity": 0.6502732240437158,
+      "m7_sensitivity": 0.6502732240437158,
+      "m0_specificity": 0.9084507042253521,
+      "m7_specificity": 0.9131455399061031,
+      "m0_f1_macro_sd": 0.012777936203825791,
+      "curve_auc_f1_macro": 0.7887229211750281,
+      "curve_auc_f1_macro_sd": 0.01338987614134058,
+      "flips_m7_mean": 0.6666666666666666,
+      "agreement_with_e_class_mean": 0.9967159277504104,
+      "decision_thresholds": {
+        "42": 0.13789412379264832,
+        "123": 0.5527793765068054,
+        "2026": 0.49660518765449524
+      },
+      "feasible": true
+    },
+    {
+      "lambda_global": 0.3,
+      "m0_f1_macro": 0.7889251106609917,
+      "m7_f1_macro": 0.7989360160893281,
+      "m0_balanced_accuracy": 0.7816901408450704,
+      "m7_balanced_accuracy": 0.7867890402524437,
+      "m0_roc_auc": 0.8351804817978912,
+      "m7_roc_auc": 0.8601169860694219,
+      "m0_sensitivity": 0.6666666666666666,
+      "m7_sensitivity": 0.6557377049180328,
+      "m0_specificity": 0.8967136150234741,
+      "m7_specificity": 0.9178403755868544,
+      "m0_f1_macro_sd": 0.01625199037684592,
+      "curve_auc_f1_macro": 0.7932717773636205,
+      "curve_auc_f1_macro_sd": 0.019087293859753704,
+      "flips_m7_mean": 3.6666666666666665,
+      "agreement_with_e_class_mean": 0.9835796387520527,
+      "decision_thresholds": {
+        "42": 0.15828432142734528,
+        "123": 0.6080642938613892,
+        "2026": 0.407959908246994
+      },
+      "feasible": true
+    },
+    {
+      "lambda_global": 1.0,
+      "m0_f1_macro": 0.7926416898210223,
+      "m7_f1_macro": 0.7979860548994991,
+      "m0_balanced_accuracy": 0.780150850457939,
+      "m7_balanced_accuracy": 0.7735703840529515,
+      "m0_roc_auc": 0.8394135303625029,
+      "m7_roc_auc": 0.9054875702301239,
+      "m0_sensitivity": 0.6448087431693988,
+      "m7_sensitivity": 0.5846994535519126,
+      "m0_specificity": 0.9154929577464789,
+      "m7_specificity": 0.9624413145539906,
+      "m0_f1_macro_sd": 0.009398508578294263,
+      "curve_auc_f1_macro": 0.7962876411538663,
+      "curve_auc_f1_macro_sd": 0.01144305095002046,
+      "flips_m7_mean": 12.333333333333334,
+      "agreement_with_e_class_mean": 0.9770114942528737,
+      "decision_thresholds": {
+        "42": 0.498605877161026,
+        "123": 0.8646581768989563,
+        "2026": 0.7901392579078674
+      },
+      "feasible": true
+    },
+    {
+      "lambda_global": 3.0,
+      "m0_f1_macro": 0.7906204242498088,
+      "m7_f1_macro": 0.7738168035086513,
+      "m0_balanced_accuracy": 0.7715885476795198,
+      "m7_balanced_accuracy": 0.7431501577772647,
+      "m0_roc_auc": 0.8365658431463096,
+      "m7_roc_auc": 0.9355806972985453,
+      "m0_sensitivity": 0.6065573770491803,
+      "m7_sensitivity": 0.5027322404371585,
+      "m0_specificity": 0.9366197183098591,
+      "m7_specificity": 0.983568075117371,
+      "m0_f1_macro_sd": 0.009089850243869784,
+      "curve_auc_f1_macro": 0.785421433654066,
+      "curve_auc_f1_macro_sd": 0.008777327982244808,
+      "flips_m7_mean": 18.333333333333332,
+      "agreement_with_e_class_mean": 0.9376026272577996,
+      "decision_thresholds": {
+        "42": 0.9986826181411743,
+        "123": 0.995640754699707,
+        "2026": 0.9924268126487732
+      },
+      "feasible": true
+    }
+  ]
+}

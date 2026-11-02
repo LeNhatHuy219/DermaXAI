@@ -1,4 +1,4 @@
-"""Experiment outputs and frozen data/schema metadata shared by the runners."""
+# Quản lý đường dẫn output, đóng băng dữ liệu và kiểm tra tính toàn vẹn metadata giữa các lần chạy.
 import hashlib
 import json
 from pathlib import Path
@@ -8,7 +8,7 @@ from .dataset import CONCEPT_NAMES, CONCEPT_NUM_CLASSES
 
 def prepare_training_outputs(default_paths, checkpoint_path=None, results_path=None,
                              overwrite=False, save_results=True):
-    """Resolve distinct outputs and reject existing artifacts before training starts."""
+    # Chuẩn hóa đường dẫn output và từ chối ghi đè file có sẵn nếu không có cờ overwrite.
     checkpoint = Path(checkpoint_path or default_paths[0]).resolve()
     results = Path(results_path or default_paths[1]).resolve()
     paths = [checkpoint, results]
@@ -21,7 +21,7 @@ def prepare_training_outputs(default_paths, checkpoint_path=None, results_path=N
 
 
 def save_experiment_results(path, validation=None, test=None, overwrite=False):
-    """Save both evaluation splits in one JSON; keep validation when re-exporting test."""
+    # Lưu kết quả validation và test vào cùng một JSON; giữ lại validation khi re-export test.
     path = Path(path)
     checkpoint_path = (test or validation or {}).get("checkpoint_path")
     if checkpoint_path and Path(checkpoint_path).resolve() == path.resolve():

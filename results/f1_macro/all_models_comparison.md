@@ -1,12 +1,14 @@
 # Tổng hợp, đánh giá và góp ý cải tiến các mô hình
 
-Đọc [bảng kết quả chính và JSON nguồn](../README.md) trước. Bảng test dưới đây chỉ gồm bảy cohort đã chốt. Các phiên bản Linear 10 epochs và bộ BAcc được đặt trong phần lịch sử.
+Đọc [bảng kết quả chính và JSON nguồn](../README.md) trước. Bảng test dưới đây chỉ gồm sáu cohort đã chốt. Các phiên bản Linear 10 epochs và bộ BAcc được đặt trong phần lịch sử.
 
-Đi tới: [cấu hình và hướng cải tiến](#baseline-decisions), [M3](#m3-report), [M4-ST](#m4-st-report), [M4-SG](#m4-sg-report), [F1 ban đầu](#legacy-f1), [BAcc cũ](#legacy-bacc), [intervention](interventions_comparison.md).
+Đi tới: [cấu hình và hướng cải tiến](#baseline-decisions), [M3](#m3-report), [M4-ST](#m4-st-report), [F1 ban đầu](#legacy-f1), [BAcc cũ](#legacy-bacc), [intervention](interventions_comparison.md).
 
-[Bản chốt baseline và thứ tự cải tiến](#baseline-decisions): giữ M0–M4 hiện tại làm đối chứng; intervention ST/SG đã hoàn tất, chuyển sang M5. Các ablations bổ sung có điều kiện theo validation và ngân sách.
+[Bản chốt baseline và thứ tự cải tiến](#baseline-decisions): giữ M0–M4 hiện tại làm đối chứng; intervention M3/M4-ST đã hoàn tất, chuyển sang M5. Các ablations bổ sung có điều kiện theo validation và ngân sách.
 
-Cập nhật ngày **06/10/2026**, đã có frozen test và intervention M4-ST/SG đủ ba seeds: giữ M0/M1/M2 làm đối chứng, M3 MLP128 làm Soft CBM, M4-SG và M4-ST MLP128 làm Hard CBM đối chứng. Baseline đã đủ để triển khai M5; các thử nghiệm thêm nên nhắm vào concept learning và correction, thay vì tăng đồng loạt epoch/backbone. Đề cương và báo cáo Word được đồng bộ với bộ chính F1 và quy tắc threshold BAcc; số liệu và weights giữ nguyên. Các đề xuất dưới đây được tách rõ với những cải thiện đã đo được. Bảng checkpoint BAcc cũ giữ riêng ở phần lưu trữ/ablation; bảng dưới đây là bảng chính F1.
+Cập nhật ngày **06/10/2026**, đã có frozen test và intervention M4-ST đủ ba seeds: giữ M0/M1/M2 làm đối chứng, M3 MLP128 làm Soft CBM, M4-ST MLP128 làm Hard CBM đối chứng. Baseline đã đủ để triển khai M5; các thử nghiệm thêm nên nhắm vào concept learning và correction, thay vì tăng đồng loạt epoch/backbone. Đề cương và báo cáo Word được đồng bộ với bộ chính F1 và quy tắc threshold BAcc; số liệu và weights giữ nguyên. Các đề xuất dưới đây được tách rõ với những cải thiện đã đo được. Bảng checkpoint BAcc cũ giữ riêng ở phần lưu trữ/ablation; bảng dưới đây là bảng chính F1.
+
+**Cập nhật 27/10/2026:** bỏ biến thể M4-SG (stop-gradient) khỏi khóa luận cùng code, weights và JSON của nó. Hard CBM của khóa luận là M4-ST (straight-through); số liệu M0–M4-ST giữ nguyên.
 
 Bảng sử dụng **kết quả test trên 395 ca của bộ checkpoint chọn theo Macro F1**, kèm M0 majority dùng chung. Các cấu hình có ba seeds 42/123/2026 được báo cáo bằng **mean ± sample SD (ddof=1)**; M0 là baseline xác định, M2 LR có một run nên không có SD. Cột epoch là ngân sách tối đa, không phải epoch checkpoint được chọn. SD của Accuracy/BAcc có đơn vị điểm phần trăm. Dấu — ở concept F1 nghĩa là mô hình không dự đoán concept.
 
@@ -22,11 +24,10 @@ M4-ST MLP128 20 epochs mới đã hoàn tất pilot và frozen test ba seeds: me
 | M2 — Oracle MLP | 100 | 85.57 ± 1.01 | 86.08 ± 1.50 | 0.8264 ± 0.0107 | 0.9246 ± 0.0030 | — |
 | **M3 mới — Soft CBM, MLP128** | 20 | 75.95 ± 0.67 | 75.94 ± 2.07 | 0.7207 ± 0.0110 | 0.8490 ± 0.0173 | 0.4839 ± 0.0122 |
 | **M4-ST mới — Hard CBM, MLP128** | 20 | 77.05 ± 0.96 | 72.66 ± 2.09 | 0.7131 ± 0.0071 | 0.8302 ± 0.0092 | 0.5069 ± 0.0015 |
-| **M4-SG mới — Hard CBM, MLP128** | 20 | 76.20 ± 4.73 | 72.53 ± 3.12 | 0.7091 ± 0.0437 | 0.8001 ± 0.0258 | 0.5078 ± 0.0155 |
 
 Concept Macro F1 là trung bình qua bảy concept, tính trên toàn bộ trạng thái đã định nghĩa của từng concept (`all-defined`). Không dùng concept ground truth của M2 để coi như một kết quả dự đoán concept hoàn hảo.
 
-Checkpoint được chọn theo **validation diagnosis Macro F1@0.5**; ngưỡng được chọn riêng bằng **validation BAcc**, rồi đóng băng cho test. Vì vậy bộ F1 không có nghĩa ngưỡng cũng tối ưu theo F1. Bảng là đối chiếu kết quả quan sát; M3/M4-SG mới khác các cohort cũ về head, LR head và ngân sách. M3 mới và M4-SG mới cùng head/LRs/ngân sách nhưng khác cả soft/hard representation và luồng gradient, nên chưa xác định hiệu quả riêng từng cơ chế hoặc ST/SG. SD giữa seeds không phải khoảng tin cậy hoặc kiểm định chênh lệch giữa mô hình.
+Checkpoint được chọn theo **validation diagnosis Macro F1@0.5**; ngưỡng được chọn riêng bằng **validation BAcc**, rồi đóng băng cho test. Vì vậy bộ F1 không có nghĩa ngưỡng cũng tối ưu theo F1. Bảng là đối chiếu kết quả quan sát; M3/M4-ST mới khác các cohort cũ về head, LR head và ngân sách. M3 mới và M4-ST mới cùng head/LRs/ngân sách nhưng khác soft/hard bottleneck (ST dùng straight-through estimator) và phiên bản PyTorch train (2.14 so với 2.12), nên chưa tách được hiệu quả riêng của bottleneck. SD giữa seeds không phải khoảng tin cậy hoặc kiểm định chênh lệch giữa mô hình.
 
 **Validation dùng để chọn cấu hình, cập nhật ngày 05/10/2026.**
 
@@ -39,10 +40,8 @@ Checkpoint được chọn theo **validation diagnosis Macro F1@0.5**; ngưỡng
 | M3 MLP128 | 0.7727 ± 0.0204 | 0.7689 ± 0.0150 | 0.4786 ± 0.0156 |
 | M4-ST Linear | 0.6199 ± 0.0552 | 0.6899 ± 0.0603 | 0.4682 ± 0.0185 |
 | **M4-ST MLP128 mới** | **0.7775 ± 0.0190** | **0.7865 ± 0.0309** | **0.5033 ± 0.0078** |
-| M4-SG Linear | 0.5023 ± 0.0355 | 0.4211 ± 0.1851 | 0.4209 ± 0.0768 |
-| M4-SG MLP128 | 0.7579 ± 0.0168 | 0.7601 ± 0.0196 | 0.5194 ± 0.0076 |
 
-Khi nhận xét khoảng cách validation/test, dùng **cùng ngưỡng đã đóng băng**: M1 0.7595 → 0.7078, M3 mới 0.7689 → 0.7207, ST mới 0.7865 → 0.7131, SG mới 0.7601 → 0.7091. Không đối chiếu validation @0.5 với test tại ngưỡng khác rồi diễn giải như độ tổng quát hóa. ST mới có validation cao nhất trong các cohort nhận ảnh này nhưng mean test F1 không cao nhất.
+Khi nhận xét khoảng cách validation/test, dùng **cùng ngưỡng đã đóng băng**: M1 0.7595 → 0.7078, M3 mới 0.7689 → 0.7207, ST mới 0.7865 → 0.7131. Không đối chiếu validation @0.5 với test tại ngưỡng khác rồi diễn giải như độ tổng quát hóa. ST mới có validation cao nhất trong các cohort nhận ảnh này nhưng mean test F1 không cao nhất.
 
 **Chênh lệch test giữa các mô hình nhận ảnh hiện tại.**
 
@@ -51,13 +50,10 @@ Khi nhận xét khoảng cách validation/test, dùng **cùng ngưỡng đã đ�
 | So sánh | Delta mean test F1 | Khoảng percentile 95% theo ca |
 |---|---:|---:|
 | M3 MLP128 − M1 | +0.0129 | [-0.0259, +0.0527] |
-| M4-SG MLP128 − M1 | +0.0013 | [-0.0361, +0.0382] |
-| M3 MLP128 − M4-SG MLP128 | +0.0116 | [-0.0245, +0.0479] |
 | M4-ST MLP128 − M1 | +0.0053 | [-0.0274, +0.0388] |
 | M4-ST MLP128 − M3 MLP128 | -0.0076 | [-0.0344, +0.0192] |
-| M4-ST MLP128 − M4-SG MLP128 | +0.0040 | [-0.0246, +0.0325] |
 
-Cả sáu khoảng đều chứa 0: hiện chưa xác lập ưu thế F1 của một mô hình nhận ảnh trong bốn cấu hình này. Khoảng trên có điều kiện theo weights/seeds/thresholds cố định; giả định độc lập giữa cases, không bao gồm bất định huấn luyện lại hoặc cụm bệnh nhân. Chỉ có ba trained seeds và test đã được tham khảo trong các đợt follow-up, nên không mô tả đây là kết quả xác nhận trên holdout hoàn toàn mới. Không chọn lại model/seed/ngưỡng theo bootstrap test.
+Cả ba khoảng đều chứa 0: hiện chưa xác lập ưu thế F1 của một mô hình nhận ảnh trong ba cấu hình này. Khoảng trên có điều kiện theo weights/seeds/thresholds cố định; giả định độc lập giữa cases, không bao gồm bất định huấn luyện lại hoặc cụm bệnh nhân. Chỉ có ba trained seeds và test đã được tham khảo trong các đợt follow-up, nên không mô tả đây là kết quả xác nhận trên holdout hoàn toàn mới. Không chọn lại model/seed/ngưỡng theo bootstrap test.
 
 ![Test diagnosis và concept metrics hiện có](model_review_overview.png)
 
@@ -87,50 +83,30 @@ Ngân sách 100 epochs; checkpoint tốt nhất ở 66/48/95. Đây là MLP nh�
 
 Cohort Linear 10 epochs ban đầu đạt test Macro F1 0,6844 ± 0,0326, AUC 0,7616 ± 0,0446, sensitivity 62,38%, specificity 78,23%. Accuracy 74,18% gần M0 74,43%, song BAcc 70,30% và F1 tốt hơn majority rõ ràng. Train diagnosis loss chỉ giảm 0,695 → 0,656; validation F1@0.5 ở các checkpoint chỉ 0,4457/0,4621/0,4621, nên cấu hình này chưa học diagnosis hiệu quả.
 
-Cohort mới MLP128/head LR 1e-3/20 epochs đạt test Macro F1 **0,7207 ± 0,0110**, BAcc **75,94% ± 2,07 điểm %**, AUC **0,8490 ± 0,0173**. Cả ba seeds tăng F1 so với Linear, riêng seed 2026 chỉ tăng khoảng 0,0003. Mean F1/BAcc/AUC cao nhất trong các mô hình nhận ảnh ở bảng này, nhưng chưa có kiểm định khẳng định ưu thế. So với M1, sensitivity cao hơn (75,91% so với 56,11%), specificity thấp hơn (75,96% so với 85,37%) và Accuracy thấp hơn. So với M4-SG mới, mean F1/AUC cao hơn quan sát, còn concept F1 thấp hơn (0,4839 so với 0,5078).
+Cohort mới MLP128/head LR 1e-3/20 epochs đạt test Macro F1 **0,7207 ± 0,0110**, BAcc **75,94% ± 2,07 điểm %**, AUC **0,8490 ± 0,0173**. Cả ba seeds tăng F1 so với Linear, riêng seed 2026 chỉ tăng khoảng 0,0003. Mean F1/BAcc/AUC cao nhất trong các mô hình nhận ảnh ở bảng này, nhưng chưa có kiểm định khẳng định ưu thế. So với M1, sensitivity cao hơn (75,91% so với 56,11%), specificity thấp hơn (75,96% so với 85,37%) và Accuracy thấp hơn. So với M4-ST mới, mean F1/AUC cao hơn quan sát, còn concept F1 thấp hơn (0,4839 so với 0,5069).
 
 Train diagnosis loss mới giảm 0,725 → 0,092; concept loss 1,293 → 0,795. Train BAcc cuối lịch khoảng 96,38%, trong khi diagnosis validation loss khoảng 0,722; validation F1 cuối lịch thấp hơn đỉnh ở cả ba seeds. Có dấu hiệu overfitting, đặc biệt diagnosis; không quy toàn bộ gap loss cho overfitting vì hai lượt khác chế độ/dữ liệu. Mean validation F1 tại thresholds đã chốt 0,7689, test 0,7207. Giữ checkpoints epochs 19/7/18 và thresholds đã chọn bằng validation; không tăng epoch hoặc điều chỉnh ngưỡng theo test.
 
-Concept F1 0,4839 tăng vừa phải so với Linear 0,4570, nhưng exact match toàn bộ bảy groups khoảng 3,54%, thấp hơn mốc cũ 4,22%. Pigmentation/vascular structures còn yếu; diagnosis tốt hơn chưa tự chứng minh chất lượng explanation hoặc concept leakage. Intervention đã hoàn tất 128 subsets mỗi seed: sửa đủ bảy groups làm mean F1 **0,7207 → 0,6677**, BAcc **75,94% → 74,53%**. Seed 123 giảm mạnh, seed 2026 tăng; lợi ích correction chưa ổn định. Giữ cohort mới làm Soft CBM đối chứng và báo cáo intervention riêng với bảng test tự động. Head/LR/ngân sách cùng thay đổi nên không tách đóng góp riêng; đối chiếu soft/hard hiện còn khác cơ chế gradient. [Báo cáo M3 mới](#m3-report) · [Phân tích intervention](interventions_comparison.md#m3-analysis).
+Concept F1 0,4839 tăng vừa phải so với Linear 0,4570, nhưng exact match toàn bộ bảy groups khoảng 3,54%, thấp hơn mốc cũ 4,22%. Pigmentation/vascular structures còn yếu; diagnosis tốt hơn chưa tự chứng minh chất lượng explanation hoặc concept leakage. Intervention đã hoàn tất 128 subsets mỗi seed: sửa đủ bảy groups làm mean F1 **0,7207 → 0,6677**, BAcc **75,94% → 74,53%**. Seed 123 giảm mạnh, seed 2026 tăng; lợi ích correction chưa ổn định. Giữ cohort mới làm Soft CBM đối chứng và báo cáo intervention riêng với bảng test tự động. Head/LR/ngân sách cùng thay đổi nên không tách đóng góp riêng; đối chiếu soft/hard hiện còn khác phiên bản PyTorch train. [Báo cáo M3 mới](#m3-report) · [Phân tích intervention](interventions_comparison.md#m3-analysis).
 
 **6. M4-ST — Hard CBM Linear, 10 epochs: kết quả nhạy với seed và cần kiểm tra ngân sách.**
 
 Test Macro F1 0,6471 ± 0,0722 và BAcc 66,28% ± 8,38 điểm % cho thấy dao động lớn. Seed 42 có sensitivity 22,77%, trong khi seeds 123/2026 đạt 60,40%/71,29%. Do đó chỉ nhìn mean Accuracy 73,50% sẽ bỏ qua sự không ổn định của khả năng phát hiện melanoma.
 
-Train diagnosis loss giảm 0,704 → 0,628, concept loss giảm 1,291 → 0,926; cả ba seeds đều chọn checkpoint epoch 10, là cuối ngân sách. Đây là căn cứ để khảo sát lịch train dài hơn bằng validation, không bảo đảm tăng epoch sẽ tăng test. Concept F1 0,4700 nhỉnh hơn M3 quan sát nhưng diagnosis thấp hơn: concept metrics tốt hơn không tự động làm diagnosis tốt hơn. ST MLP128/head LR 1e-3/backbone LR 1e-4/20 epochs đã hoàn tất pilot và test mới: validation F1@0.5 **0,7775 ± 0,0190**, test **0,7131 ± 0,0071**. PyTorch ST mới 2.12 khác 2.14 của SG trước, nên chưa coi đây là đối chiếu cô lập hoàn toàn gradient ST/SG.
+Train diagnosis loss giảm 0,704 → 0,628, concept loss giảm 1,291 → 0,926; cả ba seeds đều chọn checkpoint epoch 10, là cuối ngân sách. Đây là căn cứ để khảo sát lịch train dài hơn bằng validation, không bảo đảm tăng epoch sẽ tăng test. Concept F1 0,4700 nhỉnh hơn M3 quan sát nhưng diagnosis thấp hơn: concept metrics tốt hơn không tự động làm diagnosis tốt hơn. ST MLP128/head LR 1e-3/backbone LR 1e-4/20 epochs đã hoàn tất pilot và test mới: validation F1@0.5 **0,7775 ± 0,0190**, test **0,7131 ± 0,0071**. PyTorch ST mới 2.12 khác 2.14 của M3, cần ghi khi đối chiếu soft/hard.
 
 **6b. M4-ST mới — MLP128, 20 epochs: frozen test ổn định về F1, sensitivity còn biến động.**
 
 Validation F1@0.5 **0.7775 ± 0.0190** tăng rõ so với Linear cũ **0.6199 ± 0.0552**; best epochs **18/15/19** và thresholds **0.323596/0.427888/0.433949** đã đóng băng. Frozen test F1 **0.7131 ± 0.0071**, BAcc **72.66% ± 2.09 điểm %**, AUC **0.8302 ± 0.0092**, concept F1 **0.5069 ± 0.0015**. F1/SD tốt hơn cấu hình ST Linear cũ quan sát, nhưng head/LR/ngân sách cùng đổi nên chưa tách hiệu quả riêng.
 
-Mean sensitivity **63.70% ± 8.00 điểm %**, range **56.44–72.28%**; seed 123 bỏ sót 44/101 melanoma. Do đó SD F1 nhỏ không đồng nghĩa sensitivity ổn định. Concept F1 gần SG mới (0.5078), cao hơn M3 mới (0.4839), exact match chỉ **4.14%**. Ba paired bootstrap ST−M1/M3/SG đều chứa 0: chưa có bằng chứng ST vượt các models này về F1.
+Mean sensitivity **63.70% ± 8.00 điểm %**, range **56.44–72.28%**; seed 123 bỏ sót 44/101 melanoma. Do đó SD F1 nhỏ không đồng nghĩa sensitivity ổn định. Concept F1 cao hơn M3 mới (0.4839), exact match chỉ **4.14%**. Hai paired bootstrap ST−M1/M3 đều chứa 0: chưa có bằng chứng ST vượt các models này về F1.
 
-Train diagnosis loss giảm 0.715 → 0.213, còn validation diagnosis loss epoch 20 khoảng 0.584; concept loss train/validation cuối lịch 0.677/1.002. F1 epoch 20 thấp hơn best ở cả ba seeds: có dấu hiệu overfitting, giữ best checkpoints và ngân sách 20 epochs. Mean F1 ở cùng frozen thresholds giảm validation **0.7865 → test 0.7131**. Cả ba checkpoint hashes khớp, toàn bộ JSON validation trước test tái tạo đúng SHA-256. Intervention đã hoàn tất: full correction tăng mean F1 **0.7131 → 0.7862**, nhưng mean sensitivity **63.70% → 63.04%**, specificity **81.63% → 91.84%**. F1 tăng ở cả ba seeds; vẫn có ca/subset giảm. Khác phiên bản PyTorch so với SG trước cần được ghi trong phép so sánh. [Báo cáo ST mới](#m4-st-report) · [Intervention chung](interventions_comparison.md).
-
-**7. M4-SG cũ — Hard CBM Linear, 10 epochs: một cấu hình học diagnosis không hiệu quả.**
-
-AUC test 0,4903 ± 0,0477 gần 0,5, BAcc 53,57% và Macro F1 0,3882 cho thấy diagnosis rất yếu. Train diagnosis loss gần như không giảm (0,716 → 0,702), dù concept loss giảm 1,290 → 0,909. Vì vậy tổng loss giảm ở đây chủ yếu phản ánh việc học concept; không đủ để nói cả model đang học diagnosis tốt.
-
-Threshold tối ưu theo BAcc validation còn làm giảm F1: seed 42 giảm từ validation F1@0.5 0,4830 xuống 0,2389 và ở test dự đoán melanoma cho 392/395 ca. Đổi ngưỡng không sửa được khả năng xếp hạng yếu vốn thể hiện qua AUC. Đây là quy tắc chọn ngưỡng khác metric checkpoint, không phải bằng chứng test gây ra lựa chọn. [Tài liệu scikit-learn về decision threshold](https://scikit-learn.org/stable/modules/classification_threshold.html).
-
-Best epochs 1/5/4 khiến concept test được đo ở các checkpoint khá sớm, đặc biệt seed 42. Không diễn giải concept F1 0,4239 là giới hạn của SG ở toàn bộ lịch 10 epochs. Giữ cohort này làm đối chứng cấu hình ban đầu; không dùng kết quả này để khẳng định stop-gradient hoặc Hard CBM nói chung kém.
-
-**8. M4-SG mới — MLP128, LR head 1e-3, 20 epochs: đối chứng Hard CBM có ý nghĩa hơn.**
-
-Macro F1 0,7091 ± 0,0437 cải thiện lớn so với SG cũ; AUC tăng lên 0,8001. Cả hai nhánh học rõ: train diagnosis loss 0,729 → 0,426, concept loss 1,289 → 0,604. Đây là thay đổi đồng thời head/LR/ngân sách, nên chưa xác định đóng góp riêng của từng thay đổi.
-
-Mean F1 gần M1 (0,7091 so với 0,7078), sensitivity cao hơn (65,02% so với 56,11%) nhưng specificity thấp hơn (80,05% so với 85,37%), Accuracy và AUC cũng thấp hơn. Đó là sự đánh đổi quan sát tại các thresholds đã đóng băng; chưa có cơ sở kết luận vượt M1. Seed 123 test F1 0,7570, seed 2026 chỉ 0,6716; phải giữ cả ba seeds trong báo cáo.
-
-Concept F1 0,5078 cao nhất trong các CBM nhận ảnh đã chạy; concept Accuracy 64,80% và exact match khoảng 5,91%. Tuy nhiên chất lượng khác nhau rõ giữa concepts: blue-whitish veil F1 khoảng 0,7864, pigmentation 0,3465, vascular structures 0,2107. Train có trạng thái pigmentation không có mẫu và nhiều trạng thái vascular rất ít mẫu; đây là hạn chế dữ liệu cần nêu khi diễn giải, không phải lý do bỏ các lớp khỏi bảng chính.
-
-Best epochs 17/14/9; F1 validation cuối lịch thấp hơn đỉnh ở cả ba seeds. Mean F1 validation ở ngưỡng đã chọn là 0,7601, test 0,7091: có khoảng cách tổng quát hóa. Ở epoch 20 concept loss train/validation khoảng 0,604/0,991, diagnosis khoảng 0,426/0,540. Xu hướng validation chững lại có thể kèm overfitting nhẹ; không quy toàn bộ gap loss cho overfitting vì train/validation khác chế độ đánh giá. Giữ cohort đã chốt, chưa có căn cứ tăng lên 30–40 epochs chỉ vì train loss còn giảm.
-
-SG intervention mới đã hoàn tất: full correction tăng F1 cả ba seeds, mean **0.7091 → 0.8212 ± 0.0228**, BAcc **72.53% → 83.43%**, sensitivity **65.02% → 78.55%**, specificity **80.05% → 88.32%**. SG có full-intervention F1 cao nhất quan sát trong ba MLP128 CBMs, nhưng đây là kết quả có GT concepts, không phải automatic test hoặc ưu thế đã kiểm định. [SG intervention](interventions_comparison.md#m4-sg-details).
+Train diagnosis loss giảm 0.715 → 0.213, còn validation diagnosis loss epoch 20 khoảng 0.584; concept loss train/validation cuối lịch 0.677/1.002. F1 epoch 20 thấp hơn best ở cả ba seeds: có dấu hiệu overfitting, giữ best checkpoints và ngân sách 20 epochs. Mean F1 ở cùng frozen thresholds giảm validation **0.7865 → test 0.7131**. Cả ba checkpoint hashes khớp, toàn bộ JSON validation trước test tái tạo đúng SHA-256. Intervention đã hoàn tất: full correction tăng mean F1 **0.7131 → 0.7862**, nhưng mean sensitivity **63.70% → 63.04%**, specificity **81.63% → 91.84%**. F1 tăng ở cả ba seeds; vẫn có ca/subset giảm. Khác phiên bản PyTorch so với M3 cần được ghi trong phép so sánh. [Báo cáo ST mới](#m4-st-report) · [Intervention chung](interventions_comparison.md).
 
 **Những bằng chứng bổ sung làm thay đổi ưu tiên cải tiến.**
 
-1. **LR head có bằng chứng riêng; MLP lớn hơn chưa có lợi ích test chắc chắn.** Study BAcc giữ SG Linear, cùng môi trường và 20 epochs: tăng head LR 1e-4 → 1e-3 làm validation BAcc 57.02% → 73.95%, test F1 0.6077 → 0.6868. Study head cùng LR/ngân sách lại cho ST Linear test F1 **0.7250**, ST MLP **0.7193**; SG Linear **0.6868**, SG MLP **0.7026**. MLP được chọn đúng từ validation, nhưng không luôn hơn Linear trên test. Những runs BAcc này khác checkpoints F1 ở bảng chính, không gộp mean hoặc dùng điểm 0.7250 để thay lựa chọn ST mới. [Study LR](../bacc/ablation/m4_sg_head_lr_study/report.md) · [Study head](../bacc/ablation/m4_head_comparison/report.md).
-2. **Ngân sách và cách kiểm soát overfitting cần được nhìn theo history.** M3/M4-ST/SG mới đều có best F1 cao hơn epoch 20. Giữ best checkpoints đã giải quyết việc lấy nhầm weights cuối lịch. Early stopping chủ yếu tiết kiệm compute; không tự tăng khả năng tổng quát hóa. Patience quá ngắn có thể bỏ đỉnh muộn: M3 seed 42 đạt 0.7444 ở epoch 10 rồi tăng lên 0.7495 ở epoch 19; patience 5 theo F1 sẽ dừng trước đỉnh này. Chưa có căn cứ tăng ngân sách đồng loạt lên 40–100 epochs.
+1. **MLP lớn hơn chưa có lợi ích test chắc chắn.** Study head BAcc cùng LR/ngân sách cho ST Linear test F1 **0.7250**, ST MLP **0.7193**. MLP được chọn đúng từ validation, nhưng không hơn Linear trên test. Những runs BAcc này khác checkpoints F1 ở bảng chính, không gộp mean hoặc dùng điểm 0.7250 để thay lựa chọn ST mới. [Study head](../bacc/ablation/m4_head_comparison/report.md).
+2. **Ngân sách và cách kiểm soát overfitting cần được nhìn theo history.** M3/M4-ST mới đều có best F1 cao hơn epoch 20. Giữ best checkpoints đã giải quyết việc lấy nhầm weights cuối lịch. Early stopping chủ yếu tiết kiệm compute; không tự tăng khả năng tổng quát hóa. Patience quá ngắn có thể bỏ đỉnh muộn: M3 seed 42 đạt 0.7444 ở epoch 10 rồi tăng lên 0.7495 ở epoch 19; patience 5 theo F1 sẽ dừng trước đỉnh này. Chưa có căn cứ tăng ngân sách đồng loạt lên 40–100 epochs.
 3. **Prediction quality và confidence quality là hai mặt cần đo riêng.** Từ probabilities test đã lưu, tính Brier `mean((p-y)^2)` và binary NLL không weighting, clip probabilities vào [1e-7, 1−1e-7]. Không fit calibration trong lượt review này.
 
 | Model nhận ảnh | Raw test Brier ↓ | Raw test NLL ↓ |
@@ -138,7 +114,6 @@ SG intervention mới đã hoàn tất: full correction tăng F1 cả ba seeds, 
 | M1 | 0.1421 ± 0.0033 | 0.4356 ± 0.0060 |
 | M3 MLP128 | 0.1498 ± 0.0116 | 0.5021 ± 0.0828 |
 | M4-ST MLP128 | 0.1551 ± 0.0067 | 0.4942 ± 0.0342 |
-| M4-SG MLP128 | 0.1624 ± 0.0220 | 0.4922 ± 0.0539 |
 
 M3 có F1/AUC cao hơn quan sát nhưng raw Brier/NLL chưa tốt hơn M1. Brier/NLL còn phụ thuộc khả năng phân biệt lớp, nên đây chưa phải bằng chứng riêng về calibration. Đề xuất đo reliability diagram và thử temperature scaling hoặc Platt scaling bằng validation trong một protocol mới. Calibration cần được chốt trước test; không tự bảo đảm F1 tăng, và một phép temperature scaling đơn điệu không cải thiện thứ tự xếp hạng/AUC. [Guo et al., ICML 2017](https://proceedings.mlr.press/v70/guo17a.html).
 
@@ -146,15 +121,15 @@ Checkpoint theo F1@0.5 và threshold theo BAcc là hai quyết định đang đ�
 
 **Concept predictor: nơi nên đầu tư trước khi đổi backbone.**
 
-| Concept | Test F1 M3 MLP128 | Test F1 SG MLP128 | Nhận xét |
+| Concept | Test F1 M3 MLP128 | Test F1 M4-ST MLP128 | Nhận xét |
 |---|---:|---:|---|
-| pigment_network | 0.5944 | 0.6107 | Khá hơn các groups hiếm, vẫn còn nhiều lỗi |
-| streaks | 0.5558 | 0.5741 | Còn khoảng trống cải thiện |
-| pigmentation | 0.3230 | 0.3465 | Yếu; một state không có trong train/validation |
-| regression_structures | 0.3630 | 0.4311 | SG cao hơn quan sát; cần xem nhầm từng state |
-| dots_and_globules | 0.5750 | 0.5953 | Mức trung bình |
-| blue_whitish_veil | 0.7608 | 0.7864 | Group học tốt nhất hiện tại |
-| vascular_structures | 0.2155 | 0.2107 | Yếu nhất, cả hai model đều cần cải thiện |
+| pigment_network | 0.5944 | 0.6307 | Khá hơn các groups hiếm, vẫn còn nhiều lỗi |
+| streaks | 0.5558 | 0.5722 | Còn khoảng trống cải thiện |
+| pigmentation | 0.3230 | 0.3391 | Yếu; một state không có trong train/validation |
+| regression_structures | 0.3630 | 0.4278 | M4-ST cao hơn quan sát; cần xem nhầm từng state |
+| dots_and_globules | 0.5750 | 0.5954 | Mức trung bình |
+| blue_whitish_veil | 0.7608 | 0.7783 | Group học tốt nhất hiện tại |
+| vascular_structures | 0.2155 | 0.2049 | Yếu nhất, cả hai model đều cần cải thiện |
 
 Train chỉ có **413 ca**, gồm **323 non-melanoma và 90 melanoma**. `pigmentation/localized regular` có **0 train, 0 validation, 3 test**. Vascular có các states chỉ **1/4/5 mẫu train**; balanced state weight lớn nhất là **51.625** cho state chỉ có một mẫu. Augmentation từ các states đã quan sát không cung cấp supervision thật cho một state hoàn toàn vắng mặt.
 
@@ -173,24 +148,21 @@ Train có **18/176 GT concept profiles** xuất hiện ở cả hai lớp diagno
 | M3 Linear | Giữ mốc cấu hình ban đầu | Đã có MLP follow-up, không tiếp tục tối ưu lại cohort cũ |
 | M3 MLP128 | Giữ Soft CBM chính và intervention âm/không ổn định | Ablation head LR 5e-4 so với 1e-3; một ablation riêng lambda concept 2 so với 1; chấm cả diagnosis, concept và intervention trên validation |
 | M4-ST Linear | Giữ mốc hard/ST ban đầu | Cohort MLP128 đã có frozen test đủ ba seeds; không cần tối ưu lại cohort cũ |
-| M4-ST MLP128 | Giữ Hard CBM ST đối chứng; F1 ổn định, full correction tăng F1 | Đã đủ intervention ba seeds; đọc các ca đúng → sai và sensitivity, chưa cần train thêm |
-| M4-SG Linear | Giữ đối chứng học diagnosis yếu ở cấu hình ban đầu | Study LR đã chỉ ra hướng xử lý; không dùng cohort này để kết luận SG nói chung kém |
-| M4-SG MLP128 | Giữ Hard CBM SG đối chứng; full correction tăng F1 ở cả ba seeds | Đã đủ intervention; nếu cần nâng concept, thử smoothing/capping state weights như một ablation riêng, đọc per-state outcomes |
+| M4-ST MLP128 | Giữ Hard CBM đối chứng; F1 ổn định, full correction tăng F1 | Đã đủ intervention ba seeds; đọc các ca đúng → sai và sensitivity; nếu cần nâng concept, thử smoothing/capping state weights như một ablation riêng |
 | M5 categorical ECBM | Chưa có code/kết quả model | Ưu tiên triển khai và ablation năng lượng, đo propagation và chi phí inference |
 
 Các LR/lambda/weighting đề xuất là **giả thuyết cần kiểm chứng**, không phải cấu hình tối ưu đã xác nhận. Mỗi ablation giữ những knobs khác cố định, lưu tên/config riêng, xem pilot validation rồi xác nhận đủ ba seeds. Preprocessing đã có preset `comparison`; cần đối chiếu ảnh để bảo đảm crop vẫn giữ vùng tổn thương và biến đổi màu không làm mất ý nghĩa của concept màu. Chưa có kết quả validation cho preset này để chọn thay `legacy_letterbox`.
 
 **Intervention: ưu tiên chất lượng correction, không chỉ điểm diagnosis tự động.**
 
-Đã có đủ 128 subsets × 395 ca × ba seeds cho M3/ST/SG MLP128. Giữ weights/thresholds và automatic test nguyên trạng. [Báo cáo và curves chung](interventions_comparison.md).
+Đã có đủ 128 subsets × 395 ca × ba seeds cho M3/M4-ST MLP128. Giữ weights/thresholds và automatic test nguyên trạng. [Báo cáo và curves chung](interventions_comparison.md).
 
 | Cohort | Automatic test F1 | Full GT intervention F1 | Delta mean F1 |
 |---|---:|---:|---:|
 | M3 MLP128 | 0.7207 ± 0.0110 | 0.6677 ± 0.1296 | -0.0530 |
 | M4-ST MLP128 | 0.7131 ± 0.0071 | 0.7862 ± 0.0279 | +0.0731 |
-| M4-SG MLP128 | 0.7091 ± 0.0437 | 0.8212 ± 0.0228 | +0.1121 |
 
-ST/SG tăng full F1 ở cả ba seeds, nhưng mỗi model vẫn có mean 26 ca diagnosis đúng → sai khi sửa đủ concepts. ST mean F1 tại m=6 (0.7900) cao hơn m=7 (0.7862); SG curve mean tăng qua các m nhưng một số subsets vẫn giảm so với baseline. Không dùng test để chọn subset/m tốt nhất làm chính sách. Chưa kiểm định chênh lệch intervention giữa models; representation/gradient/runtime vẫn khác nhau. Audit độc lập tái tạo đúng 768 subsets mới và xác minh 147 artifacts cũ giữ nguyên hashes.
+M4-ST tăng full F1 ở cả ba seeds, nhưng vẫn có mean 26 ca diagnosis đúng → sai khi sửa đủ concepts. Mean F1 tại m=6 (0.7900) cao hơn m=7 (0.7862). Không dùng test để chọn subset/m tốt nhất làm chính sách. Chưa kiểm định chênh lệch intervention giữa M3 và M4-ST; representation/runtime vẫn khác nhau.
 
 M3 MLP128 full intervention làm mean F1 **0.7207 → 0.6677**; seed 123 giảm mạnh, seed 2026 tăng. Soft → GT one-hot và cách head học từ predicted concepts là các giả thuyết giải thích, chưa phải nguyên nhân đã chứng minh. Giữ nguyên measurement này trong khóa luận.
 
@@ -220,19 +192,19 @@ Chưa có kết quả M5 để nói ECBM tốt hơn các baseline trên Derm7pt.
 
 | Ưu tiên | Công việc | Kết quả cần nhìn trước khi quyết định tiếp |
 |---:|---|---|
-| Đã hoàn tất | Frozen test và intervention ST/SG/M3 MLP128 đủ ba seeds | Baseline diagnosis/concept/correction đã đủ, giữ cả kết quả tăng và giảm |
+| Đã hoàn tất | Frozen test và intervention M4-ST/M3 MLP128 đủ ba seeds | Baseline diagnosis/concept/correction đã đủ, giữ cả kết quả tăng và giảm |
 | 1 | Triển khai M5 categorical ECBM với kiểm tra inference/clamping và ablations | Diagnosis + concept + propagation + latency, cùng protocol validation đã khai báo |
 | 2 | Dùng per-state support/confusion, score-quality và case review hiện có | Chỉ rõ state nào yếu, lỗi confidence hay lỗi ranking, và ca correction đúng → sai |
 | 3 | Nếu còn ngân sách, thử một cải tiến M3 correction-aware hoặc một concept-weighting ablation | Validation diagnosis/concept/intervention cùng tăng hoặc có trade-off rõ; chưa mở grid nhiều knobs cùng lúc |
 
-Muốn so riêng gradient ST/SG trong một lượt xác nhận, dùng cùng runtime và knobs; giữ các kết quả hiện tại với provenance. Bộ M0/M1/M2 và M3/SG mới đã đủ vai trò baseline để tiếp tục khóa luận. Các góp ý này dựa trên results đã quan sát; các tests/curves tiếp theo vẫn phải được chốt từ train/validation, không tìm cấu hình theo test đã đọc.
+Bộ M0/M1/M2, M3 và M4-ST mới đã đủ vai trò baseline để tiếp tục khóa luận. Các góp ý này dựa trên results đã quan sát; các tests/curves tiếp theo vẫn phải được chốt từ train/validation, không tìm cấu hình theo test đã đọc.
 
 
 **Nguồn dữ liệu và đối chiếu.**
 
 Các mean/SD lấy từ summaries đã kiểm tra predictions và cùng protocol; không gộp cohort 10/20 epochs hoặc checkpoints BAcc vào một mean. Các nhận xét về train dùng histories lưu trong exports gốc. M2 MLP không lưu train loss nên báo cáo không suy đoán nó.
 
-Đã đối chiếu **25 source runs F1**, hiện đều có test: official labels/case IDs ở validation/test, probabilities/threshold predictions, diagnosis metrics và concept metrics/argmax/one-hot nơi có export, schema/manifest, ngưỡng BAcc và best epoch theo history. Review trước đối chiếu thêm **15 source runs test BAcc** riêng của các studies và sáu summaries test tương ứng; lượt cập nhật này giữ nguyên hashes các artifacts đó. Không tái huấn luyện hoặc chạy lại backbone trên ảnh. Brier/NLL và paired bootstrap lấy từ scores/predictions đã lưu. Bổ sung test đã thay đổi ba ST source JSON đúng dự kiến; tái tạo phần validation-only khớp nguyên SHA-256 trước test, giữ weights/epoch/threshold/history/validation. 91 artifacts khác của review trước giữ nguyên hashes.
+Đã đối chiếu **19 source runs F1** hiện còn trong bộ kết quả, đều có test: official labels/case IDs ở validation/test, probabilities/threshold predictions, diagnosis metrics và concept metrics/argmax/one-hot nơi có export, schema/manifest, ngưỡng BAcc và best epoch theo history. Review trước đối chiếu thêm các source runs test BAcc của study head M4-ST và summaries test tương ứng. Không tái huấn luyện hoặc chạy lại backbone trên ảnh. Brier/NLL và paired bootstrap lấy từ scores/predictions đã lưu. Bổ sung test đã thay đổi ba ST source JSON đúng dự kiến; tái tạo phần validation-only khớp nguyên SHA-256 trước test, giữ weights/epoch/threshold/history/validation.
 
 [Biểu đồ SVG](model_review_overview.svg).
 
@@ -243,8 +215,6 @@ Các mean/SD lấy từ summaries đã kiểm tra predictions và cùng protocol
 - [M0](../m0_majority_results.json), [M1](m1/efficientnet_b0_e10/test_summary.json).
 - [M2 LR](m2_lr/logistic_regression/seed42.json), [M2 MLP](m2_mlp/mlp32_e100/test_summary.json).
 - [M3 Linear](m3/linear_e10/test_summary.json), [M3 MLP128](m3/mlp128_e20_headlr0.001/test_summary.json), [M4-ST](m4_st/linear_e10/test_summary.json).
-- [M4-SG cũ](m4_sg/linear_e10/test_summary.json), [M4-SG mới](m4_sg/mlp128_e20_headlr0.001/test_summary.json).
-- [Báo cáo M4-SG mới kèm learning curves và quyết định trước test](#m4-sg-report).
 - [Báo cáo M3 mới kèm learning curves và đối chiếu trước/sau test](#m3-report).
 - [M4-ST MLP128: pilot validation mới và frozen selection](#m4-st-validation).
 - [M4-ST MLP128: train/validation/frozen test và so sánh cặp](#m4-st-report), [test summary](m4_st/mlp128_e20_headlr0.001/test_summary.json).
@@ -261,7 +231,7 @@ Các bảng theo seed, learning curves, lựa chọn trước test và đối ch
 <details>
 <summary>Mở bảng và ghi nhận chi tiết</summary>
 
-Giữ bộ M0–M4 hiện tại làm đối chứng cho khóa luận. Diagnosis test và intervention M3/M4-ST/M4-SG MLP128 đã đủ ba seeds; bước tiếp theo là triển khai M5. Những hạn chế đã thấy được giữ trong báo cáo; chúng không khiến một baseline mất giá trị đối chứng và không phải lý do phải train lại tất cả models.
+Giữ bộ M0–M4 hiện tại làm đối chứng cho khóa luận. Diagnosis test và intervention M3/M4-ST MLP128 đã đủ ba seeds; bước tiếp theo là triển khai M5. Những hạn chế đã thấy được giữ trong báo cáo; chúng không khiến một baseline mất giá trị đối chứng và không phải lý do phải train lại tất cả models.
 
 #### Những phần đã kiểm chứng và giữ cố định
 
@@ -275,11 +245,11 @@ Giữ bộ M0–M4 hiện tại làm đối chứng cho khóa luận. Diagnosis 
 | Artifacts | Giữ weights, best epochs, thresholds, source predictions/history và kết quả intervention đã có |
 | Cohort cũ/studies | Giữ Linear 10 epochs và studies BAcc riêng để đối chiếu; không gộp với các summaries MLP128/F1 mới |
 
-Tests cơ chế M3/M4 đã pass trước đó: luồng gradient ST/SG, hard categorical one-hot, MLP head/LR groups, pilot chỉ đọc train/validation và frozen evaluation. Lượt tổng hợp test xác minh official labels/case IDs, metrics, schema và checkpoint hashes. Với ST mới, toàn bộ JSON validation trước test tái tạo đúng SHA-256 sau khi bỏ phần test bổ sung. Không có lỗi triển khai đã xác định buộc phải retrain trong các checks này; chúng không chứng minh thuật toán tối ưu hoặc mọi phép so sánh đã cô lập hoàn toàn.
+Tests cơ chế M3/M4 đã pass trước đó: luồng gradient straight-through, hard categorical one-hot, MLP head/LR groups, pilot chỉ đọc train/validation và frozen evaluation. Lượt tổng hợp test xác minh official labels/case IDs, metrics, schema và checkpoint hashes. Với ST mới, toàn bộ JSON validation trước test tái tạo đúng SHA-256 sau khi bỏ phần test bổ sung. Không có lỗi triển khai đã xác định buộc phải retrain trong các checks này; chúng không chứng minh thuật toán tối ưu hoặc mọi phép so sánh đã cô lập hoàn toàn.
 
 [Báo cáo đầy đủ](all_models_comparison.md).
 
-Intervention ST/SG đã chạy bổ sung: full correction làm mean F1 ST **0.7131 → 0.7862**, SG **0.7091 → 0.8212**, cả ba seeds đều tăng ở hai cohorts. Audit độc lập pass 768 subsets mới, weights/thresholds và 147 artifacts cũ giữ nguyên. [Báo cáo intervention chung](interventions_comparison.md). Đây là GT-assisted measurement, giữ riêng với automatic test.
+Intervention M4-ST đã chạy bổ sung: full correction làm mean F1 **0.7131 → 0.7862**, cả ba seeds đều tăng; weights/thresholds giữ nguyên. [Báo cáo intervention chung](interventions_comparison.md). Đây là GT-assisted measurement, giữ riêng với automatic test.
 
 Giữ bảng checkpoint BAcc cũ ở phần lưu trữ/ablation/phụ lục; bảng chính dùng checkpoint chọn theo Macro F1. Không xóa kết quả/weights BAcc hoặc gộp hai tiêu chí vào một mean. Cột BAcc vẫn được báo cáo trong bảng chính như một metric bổ sung.
 
@@ -293,24 +263,23 @@ Giữ bảng checkpoint BAcc cũ ở phần lưu trữ/ablation/phụ lục; b�
 | M2 MLP | 0.8264 ± 0.0107 | Oracle phi tuyến dùng GT concepts; giữ |
 | M3 MLP128 | 0.7207 ± 0.0110 | Soft Joint CBM reference; giữ cả diagnosis và intervention đã đo |
 | M4-ST MLP128 | 0.7131 ± 0.0071 | Hard CBM có diagnosis gradient về concept/backbone; giữ |
-| M4-SG MLP128 | 0.7091 ± 0.0437 | Hard CBM chặn diagnosis gradient về concept/backbone; giữ |
 
-M2 là oracle reference, không phải hệ thống diagnosis tự động từ ảnh. M3 có mean diagnosis F1/AUC cao nhất quan sát trong các cohort nhận ảnh chính; SG có mean concept F1 nhỉnh nhất quan sát. Tuy nhiên, sáu paired case-bootstrap comparisons giữa M1/M3/ST/SG đều có khoảng 95% chứa 0 cho diagnosis F1. Không tuyên bố một model thắng rõ về F1 hoặc yêu cầu SG có accuracy cao nhất. ST và SG là hai đối chứng về cơ chế gradient, đều cần giữ.
+M2 là oracle reference, không phải hệ thống diagnosis tự động từ ảnh. M3 có mean diagnosis F1/AUC cao nhất quan sát trong các cohort nhận ảnh chính; M4-ST có mean concept F1 cao hơn M3 quan sát. Tuy nhiên, ba paired case-bootstrap comparisons giữa M1/M3/M4-ST đều có khoảng 95% chứa 0 cho diagnosis F1. Không tuyên bố một model thắng rõ về F1. M3 và M4-ST là cặp đối chứng Soft/Hard CBM của khóa luận.
 
 #### Những phần còn cần hoàn tất hoặc cải thiện
 
 | Vấn đề đã thấy | Căn cứ hiện tại | Hành động và cách đánh giá |
 |---|---|---|
-| Correction có thể gây hại dù full F1 tăng | ST/SG intervention đã hoàn tất; full correction đều có mean 26 ca đúng → sai | Giữ kết quả này trong baseline. Đọc case transitions và sensitivity/specificity; chấm riêng propagation ở groups chưa sửa cho M5 |
+| Correction có thể gây hại dù full F1 tăng | M4-ST intervention đã hoàn tất; full correction có mean 26 ca đúng → sai | Giữ kết quả này trong baseline. Đọc case transitions và sensitivity/specificity; chấm riêng propagation ở groups chưa sửa cho M5 |
 | M3 correction chưa ổn định | Full GT intervention làm mean F1 0.7207 → 0.6677; kết quả khác hướng giữa seeds | Giữ kết quả âm này làm baseline. Nếu làm ablation, mô phỏng correction bằng GT của ca train; chọn tỷ lệ trên validation và đánh giá cả diagnosis/concept/intervention |
 | Concept learning còn yếu | Pigmentation F1 khoảng 0.32–0.35; vascular khoảng 0.20–0.22 ở các MLP CBMs | Xem per-state support/confusion trước; nếu thử weighting/smoothing/capping, mỗi lần chỉ đổi một yếu tố và chấm trên validation |
 | Thiếu supervision cho states hiếm | `pigmentation/localized regular` có 0 train, 0 validation, 3 test; một số vascular states chỉ có 1/4/5 ca train | Giữ taxonomy/metric hiện tại. Bổ sung dữ liệu có xác nhận chuyên gia, nếu khả thi, thuộc một cohort mở rộng riêng; augmentation không tạo annotation thật cho state vắng mặt |
-| Sensitivity chưa tốt hoặc chưa ổn định | M1 mean 56.11%; ST mean 63.70%, range 56.44–72.28%; SG mean 65.02%; M3 mean 75.91% | Báo cáo sensitivity/specificity và FP/FN cùng F1. Không đổi frozen test threshold; mục tiêu threshold khác cần khai báo trong protocol mới và chọn bằng validation |
-| Overfitting | M3/ST/SG mới đều có F1 validation epoch 20 thấp hơn best | Tiếp tục dùng best checkpoints; chưa tăng epoch/backbone đồng loạt. Regularization/LR/lambda là các ablations có mục tiêu nếu còn cần |
-| Confidence và provenance cần đầy đủ hơn | Raw Brier/NLL của các CBM mới chưa tốt hơn M1; ST train ghi Torch 2.12, M3/SG ghi 2.14; M4 chưa ghi environment test riêng | Đo reliability trên validation trước khi cân nhắc calibration. Ghi environment train/test/intervention riêng cho runs tương lai; phép xác nhận ST/SG cần cùng runtime |
+| Sensitivity chưa tốt hoặc chưa ổn định | M1 mean 56.11%; ST mean 63.70%, range 56.44–72.28%; M3 mean 75.91% | Báo cáo sensitivity/specificity và FP/FN cùng F1. Không đổi frozen test threshold; mục tiêu threshold khác cần khai báo trong protocol mới và chọn bằng validation |
+| Overfitting | M3/M4-ST mới đều có F1 validation epoch 20 thấp hơn best | Tiếp tục dùng best checkpoints; chưa tăng epoch/backbone đồng loạt. Regularization/LR/lambda là các ablations có mục tiêu nếu còn cần |
+| Confidence và provenance cần đầy đủ hơn | Raw Brier/NLL của các CBM mới chưa tốt hơn M1; ST train ghi Torch 2.12, M3 ghi 2.14; M4 chưa ghi environment test riêng | Đo reliability trên validation trước khi cân nhắc calibration. Ghi environment train/test/intervention riêng cho runs tương lai; phép xác nhận soft/hard cần cùng runtime |
 | M5 chưa triển khai | Chưa có code hoặc kết quả model M5 | Làm prototype categorical ECBM cho bảy groups, kiểm tra inference/clamp và đo correction trên groups chưa sửa; sau pilot validation mới chốt protocol ba seeds |
 
-Concept metrics tốt hơn không tự bảo đảm diagnosis hoặc correction tốt hơn. Intervention strategy và granularity cũng ảnh hưởng kết quả, nên giữ đơn vị categorical group khi so M3/ST/SG/M5. [Shin et al., ICML 2023](https://proceedings.mlr.press/v202/shin23a.html).
+Concept metrics tốt hơn không tự bảo đảm diagnosis hoặc correction tốt hơn. Intervention strategy và granularity cũng ảnh hưởng kết quả, nên giữ đơn vị categorical group khi so M3/M4-ST/M5. [Shin et al., ICML 2023](https://proceedings.mlr.press/v202/shin23a.html).
 
 M3 correction-aware, concept weighting và calibration là các hướng cần kiểm chứng, không phải cải thiện đã xác nhận. Calibration như temperature scaling nhằm đánh giá/chỉnh confidence; chưa có calibration được fit cho cohort hiện tại. [Guo et al., ICML 2017](https://proceedings.mlr.press/v70/guo17a.html).
 
@@ -318,7 +287,7 @@ M5 theo hướng class/concept/global energy và frozen inference/correction c�
 
 #### Thứ tự thực hiện
 
-1. **Đã hoàn tất baseline:** diagnosis + concept + intervention ST/SG/M3 đủ ba seeds; tables/curves và case transitions đã đối chiếu. Giữ các cohort hiện tại làm mốc, kèm hạn chế dữ liệu/runtime/test exposure.
+1. **Đã hoàn tất baseline:** diagnosis + concept + intervention M4-ST/M3 đủ ba seeds; tables/curves và case transitions đã đối chiếu. Giữ các cohort hiện tại làm mốc, kèm hạn chế dữ liệu/runtime/test exposure.
 2. **Triển khai M5:** prototype categorical, kiểm tra frozen inference/group clamping, pilot train/validation seed 42, rồi chốt protocol và chạy ba seeds. Đánh giá cả diagnosis, concept, correction trên groups chưa sửa và latency.
 3. **Ablations bổ sung nếu còn ngân sách:** ưu tiên correction-aware M3 hoặc một thay đổi concept weighting. Không mở grid lớn, không tăng epoch tất cả models hoặc train chỉ để đạt thứ hạng mong muốn.
 
@@ -358,7 +327,7 @@ M3 MLP128 có mean Macro F1 cao hơn M3 Linear 10 epochs (**0.6844**) khoảng *
 
 So với M1, mean Macro F1 tăng từ **0.7078** lên **0.7207**, AUC từ **0.8302** lên **0.8490**, sensitivity từ **56.11%** lên **75.91%**; specificity giảm từ **85.37%** xuống **75.96%**, Accuracy từ **77.89%** xuống **75.95%**. M3 mới có mean Macro F1/BAcc/AUC cao nhất trong các mô hình nhận ảnh đã có test ở bảng hiện tại, còn M2 oracle vẫn cao hơn về diagnosis. Đây là kết quả quan sát, chưa chứng minh ưu thế có ý nghĩa thống kê.
 
-So với M4-SG MLP128 cùng head/LRs/ngân sách, mean Macro F1 **0.7207 so với 0.7091**, AUC **0.8490 so với 0.8001**, nhưng concept F1 **0.4839 so với 0.5078**. Soft/hard representation và luồng gradient cùng khác nhau; chưa tách được tác động riêng từng cơ chế. [Bảng so sánh đầy đủ](all_models_comparison.md).
+So với M4-ST MLP128 cùng head/LRs/ngân sách, mean Macro F1 **0.7207 so với 0.7131**, AUC **0.8490 so với 0.8302**, nhưng concept F1 **0.4839 so với 0.5069**. Soft/hard bottleneck và phiên bản PyTorch train cùng khác nhau; chưa tách được tác động riêng của bottleneck. [Bảng so sánh đầy đủ](all_models_comparison.md).
 
 #### Train và validation
 
@@ -407,7 +376,7 @@ Train dùng MPS theo metadata gốc; lượt test này dùng **CPU**, vì phiên
 
 Head CPU tái tạo test probabilities từ soft vectors với sai số tối đa **1.19e-7**; nhãn test khớp hoàn toàn cả ba seeds. Khoảng cách test probability gần ngưỡng nhất **4.54e-5**, lớn hơn sai số tái tạo. Với validation seed 42, case 750 có probability gốc bằng đúng threshold **0.07213160395622253**; replay CPU thấp hơn khoảng **1.49e-8**, nên nhãn replay tại ranh giới khác một ca. Nhãn/metrics validation gốc vẫn khớp probabilities xuất bằng rule `>= threshold`, được giữ nguyên; không thay threshold hoặc ghi đè validation bằng replay. Chi tiết đối chiếu nằm trong `frozen_test_verification` của test summary.
 
-Giữ cohort này làm Soft CBM đối chứng đã hoàn tất test và intervention. Các kết quả baseline/M4 trước đây đã được xem khi bắt đầu follow-up; không mô tả cả dự án như một test set chưa từng được tham khảo. M4-ST/M4-SG MLP128 cũng đã hoàn tất test và intervention đủ ba seeds; xem [báo cáo intervention hiện tại](interventions_comparison.md). Bộ đối chứng M0–M4 đã chốt; phần tiếp theo là M5 categorical ECBM và hai ablations bỏ E_global/E_class, hiện chưa có code/kết quả model.
+Giữ cohort này làm Soft CBM đối chứng đã hoàn tất test và intervention. Các kết quả baseline/M4 trước đây đã được xem khi bắt đầu follow-up; không mô tả cả dự án như một test set chưa từng được tham khảo. M4-ST MLP128 cũng đã hoàn tất test và intervention đủ ba seeds; xem [báo cáo intervention hiện tại](interventions_comparison.md). Bộ đối chứng M0–M4 đã chốt; phần tiếp theo là M5 categorical ECBM và hai ablations bỏ E_global/E_class, hiện chưa có code/kết quả model.
 
 </details>
 
@@ -437,13 +406,13 @@ Cập nhật sau quyết định chốt: test cả ba frozen checkpoints đã ho
 
 Checkpoint chọn bằng diagnosis Macro F1@0.5; ngưỡng chọn riêng theo BAcc validation, không chọn lại checkpoint. Mean F1@0.5 tăng từ 0.4566 của M3 Linear 10 epochs lên 0.7727; cả ba seeds đều tăng. Head/LR/ngân sách thay đổi đồng thời nên không tách riêng được đóng góp từng yếu tố.
 
-M4-SG MLP128 cùng ngân sách/head/LRs đạt mean validation F1@0.5 0.7579, AUC 0.7902 và concept F1 0.5194. M3 mới có diagnosis F1/AUC validation cao hơn quan sát, nhưng concept F1 thấp hơn. Chưa kết luận về ưu thế test hoặc khác biệt có ý nghĩa thống kê.
+Chưa kết luận về ưu thế test hoặc khác biệt có ý nghĩa thống kê.
 
 #### Train và khả năng tổng quát hóa
 
 Mean train diagnosis loss giảm 0.725 → 0.092; concept loss 1.293 → 0.795. Train BAcc cuối lịch khoảng 96.38%, ghi trong lúc cập nhật weights với augmentation/dropout, không phải một lượt model.eval() trên train.
 
-Mean diagnosis loss validation epoch 20 khoảng 0.722, trong khi train khoảng 0.092. Validation total loss đạt đáy rồi tăng; F1 cuối lịch thấp hơn mức tốt nhất ở cả ba seeds. Có dấu hiệu overfitting rõ hơn M4-SG mới, đặc biệt diagnosis, nhưng không quy toàn bộ chênh lệch loss cho overfitting vì hai lượt train/validation khác chế độ và dữ liệu. Không tăng thêm epoch chỉ vì train loss tiếp tục giảm.
+Mean diagnosis loss validation epoch 20 khoảng 0.722, trong khi train khoảng 0.092. Validation total loss đạt đáy rồi tăng; F1 cuối lịch thấp hơn mức tốt nhất ở cả ba seeds. Có dấu hiệu overfitting, đặc biệt diagnosis, nhưng không quy toàn bộ chênh lệch loss cho overfitting vì hai lượt train/validation khác chế độ và dữ liệu. Không tăng thêm epoch chỉ vì train loss tiếp tục giảm.
 
 Concept F1 tại checkpoint đạt 0.4786 ± 0.0156: cải thiện vừa phải so với M3 cũ, còn hạn chế. Epoch diagnosis tốt nhất không phải epoch concept tốt nhất; seed 123 chọn epoch 7. Diagnosis tốt hơn chưa tự chứng minh concept leakage hay explanation faithful; cần đánh giá concept và intervention riêng.
 
@@ -503,25 +472,23 @@ Train diagnosis loss giảm 0.715 → 0.213; ở epoch 20, validation diagnosis 
 | M1 | 0.7078 ± 0.0118 | 0.8302 ± 0.0062 | — |
 | M3 MLP128 | 0.7207 ± 0.0110 | 0.8490 ± 0.0173 | 0.4839 ± 0.0122 |
 | M4-ST MLP128 | 0.7131 ± 0.0071 | 0.8302 ± 0.0092 | 0.5069 ± 0.0015 |
-| M4-SG MLP128 | 0.7091 ± 0.0437 | 0.8001 ± 0.0258 | 0.5078 ± 0.0155 |
 
-ST nằm gần M1/M3/SG về diagnosis F1, concept F1 gần SG và cao hơn M3 quan sát. So với ST Linear 10 epochs ban đầu, mean F1 tăng 0.6471 → 0.7131 và SD giảm 0.0722 → 0.0071; head/LR/ngân sách cùng thay đổi nên chưa tách được đóng góp riêng.
+ST nằm gần M1/M3 về diagnosis F1, concept F1 cao hơn M3 quan sát. So với ST Linear 10 epochs ban đầu, mean F1 tăng 0.6471 → 0.7131 và SD giảm 0.0722 → 0.0071; head/LR/ngân sách cùng thay đổi nên chưa tách được đóng góp riêng.
 
 | So sánh | Delta mean F1 | Paired case-bootstrap percentile 95% |
 |---|---:|---:|
 | ST − M1 | +0.0053 | [-0.0274, +0.0388] |
 | ST − M3 MLP128 | -0.0076 | [-0.0344, +0.0192] |
-| ST − M4-SG MLP128 | +0.0040 | [-0.0246, +0.0325] |
 
-Cả ba khoảng chứa 0, chưa xác lập khác biệt F1 rõ. 2.000 resamples stratified theo lớp, RNG seed 20261005; lấy cùng case cho mọi model, tính F1 từng trained seed rồi lấy mean, không ensemble. Khoảng có điều kiện theo weights/seeds/thresholds cố định và giả định cases độc lập; không gồm bất định huấn luyện lại. Test của dự án đã được tham khảo trước follow-up này.
+Cả hai khoảng chứa 0, chưa xác lập khác biệt F1 rõ. 2.000 resamples stratified theo lớp, RNG seed 20261005; lấy cùng case cho mọi model, tính F1 từng trained seed rồi lấy mean, không ensemble. Khoảng có điều kiện theo weights/seeds/thresholds cố định và giả định cases độc lập; không gồm bất định huấn luyện lại. Test của dự án đã được tham khảo trước follow-up này.
 
 **Đối chiếu và bước tiếp theo.**
 
 395 case IDs/nhãn official, diagnosis và concept metrics, hard one-hot/argmax được kiểm tra. SHA-256 của checkpoints khớp frozen selection; bỏ phần test mới và khôi phục mode/summary tái tạo **đúng SHA-256 của cả ba JSON validation trước test**, bao gồm history, validation predictions/metrics và cấu hình. Frozen head CPU tái hiện test scores trong atol=1e-6, rtol=1e-5. 91 artifacts khác của lượt review trước giữ nguyên hashes.
 
-Config train ghi PyTorch 2.12/MPS; M3/SG trước ghi 2.14. Runner hiện chưa lưu environment test riêng, vì vậy metadata trong test summary là config từ checkpoint. Không coi ST/SG là phép so sánh cô lập hoàn toàn runtime.
+Config train ghi PyTorch 2.12/MPS; M3 ghi 2.14. Runner hiện chưa lưu environment test riêng, vì vậy metadata trong test summary là config từ checkpoint. Không coi M3/M4-ST là phép so sánh cô lập hoàn toàn runtime.
 
-Giữ cohort làm Hard CBM ST đối chứng. Intervention mới đã hoàn tất đủ ba seeds với weights/thresholds cố định: full correction tăng mean F1 **0.7131 → 0.7862 ± 0.0279**, nhưng sensitivity mean **63.70% → 63.04%**, specificity **81.63% → 91.84%**. Cả ba seeds tăng full F1, vẫn có ca/subset bị giảm. [Báo cáo và đối chiếu ST/SG/M3](interventions_comparison.md). Baseline đã đủ để chuyển sang M5; không chọn lại seed/threshold hoặc train thêm theo điểm test.
+Giữ cohort làm Hard CBM ST đối chứng. Intervention mới đã hoàn tất đủ ba seeds với weights/thresholds cố định: full correction tăng mean F1 **0.7131 → 0.7862 ± 0.0279**, nhưng sensitivity mean **63.70% → 63.04%**, specificity **81.63% → 91.84%**. Cả ba seeds tăng full F1, vẫn có ca/subset bị giảm. [Báo cáo và đối chiếu M4-ST/M3](interventions_comparison.md). Baseline đã đủ để chuyển sang M5; không chọn lại seed/threshold hoặc train thêm theo điểm test.
 
 </details>
 
@@ -557,12 +524,11 @@ SD dùng ddof=1 giữa ba seeds; không phải confidence interval trên bệnh 
 |---|---:|---:|---:|
 | M4-ST MLP128 20 epochs mới | 0.7775 ± 0.0190 | 0.7965 ± 0.0132 | 0.5033 ± 0.0078 |
 | M4-ST Linear 10 epochs | 0.6199 ± 0.0552 | 0.6904 ± 0.0871 | 0.4682 ± 0.0185 |
-| M4-SG MLP128 20 epochs | 0.7579 ± 0.0168 | 0.7902 ± 0.0159 | 0.5194 ± 0.0076 |
 | M3 MLP128 20 epochs | 0.7727 ± 0.0204 | 0.8129 ± 0.0234 | 0.4786 ± 0.0156 |
 
-Các cohort giữ summaries riêng. Head/LR/ngân sách thay đổi đồng thời so với ST Linear, nên không quy mức cải thiện cho một yếu tố riêng. So với SG MLP128, head/LRs/ngân sách/data/selection rules khớp; ST mới chạy PyTorch 2.12 còn M3/SG trước ghi PyTorch 2.14, đều dùng MPS. Các versions đầy đủ đã lưu trong summary; chưa coi đây là phép đối chiếu cô lập hoàn toàn tác động ST/SG. Đây là mô tả validation, chưa kết luận ưu thế test hay ý nghĩa thống kê.
+Các cohort giữ summaries riêng. Head/LR/ngân sách thay đổi đồng thời so với ST Linear, nên không quy mức cải thiện cho một yếu tố riêng. So với M3 MLP128, head/LRs/ngân sách/data/selection rules khớp; ST mới chạy PyTorch 2.12 còn M3 ghi PyTorch 2.14, đều dùng MPS. Các versions đầy đủ đã lưu trong summary; chưa coi đây là phép đối chiếu cô lập hoàn toàn tác động soft/hard. Đây là mô tả validation, chưa kết luận ưu thế test hay ý nghĩa thống kê.
 
-Mean F1@0.5 tăng **0.6199 → 0.7775** so với ST Linear; cả ba seeds đều tăng. Mức mới gần M3 MLP128 (0.7727) và cao hơn SG MLP128 quan sát (0.7579), nhưng concept F1 **0.5033** vẫn thấp hơn SG **0.5194**. Giữ cấu hình này để đánh giá frozen test; chưa khẳng định mô hình tốt nhất từ validation.
+Mean F1@0.5 tăng **0.6199 → 0.7775** so với ST Linear; cả ba seeds đều tăng. Mức mới gần M3 MLP128 (0.7727); concept F1 **0.5033** cao hơn M3 **0.4786** quan sát. Giữ cấu hình này để đánh giá frozen test; chưa khẳng định mô hình tốt nhất từ validation.
 
 #### Train và validation theo epoch
 
@@ -581,7 +547,7 @@ Diagnosis validation loss đạt đáy sớm rồi tăng, trong khi train loss t
 
 #### Quyết định và bước tiếp theo
 
-Giữ cohort M4-ST MLP128 này cùng cả ba checkpoints/ngưỡng đã lưu làm đối chứng ST tương ứng với SG mới. Quyết định dùng validation, giữ Linear cũ làm mốc. Chưa dùng test cohort mới để chọn seed, epoch hay threshold. Kết quả test của baseline/studies trước đây đã được xem; không mô tả toàn dự án như chưa từng tham khảo test.
+Giữ cohort M4-ST MLP128 này cùng cả ba checkpoints/ngưỡng đã lưu làm Hard CBM đối chứng tương ứng với M3 mới. Quyết định dùng validation, giữ Linear cũ làm mốc. Chưa dùng test cohort mới để chọn seed, epoch hay threshold. Kết quả test của baseline/studies trước đây đã được xem; không mô tả toàn dự án như chưa từng tham khảo test.
 
 Khi đánh giá test, dùng các frozen checkpoints và ngưỡng trong frozen selection; chỉ sau đó mới chạy intervention. Ví dụ từ gốc repo:
 
@@ -606,115 +572,21 @@ Giữ nguyên SHA-256 của **157 artifacts** có trước đợt nâng cấp, g
 </details>
 
 
-<a id="m4-sg-report"></a>
-### M4-SG MLP128 — test và đường học
-
-<details>
-<summary>Mở bảng và ghi nhận chi tiết</summary>
-
-Cohort đã hoàn tất seeds 42 / 123 / 2026. Cấu hình và ba checkpoint được chốt trước test trong quyết định lưu riêng; weights, best epochs, thresholds và validation metrics giữ nguyên khi bổ sung test.
-
-[Quyết định trước test](m4_sg/mlp128_e20_headlr0.001/frozen_selection.json) · [Validation summary](m4_sg/mlp128_e20_headlr0.001/validation_summary.json) · [Test summary](m4_sg/mlp128_e20_headlr0.001/test_summary.json)
-
-#### Quá trình học trên train
-
-Giá trị dưới đây là mean qua ba seeds của từng epoch, theo history. Train loss = diagnosis loss + concept loss (lambda=1). Loss và BAcc train được ghi trong lúc cập nhật weights, có augmentation/dropout; không phải lượt đánh giá riêng trên train bằng model.eval().
-
-| Chỉ số train | Epoch 1 | Epoch 20 |
-|---|---:|---:|
-| Total loss | 2.0187 | 1.0297 |
-| Diagnosis loss | 0.7294 | 0.4258 |
-| Concept loss | 1.2894 | 0.6038 |
-| Diagnosis BAcc (%) | 49.9765 | 81.9688 |
-
-Cả diagnosis head và concept predictor đều có tín hiệu học rõ. Trong stop-gradient, diagnosis loss cập nhật diagnosis head; concept loss cập nhật backbone/concept heads. Xu hướng giảm xuất hiện ở cả ba seeds, xen kẽ một số epoch tăng nhẹ. Vì head, LR và ngân sách cùng thay đổi so với baseline ban đầu, kết quả này không xác định đóng góp riêng của từng yếu tố.
-
-#### Diễn biến validation
-
-Best epochs theo Macro F1@0.5 là 17 / 14 / 9. Train loss tiếp tục giảm đến epoch 20, trong khi validation Macro F1 cuối lịch thấp hơn mức tốt nhất ở cả ba seeds. Đây là dấu hiệu lợi ích validation đã chững lại, có thể kèm overfitting nhẹ; không đủ căn cứ định lượng mức độ overfitting chỉ từ chênh lệch train/validation loss.
-
-Ở epoch 20, mean concept loss train khoảng 0.604 và validation khoảng 0.991; mean diagnosis loss tương ứng khoảng 0.426 và 0.540. Khoảng cách loss lớn hơn ở nhánh concept, đáng chú ý khi đánh giá khả năng tổng quát hóa concept. Train và validation khác augmentation, chế độ dropout/batch normalization và phân bố nhãn, nên không diễn giải toàn bộ khoảng cách là overfitting. [PyTorch: training và evaluation modes](https://docs.pytorch.org/tutorials/beginner/introyt/trainingyt.html#per-epoch-activity).
-
-![Learning curves](m4_sg/mlp128_e20_headlr0.001/learning_curves.png)
-
-#### Kết quả test
-
-| Seed | Accuracy (%) | BAcc (%) | Macro F1 | AUC | Sensitivity (%) |
-|---:|---:|---:|---:|---:|---:|
-| 42 | 75.44 | 71.48 | 0.6986 | 0.8149 | 63.37 |
-| 123 | 81.27 | 76.04 | 0.7570 | 0.8152 | 65.35 |
-| 2026 | 71.90 | 70.07 | 0.6716 | 0.7703 | 66.34 |
-| **Mean ± sample SD** | 76.20 ± 4.73 | 72.53 ± 3.12 | 0.7091 ± 0.0437 | 0.8001 ± 0.0258 | 65.02 ± 1.51 |
-
-Concept Macro F1 (all-defined): **0.5078 ± 0.0155**. SD giữa seeds dùng ddof=1; đây không phải case-level CI hay kiểm định so sánh cặp.
-
-Mean validation Macro F1 ở các ngưỡng đã chọn: 0.7601; mean test Macro F1: 0.7091. Validation và test cùng dùng thresholds đã đóng băng của từng seed, nhưng là hai tập ca khác nhau.
-
-Kết quả mới cải thiện rõ so với cohort SG Linear 10 epochs ban đầu. Mean test Macro F1 gần M1 hiện tại (0.7078), song chưa có kiểm định chứng minh hơn M1. Nên giữ cả ba seeds trong báo cáo, không chọn riêng seed 123 do có test cao nhất. Nhạy melanoma khoảng 65% cho thấy hiệu năng chẩn đoán vẫn còn hạn chế.
-
-#### Phạm vi và bước tiếp theo
-
-Đây là Hard CBM dùng stop-gradient với MLP128, không phải ECBM và chưa tái lập đầy đủ Nápoles: preprocessing, augmentation và regularization vẫn khác. Giữ cohort đã chốt làm đối chứng; M4-ST cùng head/LRs/ngân sách đã hoàn tất frozen test và intervention, runtime train vẫn khác. M3 MLP128 tương ứng đã hoàn tất pilot và frozen test: [báo cáo M3](#m3-report).
-
-SG intervention mới đã hoàn tất đủ ba seeds: full correction tăng mean F1 **0.7091 → 0.8212 ± 0.0228**, BAcc **72.53% → 83.43%**, sensitivity **65.02% → 78.55%**, specificity **80.05% → 88.32%**. F1 tăng ở cả ba seeds; vẫn có mean 26 ca diagnosis đúng → sai. Đây là GT-assisted intervention, giữ riêng với automatic test. [Báo cáo và audit so sánh M3/ST/SG](interventions_comparison.md). Tiếp theo là triển khai/đánh giá M5 ECBM. Không đổi cấu hình/thresholds của cohort này theo kết quả test mới.
-
-#### Đối chiếu đã thực hiện
-
-Đối chiếu hash weights, best epoch, threshold với quyết định trước test; validation diagnosis/concept metrics khớp snapshot. Summarizer xác minh cùng protocol, official 395 ca/nhãn test, metrics từ predictions và hard concept exports. Diagnosis head nạp từ checkpoint tái tạo test probabilities trên hard vectors trong sai số số học.
-
-</details>
-
-
-<a id="m4-sg-validation"></a>
-### M4-SG MLP128 — validation và lựa chọn trước test
-
-<details>
-<summary>Mở bảng và ghi nhận chi tiết</summary>
-
-Ghi nhận ở thời điểm của thí nghiệm cũ hoặc pilot trước test. Các câu về bước tiếp theo mô tả thời điểm đó; trạng thái hiện tại nằm ở bảng chính phía trên.
-
-Ngày ghi nhận: 2026-10-04T15:07:32.469226+00:00. Ba seeds 42 / 123 / 2026; 203 ca validation; chưa đánh giá test cho cohort này.
-
-Cấu hình được chốt cho đợt này: stop-gradient, MLP128, 20 epochs, LR backbone/concept 1e-4, LR diagnosis head 1e-3, weight decay 0.01, legacy_letterbox. Checkpoint chọn Macro F1@0.5; threshold chọn BAcc trên validation, hòa gần 0.5. Đây chưa phải tái lập đầy đủ Nápoles.
-
-| Seed | Best epoch | Macro F1 @0.5 | Macro F1 ở ngưỡng đã chọn | BAcc (%) | AUC | Threshold |
-|---:|---:|---:|---:|---:|---:|---:|
-| 42 | 17 | 0.7397 | 0.7376 | 73.87 | 0.7719 | 0.470053 |
-| 123 | 14 | 0.7730 | 0.7730 | 76.80 | 0.8007 | 0.500000 |
-| 2026 | 9 | 0.7609 | 0.7698 | 77.50 | 0.7981 | 0.473882 |
-
-Mean ± sample SD Macro F1@0.5: **0.7579 ± 0.0168**; cấu hình Linear 10 epochs cũ: **0.5023 ± 0.0355** trên cùng validation và seeds. Kết quả hỗ trợ chọn cấu hình mới trong đợt so sánh này; không xác định đóng góp riêng của từng thay đổi.
-
-Đã đối chiếu labels/cases validation, manifest/schema, hai bộ diagnosis metrics, ngưỡng BAcc, concept metrics tổng thể, best epoch, config và diagnosis head outputs với checkpoints. Đã lưu SHA-256 của ba checkpoints và exports validation trước test.
-
-Bước tiếp theo: đánh giá test cả ba checkpoints, giữ nguyên epoch/threshold, rồi tổng hợp test riêng cho cohort MLP128 20 epochs. Test cập nhật JSON nguồn nhưng giữ phần validation; hash export trước test là snapshot lịch sử, hash checkpoint phải giữ nguyên.
-
-Baseline/study cũ đã được xem test trước đợt pilot này. Quyết định hiện tại dùng validation; không mô tả đây là lần đầu hoàn toàn chưa biết test của toàn dự án.
-
-[JSON validation summary](m4_sg/mlp128_e20_headlr0.001/validation_summary.json) · [Quyết định và hashes trước test](m4_sg/mlp128_e20_headlr0.001/frozen_selection.json)
-
-#### Cập nhật sau khi hoàn tất test
-
-Ba seeds đã được đánh giá test bằng checkpoint/ngưỡng đã đóng băng. Xem [báo cáo train–validation–test](#m4-sg-report) và [JSON test summary](m4_sg/mlp128_e20_headlr0.001/test_summary.json). Phần quyết định và hashes trước test phía trên giữ nguyên như snapshot lịch sử.
-
-</details>
-
-
 <a id="legacy-f1"></a>
-### Bộ F1 đầu tiên — 16 runs và các phiên bản Linear
+### Bộ F1 đầu tiên — 13 runs và các phiên bản Linear
 
 <details>
 <summary>Mở bảng và ghi nhận chi tiết</summary>
 
 Ghi nhận ở thời điểm của thí nghiệm cũ hoặc pilot trước test. Các câu về bước tiếp theo mô tả thời điểm đó; trạng thái hiện tại nằm ở bảng chính phía trên.
 
-**Bảng lịch sử của 16 runs đầu tiên.** Đối chiếu các cohort MLP128 20 epochs mới trong [bảng đánh giá hiện tại](all_models_comparison.md); intervention M3/M4-ST/M4-SG đã hoàn tất trong [báo cáo riêng](interventions_comparison.md). Giữ bảng này để truy nguyên kết quả ban đầu.
+**Bảng lịch sử của 13 runs đầu tiên** (không tính 3 runs M4-SG Linear đã bỏ). Đối chiếu các cohort MLP128 20 epochs mới trong [bảng đánh giá hiện tại](all_models_comparison.md); intervention M3/M4-ST đã hoàn tất trong [báo cáo riêng](interventions_comparison.md). Giữ bảng này để truy nguyên kết quả ban đầu.
 
-Đã hoàn tất 16 runs: năm cấu hình có đủ seeds 42, 123, 2026 và một run M2 Oracle LR. Mỗi run dùng 203 ca validation và 395 ca test trong cùng manifest. M0 majority là baseline dùng chung ở `../m0_majority_results.json`.
+Còn 13 runs: bốn cấu hình có đủ seeds 42, 123, 2026 và một run M2 Oracle LR. Mỗi run dùng 203 ca validation và 395 ca test trong cùng manifest. M0 majority là baseline dùng chung ở `../m0_majority_results.json`.
 
 Checkpoint được chọn theo **validation diagnosis Macro F1 tại ngưỡng 0.5**, hòa giữ epoch đầu tiên. M2 LR chọn C theo cùng metric. Ngưỡng quyết định được chọn **riêng theo validation Balanced Accuracy**, hòa ưu tiên gần 0.5, rồi đóng băng khi đánh giá test. Vì vậy tên bộ F1 mô tả tiêu chí checkpoint, không có nghĩa ngưỡng cũng được tối ưu theo Macro F1.
 
-Bộ M4-SG MLP128 20 epochs mới có báo cáo riêng: [train, validation và test ba seeds](#m4-sg-report), cùng [quyết định chốt trước test](#m4-sg-validation). Bảng dưới đây giữ nguyên bộ baseline đầu tiên 10 epochs.
+Bảng dưới đây giữ nguyên bộ baseline đầu tiên 10 epochs.
 
 #### Kết quả test
 
@@ -727,7 +599,6 @@ Giá trị là mean ± sample SD giữa ba seeds (`ddof=1`). SD không phải kh
 | M2 — Oracle MLP | 0.8264 ± 0.0107 | 86.08 ± 1.50 | 0.9246 ± 0.0030 | — |
 | M3 — Soft CBM | 0.6844 ± 0.0326 | 70.30 ± 4.58 | 0.7616 ± 0.0446 | 0.4570 ± 0.0185 |
 | M4-ST — Hard CBM | 0.6471 ± 0.0722 | 66.28 ± 8.38 | 0.7122 ± 0.0747 | 0.4700 ± 0.0125 |
-| M4-SG — Hard CBM | 0.3882 ± 0.1705 | 53.57 ± 2.66 | 0.4903 ± 0.0477 | 0.4239 ± 0.0699 |
 
 Concept Macro F1 là mean qua bảy concept, dùng toàn bộ trạng thái được định nghĩa; không có chỉ số này cho M1. M2 nhận concept ground-truth nên là đối chứng oracle về thông tin concept, không phải mô hình suy luận trực tiếp từ ảnh hoặc cận trên tuyệt đối.
 
@@ -739,23 +610,20 @@ Concept Macro F1 là mean qua bảy concept, dùng toàn bộ trạng thái đư
 | M2 MLP | 100 | 66 / 48 / 95 |
 | M3 | 10 | 8 / 6 / 5 |
 | M4-ST | 10 | 10 / 10 / 10 |
-| M4-SG | 10 | 1 / 5 / 4 |
 
 Ba M4-ST đạt Macro F1 validation cao nhất ở epoch cuối; đây là dấu hiệu cần khảo sát ngân sách huấn luyện bằng validation, chưa đủ để kết luận mô hình đã hội tụ hoặc 20 epochs sẽ tốt hơn. M3 có nhiều epoch hòa Macro F1@0.5 dù AUC/concept metrics còn thay đổi; epoch được chọn không nhất thiết là epoch có concept metrics tốt nhất.
 
 #### Điểm cần xử lý trước khi chốt bảng chính của khóa luận
 
-1. **M4-SG phân biệt hai lớp yếu ngay trên validation.** ROC-AUC validation của các checkpoint chọn được là 0.4441 / 0.5591 / 0.5025. Kết quả này cần kiểm tra thêm việc học diagnosis head, learning rate và ngân sách; đối chiếu export không xác định được nguyên nhân huấn luyện.
-2. **Tối ưu ngưỡng theo BAcc có thể giảm Macro F1.** Với M4-SG seed 42, ngưỡng 0.290925 nâng BAcc validation từ 0.4998 lên 0.5035 nhưng giảm Macro F1 từ 0.4830 xuống 0.2389. Seed 2026 giảm Macro F1 từ 0.4807 xuống 0.4155. Seed 42 ở test dự đoán melanoma cho 392/395 ca. Đổi ngưỡng không cải thiện khả năng xếp hạng được đo bằng AUC; cần phân biệt vấn đề chọn ngưỡng và vấn đề học mô hình. [Tài liệu scikit-learn về decision threshold](https://scikit-learn.org/stable/modules/classification_threshold.html).
-3. **Chưa có kết quả M5 ECBM trong bộ này.** Chưa thể kết luận ECBM vượt các baseline. Giữ bộ 10 epochs làm mốc đã chạy; ưu tiên xây dựng M5 và kiểm tra các baseline M3/M4 bằng protocol validation đã chốt. Nếu thay ngân sách hoặc tiêu chí ngưỡng, ghi thành protocol riêng, dùng nhất quán cho các cấu hình so sánh và giữ nguyên bộ hiện tại. Không chọn protocol theo điểm test.
+1. **Chưa có kết quả M5 ECBM trong bộ này.** Chưa thể kết luận ECBM vượt các baseline. Giữ bộ 10 epochs làm mốc đã chạy; ưu tiên xây dựng M5 và kiểm tra các baseline M3/M4 bằng protocol validation đã chốt. Nếu thay ngân sách hoặc tiêu chí ngưỡng, ghi thành protocol riêng, dùng nhất quán cho các cấu hình so sánh và giữ nguyên bộ hiện tại. Không chọn protocol theo điểm test.
 
 #### Đối chiếu đã thực hiện
 
-- Kiểm tra đủ 16 exports, metadata tiêu chí checkpoint, manifest/schema, 203 ca validation và 395 ca test; tính lại diagnosis metrics từ từng prediction ở cả hai tập.
+- Kiểm tra đủ 13 exports, metadata tiêu chí checkpoint, manifest/schema, 203 ca validation và 395 ca test; tính lại diagnosis metrics từ từng prediction ở cả hai tập.
 - Tính lại ngưỡng từ validation theo đúng rule BAcc; kiểm tra metrics ở ngưỡng cố định 0.5 và tính lại concept metrics cấp tổng thể của M3/M4.
-- Đối chiếu config, epoch, threshold và selection score của 15 checkpoint PyTorch; epoch đúng lần đầu đạt Macro F1@0.5 cao nhất trong history. Checkpoint M2 LR hiện diện; không nạp lại estimator trong lượt kiểm tra này.
-- Đối chiếu SHA-256 với cả 9 exports có lưu checkpoint hash (M3/M4); tái tạo diagnosis probabilities trên validation/test bằng head và hard concept vectors đã lưu cho 6 runs M4. Không chạy lại backbone trên ảnh hoặc huấn luyện lại.
-- Năm summaries được tạo bằng `experiments/summarize_seeds.py`, có kiểm tra protocol cùng model, seeds khác nhau, ca/nhãn test, predictions và concept exports M4.
+- Đối chiếu config, epoch, threshold và selection score của 12 checkpoint PyTorch; epoch đúng lần đầu đạt Macro F1@0.5 cao nhất trong history. Checkpoint M2 LR hiện diện; không nạp lại estimator trong lượt kiểm tra này.
+- Đối chiếu SHA-256 với cả 6 exports có lưu checkpoint hash (M3/M4-ST); tái tạo diagnosis probabilities trên validation/test bằng head và hard concept vectors đã lưu cho 3 runs M4-ST. Không chạy lại backbone trên ảnh hoặc huấn luyện lại.
+- Bốn summaries được tạo bằng `experiments/summarize_seeds.py`, có kiểm tra protocol cùng model, seeds khác nhau, ca/nhãn test, predictions và concept exports M4.
 
 #### JSON tổng hợp
 
@@ -763,18 +631,16 @@ Ba M4-ST đạt Macro F1 validation cao nhất ở epoch cuối; đây là dấu
 - [M2 — Oracle MLP](m2_mlp/mlp32_e100/test_summary.json)
 - [M3 — Soft CBM](m3/linear_e10/test_summary.json)
 - [M4-ST — Hard CBM](m4_st/linear_e10/test_summary.json)
-- [M4-SG — Hard CBM](m4_sg/linear_e10/test_summary.json)
 
 </details>
 
 
-Bổ sung Accuracy và ROC-AUC của ba cohort Linear F1 đã có trong bảng đối chiếu:
+Bổ sung Accuracy và ROC-AUC của hai cohort Linear F1 đã có trong bảng đối chiếu:
 
 | Mô hình | Epoch | Accuracy (%) | BAcc (%) | Macro F1 | ROC-AUC | Concept Macro F1 |
 |---|---:|---:|---:|---:|---:|---:|
 | M3 — Soft CBM, Linear | 10 | 74.18 ± 1.77 | 70.30 ± 4.58 | 0.6844 ± 0.0326 | 0.7616 ± 0.0446 | 0.4570 ± 0.0185 |
 | M4-ST — Hard CBM, Linear | 10 | 73.50 ± 3.56 | 66.28 ± 8.38 | 0.6471 ± 0.0722 | 0.7122 ± 0.0747 | 0.4700 ± 0.0125 |
-| M4-SG cũ — Hard CBM, Linear | 10 | 45.23 ± 22.33 | 53.57 ± 2.66 | 0.3882 ± 0.1705 | 0.4903 ± 0.0477 | 0.4239 ± 0.0699 |
 
 
 <a id="legacy-bacc"></a>

@@ -50,11 +50,11 @@ Bài báo đề xuất mô hình Nút thắt Khái niệm Dựa trên Năng lư�
 
 ## 05 Core Pain Points Identified by the Paper
 
-| Pain point | Manifestation | Cause or author explanation | Evidence from the paper |
-|---|---|---|---|
-| Thiếu tương tác giữa các khái niệm | Can thiệp sửa một khái niệm (ví dụ: ngực vàng) không giúp sửa khái niệm tương quan (ví dụ: bụng vàng) | CBM truyền thống dự đoán các khái niệm độc lập từ backbone, không có cầu nối biểu diễn tương tác giữa c_i và c_j | [Paper: Section 1, Figure 2] |
-| Không định lượng được phụ thuộc điều kiện | Không trả lời được xác suất xuất hiện khái niệm này khi đã biết khái niệm khác và nhãn lớp | Không mô hình hóa hàm phân phối đồng thời p(x, c, y) | [Paper: Section 1, Section 3.4] |
-| Đánh đổi hiệu năng - giải thích (Trade-off) | Mô hình có nút thắt khái niệm thường đạt accuracy thấp hơn mô hình Black-box | Thông tin dự đoán chẩn đoán bị bóp nghẽn hoàn toàn qua vector khái niệm hữu hạn | [Paper: Section 1, Table 1, Table 4] |
+| Pain point                                             | Manifestation                                                                                                             | Cause or author explanation                                                                                                             | Evidence from the paper              |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| Thiếu tương tác giữa các khái niệm             | Can thiệp sửa một khái niệm (ví dụ: ngực vàng) không giúp sửa khái niệm tương quan (ví dụ: bụng vàng) | CBM truyền thống dự đoán các khái niệm độc lập từ backbone, không có cầu nối biểu diễn tương tác giữa c_i và c_j | [Paper: Section 1, Figure 2]         |
+| Không định lượng được phụ thuộc điều kiện | Không trả lời được xác suất xuất hiện khái niệm này khi đã biết khái niệm khác và nhãn lớp          | Không mô hình hóa hàm phân phối đồng thời p(x, c, y)                                                                          | [Paper: Section 1, Section 3.4]      |
+| Đánh đổi hiệu năng - giải thích (Trade-off)    | Mô hình có nút thắt khái niệm thường đạt accuracy thấp hơn mô hình Black-box                               | Thông tin dự đoán chẩn đoán bị bóp nghẽn hoàn toàn qua vector khái niệm hữu hạn                                         | [Paper: Section 1, Table 1, Table 4] |
 
 ---
 
@@ -83,40 +83,45 @@ Bài báo đề xuất mô hình Nút thắt Khái niệm Dựa trên Năng lư�
 
 ## 08 Core Module Breakdown
 
-| Module | Function | Why it is needed | Input and output | Supporting evidence | Known or expected effect of removal |
-|---|---|---|---|---|---|
-| Backbone Extractor F | Trích xuất vector đặc trưng không gian z từ ảnh | Nén ảnh đầu vào thành biểu diễn trừu tượng 1280 chiều | In: x; Out: z | [Paper: Section 3.1] | Không thể đưa ảnh vào các mạng năng lượng |
-| Class Energy E_class | Đo độ tương thích trực tiếp giữa đặc trưng z và nhãn y | Bảo toàn khả năng phân loại mạnh như mô hình Black-box | In: (z, u_m); Out: scalar energy | [Paper: Equation 3] | Đo lường thực tế: Bỏ E_class làm giảm nhẹ độ chính xác phân loại [Paper: Table 4] |
-| Concept Energy E_concept | Đo độ tương thích giữa đặc trưng z và từng khái niệm c_k | Nhận diện sự hiện diện của từng thuộc tính trên ảnh | In: (z, v_k); Out: scalar energy | [Paper: Equation 6] | Mô hình mất khả năng dự đoán khái niệm từ ảnh |
-| Global Energy E_global | Đo mức tương thích giữa toàn bộ vector khái niệm và nhãn y | Nắm bắt tương quan bậc cao giữa các khái niệm và hỗ trợ lan truyền can thiệp | In: ([v_1..v_K], u_m); Out: scalar energy | [Paper: Equation 9] | Đo lường thực tế: Bỏ E_global làm mất khả năng lan truyền can thiệp sang khái niệm liên đới [Paper: Section 3.3] |
+| Module                   | Function                                                               | Why it is needed                                                                           | Input and output                          | Supporting evidence  | Known or expected effect of removal                                                                                               |
+| ------------------------ | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ----------------------------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Backbone Extractor F     | Trích xuất vector đặc trưng không gian z từ ảnh                | Nén ảnh đầu vào thành biểu diễn trừu tượng 1280 chiều                          | In: x; Out: z                             | [Paper: Section 3.1] | Không thể đưa ảnh vào các mạng năng lượng                                                                              |
+| Class Energy E_class     | Đo độ tương thích trực tiếp giữa đặc trưng z và nhãn y   | Bảo toàn khả năng phân loại mạnh như mô hình Black-box                           | In: (z, u_m); Out: scalar energy          | [Paper: Equation 3]  | Đo lường thực tế: Bỏ E_class làm giảm nhẹ độ chính xác phân loại [Paper: Table 4]                                  |
+| Concept Energy E_concept | Đo độ tương thích giữa đặc trưng z và từng khái niệm c_k | Nhận diện sự hiện diện của từng thuộc tính trên ảnh                             | In: (z, v_k); Out: scalar energy          | [Paper: Equation 6]  | Mô hình mất khả năng dự đoán khái niệm từ ảnh                                                                         |
+| Global Energy E_global   | Đo mức tương thích giữa toàn bộ vector khái niệm và nhãn y | Nắm bắt tương quan bậc cao giữa các khái niệm và hỗ trợ lan truyền can thiệp | In: ([v_1..v_K], u_m); Out: scalar energy | [Paper: Equation 9]  | Đo lường thực tế: Bỏ E_global làm mất khả năng lan truyền can thiệp sang khái niệm liên đới [Paper: Section 3.3] |
 
 ---
 
 ## 09 Essential Formulas and Symbols
 
 1. **Tổng hàm năng lượng đồng thời:**
+
    ```text
    E_joint(x, c, y) = E_class(x, y) + lambda_c * E_concept(x, c) + lambda_g * E_global(c, y)
    ```
+
    * *Ý nghĩa các ký hiệu:* `x` là ảnh; `c` là vector khái niệm; `y` là nhãn lớp; `lambda_c`, `lambda_g` là trọng số cân bằng năng lượng [Paper: Equation 12].
    * *Mục đích:* Làm hàm mục tiêu trong giai đoạn suy luận và can thiệp.
-
 2. **Xác suất có điều kiện Boltzmann cho lớp:**
+
    ```text
    p(y | x) = exp(-E_class(x, y)) / sum_m exp(-E_class(x, y_m))
    ```
-   * *Mục đích:* Chuyển đổi mức năng lượng thành phân phối xác suất phân loại hợp lệ [Paper: Equation 4].
 
+   * *Mục đích:* Chuyển đổi mức năng lượng thành phân phối xác suất phân loại hợp lệ [Paper: Equation 4].
 3. **Hàm mất mát huấn luyện toàn phần:**
+
    ```text
    L_total = L_class(x, y) + lambda_c * L_concept(x, c) + lambda_g * L_global(c, y)
    ```
-   * *Mục đích:* Tối ưu đồng thời cả 3 mạng năng lượng và không gian nhúng [Paper: Equation 2].
 
+   * *Mục đích:* Tối ưu đồng thời cả 3 mạng năng lượng và không gian nhúng [Paper: Equation 2].
 4. **Xác suất can thiệp và lan truyền (Proposition 3.1):**
+
    ```text
    p(c_rem, y | x, c_int) = exp(-E_joint(x, c, y)) / sum_{m, c_rem} exp(-E_joint(x, c, y_m))
    ```
+
    * *Mục đích:* Tính xác suất phân phối đồng thời của các khái niệm còn lại `c_rem` và nhãn `y` sau khi đã can thiệp cố định một phần khái niệm `c_int` [Paper: Equation 13].
 
 ---
@@ -127,11 +132,11 @@ Bài báo đề xuất mô hình Nút thắt Khái niệm Dựa trên Năng lư�
 * **Mô hình đối chứng (Baselines):** Standard CBM (Koh et al., 2020), Concept Embedding Models (CEM, Zarlenga et al., 2022), ProbCBM (Kim et al., 2023), Post-hoc CBM (PCBM, Yuksekgonul et al., 2023), Black-box Model [Paper: Section 4.1, Table 1].
 * **Thước đo:** Concept Accuracy, Overall Concept Accuracy, Class Accuracy [Paper: Table 1].
 
-| Experiment | Claim tested | Comparison and conditions | Result | Supported conclusion | Unsupported stronger conclusion | Source |
-|---|---|---|---|---|---|---|
-| Benchmark độ chính xác | ECBM vượt trội CBM và CEM cả về nhận diện khái niệm và nhãn | Chạy 5 seeds ngẫu nhiên trên CUB, CelebA, AWA2 | CUB Class Acc: ECBM 81.2% vs CEM 79.6% vs CBM 75.9% | ECBM dung hòa tốt giữa độ chính xác và tính giải thích | ECBM vượt qua Black-box trên mọi tập dữ liệu (Black-box trên CUB là 82.6%) | [Paper: Table 1, Table 4] |
-| Phân tích can thiệp (Intervention) | Can thiệp ECBM giúp sửa các khái niệm liên đới hiệu quả hơn | Tăng tỷ lệ can thiệp khái niệm từ 0% đến 100% | Đường cong chính xác của ECBM luôn nằm trên CEM và CBM ở mọi tỷ lệ | Năng lượng E_global lan truyền sửa lỗi hiệu quả | Can thiệp 1 khái niệm luôn sửa được toàn bộ các khái niệm còn lại | [Paper: Figure 2] |
-| Phân tích thành phần (Ablation) | Cả 3 nhánh năng lượng đều đóng góp thiết yếu | Tháo rời từng nhánh năng lượng trên CUB | Bỏ E_class giảm Class Acc từ 81.2% xuống 72.6% | E_class đóng vai trò duy trì độ chính xác cao | Nhánh x-c-y có thể đứng độc lập mà không giảm hiệu năng | [Paper: Table 4] |
+| Experiment                            | Claim tested                                                            | Comparison and conditions                              | Result                                                                           | Supported conclusion                                              | Unsupported stronger conclusion                                                     | Source                    |
+| ------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------- |
+| Benchmark độ chính xác            | ECBM vượt trội CBM và CEM cả về nhận diện khái niệm và nhãn | Chạy 5 seeds ngẫu nhiên trên CUB, CelebA, AWA2     | CUB Class Acc: ECBM 81.2% vs CEM 79.6% vs CBM 75.9%                              | ECBM dung hòa tốt giữa độ chính xác và tính giải thích | ECBM vượt qua Black-box trên mọi tập dữ liệu (Black-box trên CUB là 82.6%) | [Paper: Table 1, Table 4] |
+| Phân tích can thiệp (Intervention) | Can thiệp ECBM giúp sửa các khái niệm liên đới hiệu quả hơn | Tăng tỷ lệ can thiệp khái niệm từ 0% đến 100% | Đường cong chính xác của ECBM luôn nằm trên CEM và CBM ở mọi tỷ lệ | Năng lượng E_global lan truyền sửa lỗi hiệu quả           | Can thiệp 1 khái niệm luôn sửa được toàn bộ các khái niệm còn lại    | [Paper: Figure 2]         |
+| Phân tích thành phần (Ablation)   | Cả 3 nhánh năng lượng đều đóng góp thiết yếu                | Tháo rời từng nhánh năng lượng trên CUB        | Bỏ E_class giảm Class Acc từ 81.2% xuống 72.6%                               | E_class đóng vai trò duy trì độ chính xác cao             | Nhánh x-c-y có thể đứng độc lập mà không giảm hiệu năng                | [Paper: Table 4]          |
 
 ---
 
@@ -146,19 +151,19 @@ Bài báo đề xuất mô hình Nút thắt Khái niệm Dựa trên Năng lư�
 
 ## 12 Limitations Explicitly Acknowledged by the Authors
 
-| Limitation | Specific manifestation | Future direction proposed by the authors | Source |
-|---|---|---|---|
-| Chi phí tính toán tổ hợp trong E_global | Số lượng tổ hợp khái niệm trong mẫu số của L_global tăng theo hàm mũ 2^K | Sử dụng chiến lược lấy mẫu âm (Negative Sampling) để xấp xỉ mẫu số | [Paper: Section 3.1, Equation 10] |
-| Chưa mở rộng sang bài toán không nhãn khái niệm | Mô hình hiện tại cần chú thích khái niệm đầy đủ khi huấn luyện | Mở rộng sang bài toán Unsupervised hoặc Label-free concept learning trong tương lai | [Paper: Section 2] |
+| Limitation                                               | Specific manifestation                                                                | Future direction proposed by the authors                                                   | Source                            |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | --------------------------------- |
+| Chi phí tính toán tổ hợp trong E_global             | Số lượng tổ hợp khái niệm trong mẫu số của L_global tăng theo hàm mũ 2^K | Sử dụng chiến lược lấy mẫu âm (Negative Sampling) để xấp xỉ mẫu số           | [Paper: Section 3.1, Equation 10] |
+| Chưa mở rộng sang bài toán không nhãn khái niệm | Mô hình hiện tại cần chú thích khái niệm đầy đủ khi huấn luyện         | Mở rộng sang bài toán Unsupervised hoặc Label-free concept learning trong tương lai | [Paper: Section 2]                |
 
 ---
 
 ## 13 Critical Analysis
 
-| `[Analysis]` Observation | Potential issue or alternative explanation | Why it matters | How to test it | Basis |
-|---|---|---|---|---|
+| `[Analysis]` Observation                   | Potential issue or alternative explanation                                                                                                               | Why it matters                                                                                               | How to test it                                                                               | Basis                                         |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- | --------------------------------------------- |
 | Nhánh E_class học tắt (Shortcut learning) | Nhánh E_class đi trực tiếp từ z sang y có thể lấn át luồng khái niệm, gây hiện tượng thông tin bệnh học bị rò rỉ ngoài bottleneck | Tính giải thích của c có thể bị giảm vai trò nếu mô hình chỉ dựa vào E_class để phân loại | Thực hiện ablation bỏ E_class hoặc đo mức độ suy giảm khi che mờ đặc trưng ảnh | Quan sát từ bảng Ablation [Paper: Table 4] |
-| Suy luận lặp qua Gradient Descent | Tốc độ suy luận phụ thuộc vào số bước lặp hội tụ của Algorithm 1 | Khó triển khai trên các thiết bị y tế biên hoặc hệ thống thời gian thực | Đo độ trễ (latency/FPS) suy luận so sánh giữa M1, M3 và ECBM | Quy trình thuật toán [Paper: Algorithm 1] |
+| Suy luận lặp qua Gradient Descent          | Tốc độ suy luận phụ thuộc vào số bước lặp hội tụ của Algorithm 1                                                                           | Khó triển khai trên các thiết bị y tế biên hoặc hệ thống thời gian thực                         | Đo độ trễ (latency/FPS) suy luận so sánh giữa M1, M3 và ECBM                         | Quy trình thuật toán [Paper: Algorithm 1]  |
 
 ---
 
@@ -181,6 +186,7 @@ Bài báo đề xuất mô hình Nút thắt Khái niệm Dựa trên Năng lư�
 ## 16 Research Ideas
 
 ### Idea 1: Categorical Energy-Based CBM for Dermatology (Đích đến M5 của đề tài)
+
 * **Originated Limitation:** Bài báo gốc chỉ thiết kế cho khái niệm nhị phân (0 hoặc 1) [Paper: Section 3.1].
 * **Core Hypothesis:** Việc mở rộng vector nhúng từ nhị phân sang K_i trạng thái danh mục (Categorical states) cho từng khái niệm trong Derm7pt sẽ giúp ECBM áp dụng hoàn hảo cho tiêu chuẩn 7-point checklist y khoa.
 * **Delta from Paper:** Thay thế `v(+)` và `v(-)` bằng ma trận nhúng `V_k` kích thước `(K_i, d)` cho từng trạng thái của 7 khái niệm da liễu; dùng Softmax thay cho Sigmoid trong Algorithm 1.

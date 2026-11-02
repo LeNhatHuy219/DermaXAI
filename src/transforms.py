@@ -109,7 +109,7 @@ def get_transforms(
     if is_train and augment and augmentation_preset == "comparison":
         if not HAS_TORCHVISION:
             raise ImportError("The comparison augmentation preset requires torchvision")
-        # Cố định chính xác các tham số này cho M1/M3/M5 khi so sánh backbone.
+        # Cố định chính xác các tham số này cho Black-box/Soft CBM/ECBM khi so sánh backbone.
         return T.Compose([
             T.RandomResizedCrop(
                 (target_size, target_size),
@@ -127,9 +127,7 @@ def get_transforms(
 
     if HAS_TORCHVISION:
         if is_train and augment:
-            # Thứ tự: LetterboxResize trước RandomRotation là lựa chọn thiết kế có chủ đích.
-            # Viền padding đen sẽ bị xoay theo, tạo ra vùng góc nhỏ lệch màu.
-            # Ảnh hưởng không đáng kể với góc xoay nhỏ (15 độ) và đơn giản hóa pipeline.
+            # Áp dụng LetterboxResize trước RandomRotation để chuẩn hóa kích thước ảnh.
             return T.Compose([
                 LetterboxResize((target_size, target_size)),
                 T.RandomHorizontalFlip(p=0.5),

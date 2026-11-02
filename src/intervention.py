@@ -1,4 +1,4 @@
-"""Exhaustive categorical group intervention for a frozen soft CBM head."""
+# Can thiệp kiệt quệ trên các nhóm concept phân loại cho diagnosis head đã đóng băng.
 from itertools import combinations
 import numpy as np
 import torch
@@ -7,7 +7,7 @@ from .metrics import compute_metrics
 
 
 def validate_hard_concepts(vectors, schema):
-    """Reject soft, nonfinite, or malformed categorical diagnosis inputs."""
+    # Kiểm tra vector concept one-hot hợp lệ, từ chối vector mềm hoặc sai kích thước.
     values = torch.as_tensor(vectors)
     if values.ndim != 2 or values.shape[1] != schema["total_states"]:
         raise ValueError("Hard concept vector dimensions differ from schema")
@@ -21,7 +21,7 @@ def validate_hard_concepts(vectors, schema):
 
 def evaluate_hard_interventions(head, vectors, true_indices, labels, schema, threshold, case_ids,
                                baseline_probabilities=None):
-    """M4 correction starts from predicted one-hot inputs, never soft scores."""
+    # Can thiệp Hard CBM bắt đầu từ đầu vào one-hot dự đoán, không dùng điểm xác suất mềm.
     validate_hard_concepts(vectors, schema)
     targets = np.asarray(true_indices)
     if not np.issubdtype(targets.dtype, np.integer):

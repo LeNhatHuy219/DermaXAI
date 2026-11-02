@@ -1,4 +1,4 @@
-# Định nghĩa chung các Concept Bottleneck Models: M3, M4-ST và M4-SG.
+# Định nghĩa chung các Concept Bottleneck Models: Soft CBM và Hard CBM (straight-through).
 # Cả ba dùng EfficientNet-B0; mặc định head Linear, khác bottleneck/gradient.
 from typing import Dict, List, Tuple
 
@@ -20,7 +20,7 @@ def make_diagnosis_head(input_dim: int, num_classes: int = 2,
     raise ValueError("Unknown diagnosis head; expected linear or mlp128")
 
 
-# M3: ảnh -> xác suất concept mềm -> logits chẩn đoán; huấn luyện joint.
+# Soft CBM: ảnh -> xác suất concept mềm -> logits chẩn đoán; huấn luyện joint.
 class SoftJointCBM(nn.Module):
     def __init__(
         self,
@@ -56,7 +56,7 @@ class SoftJointCBM(nn.Module):
         })
 
         # Diagnosis head chỉ nhận bottleneck, không nhận trực tiếp đặc trưng ảnh.
-        # M3 chọn Linear/MLP trên xác suất mềm; M4 dùng cùng head trên one-hot.
+        # Soft CBM chọn Linear/MLP trên xác suất mềm; Hard CBM dùng cùng head trên one-hot.
         self.diagnosis_head = make_diagnosis_head(self.total_concept_states, num_classes, diagnosis_head)
 
     def extract_features(self, x: torch.Tensor) -> torch.Tensor:
@@ -93,51 +93,24 @@ def hard_categorical(logits: torch.Tensor, straight_through: bool = False) -> to
     probabilities = logits.softmax(dim=-1)
     hard = F.one_hot(probabilities.argmax(dim=-1), logits.shape[-1]).to(logits.dtype)
 
-    # Straight-through: forward dùng one-hot, backward dùng gradient xấp xỉ của softmax.
-    # probabilities - probabilities.detach() bằng 0 ở forward nhưng còn gradient.
-    # Trừ trước rồi mới cộng hard giữ các giá trị forward đúng 0/1, tránh sai số làm tròn.
-    # Đây là surrogate gradient có bias, với temperature = 1; không dùng nhiễu Gumbel.
+    # Straight-through: forward dùng one-hot argmax, backward truyền gradient qua softmax.
     return hard + (probabilities - probabilities.detach()) if straight_through else hard
 
 
-# M4-ST kế thừa toàn bộ kiến trúc M3, chỉ thay bottleneck mềm bằng one-hot.
-# Diagnosis loss vẫn cập nhật concept heads/backbone nhờ straight-through khi train.
-# Với head mặc định, tên/shape tham số giữ như M3; runner kiểm tra protocol/head.
+# Hard CBM: CBM bottleneck one-hot huấn luyện joint bằng straight-through estimator.
 class HardJointCBM(SoftJointCBM):
     def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, Dict[str, torch.Tensor], torch.Tensor]:
         features = self.dropout(self.extract_features(x))
         logits = {name: self.concept_heads[name](features) for name in self.concept_names}
 
-        # self.training bật surrogate gradient khi train; eval dùng argmax thuần.
-        # Mỗi group chọn đúng một state; vector Derm7pt có 28 chiều và đúng 7 bit 1.
+        # Ghép one-hot 7 nhóm concepts thành vector 28 chiều đưa vào diagnosis head.
         vector = torch.cat([hard_categorical(logits[name], self.training)
                             for name in self.concept_names], dim=-1)
-        return self.diagnosis_head(vector), logits, vector
-
-
-# M4-SG dùng cùng kiến trúc và hard forward như M4-ST, nhưng chặn diagnosis gradient.
-# Concept loss vẫn cập nhật concept heads/backbone từ logits trả về trong cùng bước train.
-class HardStopGradientCBM(SoftJointCBM):
-    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, Dict[str, torch.Tensor], torch.Tensor]:
-        features = self.dropout(self.extract_features(x))
-        logits = {name: self.concept_heads[name](features) for name in self.concept_names}
-
-        # Argmax/one-hot không dùng straight-through; detach tách bottleneck khỏi autograd.
-        # Diagnosis loss chỉ cập nhật diagnosis head; concept logits vẫn giữ gradient.
-        vector = torch.cat([hard_categorical(logits[name], straight_through=False)
-                            for name in self.concept_names], dim=-1).detach()
         return self.diagnosis_head(vector), logits, vector
 
 
 def get_hard_joint_cbm(concept_names: List[str], concept_num_classes: Dict[str, int],
                        num_classes: int = 2, pretrained: bool = True,
                        dropout: float = 0.2, diagnosis_head: str = "linear") -> HardJointCBM:
-    # Factory M4-ST giữ nguyên giao diện khởi tạo để runners/tests dùng chung.
+    # Factory Hard CBM giữ nguyên giao diện khởi tạo để runners/tests dùng chung.
     return HardJointCBM(concept_names, concept_num_classes, num_classes, pretrained, dropout, diagnosis_head)
-
-
-def get_hard_stop_gradient_cbm(concept_names: List[str], concept_num_classes: Dict[str, int],
-                               num_classes: int = 2, pretrained: bool = True,
-                               dropout: float = 0.2, diagnosis_head: str = "linear") -> HardStopGradientCBM:
-    # Factory M4-SG có cùng cấu hình kiến trúc; khác cơ chế gradient trong forward.
-    return HardStopGradientCBM(concept_names, concept_num_classes, num_classes, pretrained, dropout, diagnosis_head)

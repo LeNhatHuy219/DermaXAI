@@ -1,4 +1,4 @@
-"""Analytical checks for exhaustive intervention aggregation and run compatibility."""
+# Kiểm tra phân tích cho việc tổng hợp can thiệp kiệt quệ và tính tương thích giữa các lần chạy.
 import copy
 import unittest
 from pathlib import Path
@@ -8,7 +8,7 @@ import numpy as np
 from src.dataset import CONCEPT_NAMES, CONCEPT_NUM_CLASSES
 from src.intervention import evaluate_soft_interventions
 from src.protocol import load_concept_schema, manifest_fingerprint
-from experiments.run_m3_interventions import summarize_interventions
+from experiments.run_soft_cbm_interventions import summarize_interventions
 
 ROOT = Path(__file__).resolve().parents[1]
 

@@ -36,3 +36,7 @@ env/
 /.agents/
 /.aider-desk/
 /skills-lock.json
+
+# Tài liệu Word (đề cương, báo cáo) giữ cục bộ, không đưa lên Git
+*.docx
+~$*.docx
