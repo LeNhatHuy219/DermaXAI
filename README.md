@@ -110,6 +110,14 @@ Trên Windows, kích hoạt môi trường bằng `.venv\Scripts\Activate.ps1` t
 
 README đi kèm Derm7pt ghi rõ ảnh không được phân phối lại. Thư mục dữ liệu, checkpoint và log cục bộ nằm trong `.gitignore`. Output notebook chứa ảnh mẫu Derm7pt cũng cần được giữ ở máy cục bộ.
 
+**Chạy lại trên Kaggle.** Notebook [`kaggle/reproduce_derm7pt.ipynb`](kaggle/reproduce_derm7pt.ipynb) lấy code theo đúng commit của báo cáo tổng kết, nối Derm7pt và checkpoint từ phần Input, rồi chạy một trong ba chế độ:
+
+- `check`: kiểm tra dữ liệu và hash checkpoint so với `test_plan.json`, không chấm test;
+- `reproduce_test`: chấm lại test bằng checkpoint và ngưỡng đã khóa;
+- `train_one`: train lại một mô hình với một seed, chỉ train/validation.
+
+Dataset Derm7pt và checkpoint trên Kaggle để private. Notebook clone repo vào `/tmp` để Kaggle không lưu ảnh làm output.
+
 Kết quả chính hiện tại là bộ quy trình chung trong `results/derm7pt/` (mục [Kết quả chính](#ket-qua-chinh)). Các bảng trước quy trình chung được giữ để lưu trữ: [bảng M0–M4 chọn checkpoint theo Macro F1](results/f1_macro/all_models_comparison.md), [intervention ba cohorts MLP128](results/f1_macro/interventions_comparison.md) và [bản chốt baseline](results/f1_macro/all_models_comparison.md#baseline-decisions). Bảng checkpoint BAcc cũ ở mục 9 cũng chỉ để đối chiếu ablation; không gộp với bảng chính. Để chạy lại và giữ nguyên các kết quả đã công bố, ghi JSON mới vào `results/local/`:
 
 ```bash
