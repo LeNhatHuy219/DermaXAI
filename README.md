@@ -91,8 +91,7 @@ Tóm tắt:
 
 Báo cáo liên quan:
 
-- [Báo cáo tổng kết](results/derm7pt/status_report.md): những gì đã làm, số liệu, ưu điểm, hạn chế.
-- [Phân tích hạn chế ECBM](results/derm7pt/ecbm/limitations/report.md): 6 hạn chế, 7 hình.
+- [Báo cáo tổng kết](results/derm7pt/status_report.md): những gì đã làm, số liệu, ưu điểm, hạn chế, và phân tích 6 hạn chế của ECBM kèm 7 hình (mục 5).
 - [Kết quả ECBM theo chế độ suy luận](results/derm7pt/ecbm/test_modes/report.md).
 
 ## Cài đặt và chạy từ máy khác
@@ -508,7 +507,7 @@ Trọng số λ_global lúc suy luận được chọn riêng trên validation, 
 2. `run_ecbm_modes.py --stage freeze` đóng băng ngưỡng của ba chế độ (λ=1, λ paper, chỉ concept) vào `results/derm7pt/ecbm/test_modes/frozen_modes.json`.
 3. `run_ecbm_modes.py --stage test` chấm test và intervention 128 subsets cho cả ba chế độ.
 
-`analyze_ecbm_limitations.py` phân tích hạn chế của ECBM: phân rã log-odds, E_global với concept GT và concept dự đoán, concept accuracy theo cách suy luận, độ ổn định giữa seeds. Phần validation được tính mới từ checkpoint đã đóng băng; phần test chỉ đọc kết quả đã lưu. Output nằm trong `results/derm7pt/ecbm/limitations/`.
+`analyze_ecbm_limitations.py` phân tích hạn chế của ECBM: phân rã log-odds, E_global với concept GT và concept dự đoán, concept accuracy theo cách suy luận, độ ổn định giữa seeds. Phần validation được tính mới từ checkpoint đã đóng băng; phần test chỉ đọc kết quả đã lưu. Số liệu và hình nằm trong `results/derm7pt/ecbm/limitations/`; phần diễn giải nằm ở mục 5 của [báo cáo tổng kết](results/derm7pt/status_report.md).
 
 ---
 
