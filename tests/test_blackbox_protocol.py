@@ -16,9 +16,10 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from experiments.run_blackbox import (_build_optimizer, _default_paths, _head_preset, _manifest_hash,
-                                evaluate_blackbox_test, select_validation_threshold)
+from experiments.run_blackbox import (_build_optimizer, _default_paths, _head_preset, evaluate_blackbox_test)
 from src.dataset import get_dataloaders
+from src.selection import select_threshold
+from src.runtime import file_sha256
 from src.metrics import compute_metrics
 from src.models import BlackBoxClassifier, load_blackbox_state_dict
 from src.transforms import get_transforms
@@ -68,10 +69,10 @@ class BlackboxProtocolTests(unittest.TestCase):
     def test_threshold_is_selected_from_validation(self):
         # 5. Kiểm tra thuật toán quét tìm ngưỡng quyết định tối ưu tau* trên tập validation
         # Mặc định Macro F1: 0.45 và 0.8 cùng đạt 0.733, hòa chọn ngưỡng gần 0.5; BAcc giữ cho protocol cũ.
-        threshold, f1 = select_validation_threshold(np.array([0, 0, 1, 1]), np.array([0.1, 0.55, 0.45, 0.8]))
+        threshold, f1 = select_threshold(np.array([0, 0, 1, 1]), np.array([0.1, 0.55, 0.45, 0.8]))
         self.assertAlmostEqual(threshold, 0.45)
         self.assertAlmostEqual(f1, 0.7333333333333334)
-        threshold, bacc = select_validation_threshold(
+        threshold, bacc = select_threshold(
             np.array([0, 0, 1, 1]), np.array([0.1, 0.55, 0.45, 0.8]), "balanced_accuracy")
         self.assertAlmostEqual(threshold, 0.45)
         self.assertAlmostEqual(bacc, 0.75)
@@ -106,7 +107,7 @@ class BlackboxProtocolTests(unittest.TestCase):
         }
         checkpoint = {
             "epoch": 1, "model_state_dict": model.state_dict(), "config": config,
-            "decision_threshold": 0.42, "manifest_sha256": _manifest_hash(manifest),
+            "decision_threshold": 0.42, "manifest_sha256": file_sha256(manifest),
         }
 
         class FakeTestDataset:

@@ -10,6 +10,6 @@
 | M3 Soft CBM: Linear 10 epochs và MLP128 20 epochs | 6 |
 | M4 Hard CBM (straight-through, ST): Linear 10 epochs và MLP128 20 epochs | 6 |
 
-[Manifest SHA-256 và JSON nguồn](manifest.json) ghi từng weight. Kết quả nằm trong [results/f1_macro](../../results/README.md#f1-macro). Test/intervention dùng frozen weights và threshold validation; không chọn lại epoch/ngưỡng từ test.
+[Manifest SHA-256 và JSON nguồn](manifest.json) ghi từng weight. Kết quả nằm trong [results/archive/f1_macro](../../../results/archive/README.md#f1-macro). Test/intervention dùng frozen weights và threshold validation; không chọn lại epoch/ngưỡng từ test.
 
 Biến thể M4-SG (stop-gradient) đã được bỏ ngày 27/10/2026 cùng 6 weights của nó. Việc chuyển thư mục không ghi lại checkpoint. Các hash export validation trước test vẫn mô tả artifacts ở thời điểm chúng được tạo.

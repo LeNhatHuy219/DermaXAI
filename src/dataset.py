@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -333,3 +333,14 @@ if __name__ == "__main__":
     print(f"Train: {len(bundle['datasets']['train'])}, Valid: {len(bundle['datasets']['valid'])}, Test: {len(bundle['datasets']['test'])}")
     batch = next(iter(bundle["train"]))
     print(f"Batch image shape: {tuple(batch['image'].shape)}, onehot shape: {tuple(batch['concept_onehot'].shape)}")
+
+
+# Trạng thái concept nào thực sự xuất hiện trong train, dùng cho Macro-F1 "train-observed".
+def compute_train_observed_states(
+    train_df: pd.DataFrame, label_mapping: Dict[str, Dict[str, int]]
+) -> Dict[str, List[int]]:
+    observed: Dict[str, List[int]] = {}
+    for c_name in CONCEPT_NAMES:
+        observed_vals = train_df[c_name].unique().tolist()
+        observed[c_name] = sorted({label_mapping[c_name][v] for v in observed_vals})
+    return observed

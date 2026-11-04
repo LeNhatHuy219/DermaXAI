@@ -12,6 +12,9 @@ if PROJECT_ROOT not in sys.path:
 
 # Giữ đúng thứ tự import an toàn: src.dataset (kéo theo torch) trước sklearn.
 from src.dataset import CONCEPT_NAMES, CONCEPT_NUM_CLASSES, compute_concept_statistics
+from src.dataset import compute_train_observed_states
+from src.selection import select_threshold
+from src.runtime import file_sha256
 
 import numpy as np
 import pandas as pd
@@ -21,13 +24,10 @@ import torch.nn as nn
 from experiments.run_soft_cbm import (
     _concept_loss,
     _default_paths,
-    _manifest_hash,
     build_concept_criteria,
     SOFT_CBM_PROTOCOL,
-    compute_train_observed_states,
     evaluate_soft_cbm_test,
-    select_validation_threshold,
-)
+    )
 from src.metrics import compute_metrics
 from src.models import SoftJointCBM, load_soft_joint_cbm_state_dict
 from src.protocol import load_concept_schema
@@ -108,10 +108,10 @@ class SoftCBMProtocolTests(unittest.TestCase):
         self.assertNotEqual(_default_paths(42, "legacy_letterbox", 1.0), _default_paths(42, "legacy_letterbox", 0.5))
 
     def test_threshold_selection_matches_expected_tie_break(self):
-        threshold, f1 = select_validation_threshold(np.array([0, 0, 1, 1]), np.array([0.1, 0.55, 0.45, 0.8]))
+        threshold, f1 = select_threshold(np.array([0, 0, 1, 1]), np.array([0.1, 0.55, 0.45, 0.8]))
         self.assertAlmostEqual(threshold, 0.45)
         self.assertAlmostEqual(f1, 0.7333333333333334)
-        threshold, bacc = select_validation_threshold(
+        threshold, bacc = select_threshold(
             np.array([0, 0, 1, 1]), np.array([0.1, 0.55, 0.45, 0.8]), "balanced_accuracy")
         self.assertAlmostEqual(threshold, 0.45)
         self.assertAlmostEqual(bacc, 0.75)
@@ -128,7 +128,7 @@ class SoftCBMProtocolTests(unittest.TestCase):
         }
         checkpoint = {
             "epoch": 1, "model_state_dict": model.state_dict(), "config": config,
-            "decision_threshold": 0.42, "manifest_sha256": _manifest_hash(manifest),
+            "decision_threshold": 0.42, "manifest_sha256": file_sha256(manifest),
             "concept_schema": load_concept_schema(manifest),
         }
 

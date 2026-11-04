@@ -15,12 +15,13 @@ if PROJECT_ROOT not in sys.path:
 
 # Import src.dataset trước sklearn để tránh xung đột thư viện OpenMP trên một số nền tảng.
 from src.dataset import CONCEPT_NAMES, CONCEPT_NUM_CLASSES
+from src.dataset import compute_train_observed_states
+from src import runtime
 
 import numpy as np
 import pandas as pd
 import torch
 
-from experiments import run_soft_cbm as shared
 from experiments.run_ecbm_lambda_study import REPORT_KEYS, evaluate_weights, exact_outputs, load_seed
 from src.metrics import compute_concept_metrics, compute_metrics
 from src.selection import select_threshold
@@ -87,13 +88,8 @@ def freeze(device, overwrite=False):
                f"maximize_validation_{THRESHOLD_METRIC}_tie_nearest_0.5", "checkpoints": entries,
                "modes": frozen, "e_class_only_thresholds": e_class_thresholds, "test_read": False}
     os.makedirs(OUTPUT_DIR, exist_ok=True)
-    shared._save_json(FROZEN_PATH, payload)
+    runtime.save_json(FROZEN_PATH, payload)
     print(f"Đã chốt ngưỡng: {FROZEN_PATH}")
-
-
-def _stats(values):
-    values = [float(v) for v in values]
-    return {"mean": float(np.mean(values)), "sd": float(np.std(values, ddof=1)), "values": values}
 
 
 # Đọc test một lần với ngưỡng đã chốt; không chọn lại gì trên test.
@@ -114,7 +110,7 @@ def test(device, overwrite=False):
         data = load_seed(entry, MANIFEST_PATH, device, split="test")
         if len(data["labels"]) != 395:
             raise ValueError("Test split phải có đúng 395 mẫu")
-        observed = shared.compute_train_observed_states(train_df, data["schema"]["label_mapping"])
+        observed = compute_train_observed_states(train_df, data["schema"]["label_mapping"])
         concept_true = {name: data["concepts"][:, i].cpu().numpy() for i, name in enumerate(CONCEPT_NAMES)}
         e_class_pred = (_e_class_scores(data) >= frozen["e_class_only_thresholds"][seed]).astype(int)
         modes = {}
@@ -137,18 +133,18 @@ def test(device, overwrite=False):
                   f"{result['intervention_curve_auc']['f1_macro']['absolute']:.4f}")
         runs[seed] = {"model": "ecbm", "mode": "final_test", "seed": int(seed), "checkpoint": entry,
                       "best_epoch": data["best_epoch"], "frozen_modes_sha256": _file_sha256(FROZEN_PATH), "modes": modes}
-        shared._save_json(os.path.join(OUTPUT_DIR, f"seed{seed}.json"), runs[seed])
+        runtime.save_json(os.path.join(OUTPUT_DIR, f"seed{seed}.json"), runs[seed])
     summary = {}
     for name in frozen["modes"]:
         rows = [run["modes"][name] for run in runs.values()]
         summary[name] = {"role": rows[0]["role"], "energy_weights": rows[0]["energy_weights"],
-                         **{f"m0_{key}": _stats([r["test_metrics_m0"][key] for r in rows]) for key in REPORT_KEYS},
-                         "m7_f1_macro": _stats([r["test_metrics_m7"]["f1_macro"] for r in rows]),
-                         "curve_auc_f1_macro": _stats([r["intervention_curve_auc"]["f1_macro"]["absolute"] for r in rows]),
-                         "concept_f1_macro": _stats([r["test_concept_metrics"]["overall_f1_macro_all_defined"] for r in rows]),
-                         "flips_m7": _stats([r["flips_m7"] for r in rows]),
-                         "agreement_with_e_class": _stats([r["agreement_with_e_class"] for r in rows])}
-    shared._save_json(os.path.join(OUTPUT_DIR, "summary.json"), {"frozen_modes_sha256": _file_sha256(FROZEN_PATH),
+                         **{f"m0_{key}": runtime.mean_sd([r["test_metrics_m0"][key] for r in rows]) for key in REPORT_KEYS},
+                         "m7_f1_macro": runtime.mean_sd([r["test_metrics_m7"]["f1_macro"] for r in rows]),
+                         "curve_auc_f1_macro": runtime.mean_sd([r["intervention_curve_auc"]["f1_macro"]["absolute"] for r in rows]),
+                         "concept_f1_macro": runtime.mean_sd([r["test_concept_metrics"]["overall_f1_macro_all_defined"] for r in rows]),
+                         "flips_m7": runtime.mean_sd([r["flips_m7"] for r in rows]),
+                         "agreement_with_e_class": runtime.mean_sd([r["agreement_with_e_class"] for r in rows])}
+    runtime.save_json(os.path.join(OUTPUT_DIR, "summary.json"), {"frozen_modes_sha256": _file_sha256(FROZEN_PATH),
                                                                  "num_cases": 395, "modes": summary})
     _write_report(summary)
 
@@ -174,7 +170,7 @@ def main(argv=None):
     parser.add_argument("--device", default="auto")
     parser.add_argument("--overwrite", action="store_true")
     args = parser.parse_args(argv)
-    device = shared.get_device(args.device)
+    device = runtime.get_device(args.device)
     (freeze if args.stage == "freeze" else test)(device, args.overwrite)
 
 

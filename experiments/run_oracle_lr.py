@@ -2,8 +2,6 @@
 
 
 import argparse
-import hashlib
-import json
 import os
 import platform
 import sys
@@ -17,6 +15,7 @@ if PROJECT_ROOT not in sys.path:
 # Import src.dataset trước sklearn để tránh xung đột thư viện OpenMP trên một số nền tảng.
 
 from src.dataset import CONCEPT_NAMES, CONCEPT_OFFSETS, TOTAL_CONCEPT_STATES
+from src import runtime
 
 import joblib
 import numpy as np
@@ -34,20 +33,6 @@ from src.protocol import (manifest_fingerprint, load_concept_schema, prepare_tra
                           validate_manifest, validate_concept_schema)
 
 
-# Tính SHA-256 nội dung file để ghép đúng manifest/checkpoint với export.
-def _manifest_hash(manifest_path: str) -> str:
-    digest = hashlib.sha256()
-    with open(manifest_path, "rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
-# Chọn ngưỡng trên validation theo tiêu chí đã khai báo (mặc định Macro F1); giữ ngưỡng cho test.
-def select_validation_threshold(y_true: np.ndarray, y_prob: np.ndarray,
-                                metric: str = DEFAULT_THRESHOLD_METRIC) -> Tuple[float, float]:
-    return select_threshold(y_true, y_prob, metric)
-
 # Baseline Oracle Logistic Regression từ 7 concept Ground Truth (one-hot 28 chiều).
 
 DEFAULT_SEED = 42
@@ -59,27 +44,6 @@ def _default_paths(seed: int = DEFAULT_SEED, checkpoint_metric: str = DEFAULT_CH
                    threshold_metric: str = DEFAULT_THRESHOLD_METRIC) -> Tuple[str, str]:
     return run_paths(PROJECT_ROOT, checkpoint_metric, "oracle_lr", "logistic_regression", seed,
                      checkpoint_suffix=".joblib", threshold_metric=threshold_metric)
-
-
-# Tạo thư mục cha và từ chối ghi đè file đã có nếu chưa bật overwrite.
-def _prepare_output(path: str, overwrite: bool) -> None:
-    if os.path.exists(path) and not overwrite:
-        raise FileExistsError(f"Artifact already exists: {path}. Choose another path or pass --overwrite.")
-    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
-
-
-# Lưu dict kết quả thành JSON; không thực hiện thêm train hoặc chọn model.
-def _save_json(path: str, payload: Dict[str, Any]) -> None:
-    with open(path, "w", encoding="utf-8") as handle:
-        json.dump(payload, handle, ensure_ascii=False, indent=2)
-
-
-# Đọc cách ánh xạ tên state concept sang chỉ số để dựng one-hot nhất quán.
-def _load_label_mapping(project_root: str) -> Dict[str, Dict[str, int]]:
-    mapping_path = os.path.join(project_root, "data", "label_mapping.json")
-    assert os.path.exists(mapping_path), f"Thiếu file label_mapping.json tại {mapping_path}"
-    with open(mapping_path, "r") as handle:
-        return json.load(handle)
 
 
 # Ghép bảy GT concept groups thành one-hot 28 chiều; không đưa diagnosis vào features.
@@ -101,23 +65,6 @@ def concept_state_names(label_mapping: Dict[str, Dict[str, int]]) -> List[str]:
         for state_name, state_idx in label_mapping[c_name].items():
             names[CONCEPT_OFFSETS[c_name] + state_idx] = f"{c_name}={state_name}"
     return names
-
-
-# Ghép case IDs/GT/probabilities/predictions thành records để lưu và kiểm tra từng ca.
-def _extract_sample_predictions(df: pd.DataFrame, y_pred: np.ndarray, y_prob: np.ndarray) -> List[Dict[str, Any]]:
-    records = []
-    for (_, row), pred, prob in zip(df.iterrows(), y_pred, y_prob):
-        records.append({
-            "case_num": int(row["case_num"]),
-            "source_index": int(row["source_index"]),
-            "split": str(row["split"]),
-            "diagnosis": str(row["diagnosis"]),
-            "is_inconsistent": bool(row["is_inconsistent_profile"]),
-            "y_true": int(row["diagnosis_binary"]),
-            "y_pred": int(pred),
-            "y_prob": float(prob),
-        })
-    return records
 
 
 # Fit LR cho từng C trên train; chọn bằng validation metric@0.5, hòa giữ C đầu trong grid.
@@ -176,9 +123,9 @@ def run_oracle_lr_experiment(
         _default_paths(seed, checkpoint_metric, threshold_metric), checkpoint_path, results_path, overwrite, save_results,
     )
 
-    _prepare_output(checkpoint_path, overwrite)
+    runtime.prepare_output(checkpoint_path, overwrite)
     if save_results:
-        _prepare_output(results_path, overwrite)
+        runtime.prepare_output(results_path, overwrite)
 
     print("Khởi động Oracle LR (Logistic Regression trên concept Ground Truth)")
 
@@ -204,12 +151,12 @@ def run_oracle_lr_experiment(
     valid_probs = best_model.predict_proba(X_valid)[:, 1]
     valid_metrics_at_05 = compute_metrics(y_valid, (valid_probs >= 0.5).astype(int), valid_probs)
 
-    threshold, _ = select_validation_threshold(y_valid, valid_probs, threshold_metric)
+    threshold, _ = select_threshold(y_valid, valid_probs, threshold_metric)
     valid_preds = (valid_probs >= threshold).astype(int)
     valid_metrics = compute_metrics(y_valid, valid_preds, valid_probs)
     valid_table = print_metrics_table(valid_metrics, title=f"Validation Set (C={best_c}, threshold={threshold:.6f})")
 
-    manifest_sha256 = _manifest_hash(manifest_path)
+    manifest_sha256 = runtime.file_sha256(manifest_path)
     config = {
         "model_type": "LogisticRegression",
         "feature_space": "concept_onehot_28d_ground_truth",
@@ -246,7 +193,7 @@ def run_oracle_lr_experiment(
     }, checkpoint_path)
     print(f"Checkpoint đã lưu tại: {checkpoint_path}")
 
-    val_sample_preds = _extract_sample_predictions(valid_df, valid_preds, valid_probs)
+    val_sample_preds = runtime.sample_prediction_records(valid_df, valid_preds, valid_probs)
     summary_text = (
         f"Oracle LR (Logistic Regression, concept Ground Truth)\n"
         f"Training samples: 413, Valid: 203\n"
@@ -273,7 +220,7 @@ def run_oracle_lr_experiment(
     }
 
     if save_results:
-        _save_json(results_path, results)
+        runtime.save_json(results_path, results)
         print(f"Kết quả chi tiết đã lưu tại: {results_path}")
 
     return results
@@ -306,7 +253,7 @@ def evaluate_oracle_lr_test(
     if results_path is None:
         _, results_path = _default_paths(config["seed"], metric_from_config(config), threshold_metric_from_config(config))
     if save_results:
-        _prepare_output(results_path, overwrite)
+        runtime.prepare_output(results_path, overwrite)
 
     df = pd.read_csv(manifest_path, dtype={"is_inconsistent_profile": bool})
     label_mapping = schema["label_mapping"]
@@ -333,7 +280,7 @@ def evaluate_oracle_lr_test(
         "decision_threshold": threshold,
         "summary": test_table,
         "test_metrics": test_metrics,
-        "test_predictions": _extract_sample_predictions(test_df, test_preds, test_probs),
+        "test_predictions": runtime.sample_prediction_records(test_df, test_preds, test_probs),
     }
 
     if save_results:
@@ -386,7 +333,7 @@ def main(argv=None):
             config = joblib.load(checkpoint_path)["config"]
             results_path = _default_paths(config["seed"], metric_from_config(config), threshold_metric_from_config(config))[1]
         if not args.no_save:
-            _prepare_output(results_path, args.overwrite)
+            runtime.prepare_output(results_path, args.overwrite)
         test = evaluate_oracle_lr_test(
             checkpoint_path=checkpoint_path,
             manifest_path=args.manifest_path,

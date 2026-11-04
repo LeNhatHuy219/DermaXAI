@@ -5,13 +5,7 @@ import torch.nn as nn
 import torchvision.models as models
 
 # Các CBM được định nghĩa trong cbm.py; giữ import qua src.models cho code đang dùng.
-from src.cbm import (
-    HardJointCBM,
-    SoftJointCBM,
-    get_hard_joint_cbm,
-    hard_categorical,
-    make_diagnosis_head,
-)
+from src.cbm import SoftJointCBM, make_diagnosis_head
 
 from src.naming import BACKBONES, DEFAULT_BACKBONE
 
@@ -73,19 +67,6 @@ def load_blackbox_state_dict(model: BlackBoxClassifier, state_dict: Mapping[str,
     if any(key.startswith("backbone.") for key in state_dict):
         state_dict = {key: value for key, value in state_dict.items() if not key.startswith("backbone.")}
     model.load_state_dict(state_dict, strict=True)
-
-
-def get_model(
-    num_classes: int = 2,
-    pretrained: bool = True,
-    dropout: float = 0.2,
-) -> nn.Module:
-    # Khởi tạo mô hình EfficientNet-B0 Black-box Baseline
-    return BlackBoxClassifier(
-        num_classes=num_classes,
-        pretrained=pretrained,
-        dropout=dropout,
-    )
 
 
 def load_soft_joint_cbm_state_dict(model: SoftJointCBM, state_dict: Mapping[str, torch.Tensor]) -> None:

@@ -5,13 +5,9 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-import torch
 from src.dataset import (
     CONCEPT_NAMES,
-    CONCEPT_NUM_CLASSES,
     TOTAL_CONCEPT_STATES,
-    Derm7ptDataset,
-    compute_diagnosis_weights,
     get_dataloaders,
 )
 

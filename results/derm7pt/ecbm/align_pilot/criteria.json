@@ -1,0 +1,13 @@
+{
+  "locked_on": "2026-11-03, trước khi chạy seed 123 và 2026",
+  "data": "validation 203 ca; test không được đọc",
+  "seeds": [42, 123, 2026],
+  "primary": "A0-cal − A1 về AUIC-F1 ≥ 0.01 ở ít nhất 2/3 seed",
+  "guardrails": [
+    "Macro F1 tự động của A0-cal không thấp hơn A0 và A1 quá 0.01 ở mỗi seed",
+    "Concept Macro F1 (overall_f1_macro_all_defined) của A0-cal không thấp hơn A0 và A1 quá 0.01 ở mỗi seed"
+  ],
+  "secondary": "A2-OOF − A1 về AUIC-F1 (ngưỡng +0.01, 2/3 seed) và guardrail concept Macro F1 như trên",
+  "decision": "Đạt primary và guardrails: đưa A0-cal vào khóa luận, chấm test chỉ khi người nghiên cứu đồng ý riêng. Không đạt: dừng, báo như phân tích lỗi.",
+  "note": "Không thêm arm hoặc grid mới dựa trên kết quả seed 123/2026 trước khi đối chiếu tiêu chí này."
+}

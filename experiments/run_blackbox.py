@@ -2,11 +2,8 @@
 
 
 import argparse
-import hashlib
-import json
 import os
 import platform
-import random
 import sys
 from typing import Any, Dict, List, Tuple
 
@@ -24,10 +21,11 @@ if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
 from src.dataset import Derm7ptDataset, get_dataloaders
+from src import runtime
 from src.metrics import compute_metrics, print_metrics_table
 from src.models import BLACKBOX_HEADS, BlackBoxClassifier, load_blackbox_state_dict
 from src.naming import BACKBONES, DEFAULT_BACKBONE, backbone_from_config
-from src.transforms import get_transforms
+from src.transforms import get_transforms, image_size_config, image_size_hw
 from src.selection import (DEFAULT_CHECKPOINT_METRIC, selection_name, selection_score,
                            metric_from_config, add_selection_argument,
                            configuration_name, run_paths, DEFAULT_THRESHOLD_METRIC,
@@ -44,52 +42,6 @@ DEFAULT_LR = 1e-4
 DEFAULT_WEIGHT_DECAY = 1e-2
 DEFAULT_SEED = 42
 DEFAULT_AUGMENTATION_PRESET = "legacy_letterbox"
-
-
-# Gán seed cho Python/NumPy/PyTorch để kiểm soát nguồn ngẫu nhiên của run.
-def set_seed(seed: int = DEFAULT_SEED) -> None:
-    # Cố định seed cho các thư viện để kết quả có thể tái lập
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed_all(seed)
-    if torch.backends.mps.is_available():
-        torch.mps.manual_seed(seed)
-
-
-# Chọn thiết bị theo CLI; auto ưu tiên CUDA, rồi MPS, rồi CPU.
-def get_device(device_arg: str = "auto") -> torch.device:
-    # Tự động ưu tiên CUDA (NVIDIA GPU / Colab / Server), sau đó Apple Silicon (MPS) và CPU
-    if device_arg != "auto":
-        return torch.device(device_arg)
-    if torch.cuda.is_available():
-        return torch.device("cuda")
-    if torch.backends.mps.is_available():
-        return torch.device("mps")
-    return torch.device("cpu")
-
-
-# Ghép case IDs/GT/probabilities/predictions thành records để lưu và kiểm tra từng ca.
-def _extract_sample_predictions(
-    df: pd.DataFrame,
-    y_pred: np.ndarray,
-    y_prob: np.ndarray,
-) -> List[Dict[str, Any]]:
-    # Trích xuất chi tiết dự đoán từng ca bệnh phục vụ phân tích lỗi
-    records = []
-    for (_, row), pred, prob in zip(df.iterrows(), y_pred, y_prob):
-        records.append({
-            "case_num": int(row["case_num"]),
-            "source_index": int(row["source_index"]),
-            "split": str(row["split"]),
-            "diagnosis": str(row["diagnosis"]),
-            "is_inconsistent": bool(row["is_inconsistent_profile"]),
-            "y_true": int(row["diagnosis_binary"]),
-            "y_pred": int(pred),
-            "y_prob": float(prob),
-        })
-    return records
 
 
 # Học một epoch: forward ảnh -> diagnosis loss -> backward/optimizer; trả loss và BAcc train.
@@ -163,21 +115,6 @@ def evaluate(
     return metrics, avg_loss, preds, probs
 
 
-# Chọn ngưỡng trên validation theo tiêu chí đã khai báo (mặc định Macro F1); giữ ngưỡng cho test.
-def select_validation_threshold(y_true: np.ndarray, y_prob: np.ndarray,
-                                metric: str = DEFAULT_THRESHOLD_METRIC) -> Tuple[float, float]:
-    return select_threshold(y_true, y_prob, metric)
-
-
-# Tính SHA-256 nội dung file để ghép đúng manifest/checkpoint với export.
-def _manifest_hash(manifest_path: str) -> str:
-    digest = hashlib.sha256()
-    with open(manifest_path, "rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
 # Tạo checkpoint/JSON paths theo cấu hình, seed và tiêu chí chọn checkpoint.
 def _default_paths(seed: int = DEFAULT_SEED, augmentation_preset: str = DEFAULT_AUGMENTATION_PRESET,
                    checkpoint_metric: str = DEFAULT_CHECKPOINT_METRIC,
@@ -185,14 +122,14 @@ def _default_paths(seed: int = DEFAULT_SEED, augmentation_preset: str = DEFAULT_
                    weight_decay: float = DEFAULT_WEIGHT_DECAY, classifier_head: str = "linear",
                    head_lr: float = DEFAULT_HEAD_LR,
                    threshold_metric: str = DEFAULT_THRESHOLD_METRIC,
-                   backbone: str = DEFAULT_BACKBONE) -> Tuple[str, str]:
+                   backbone: str = DEFAULT_BACKBONE, image_size=224) -> Tuple[str, str]:
     if classifier_head not in BLACKBOX_HEADS:
         raise ValueError("Unknown Black-box classifier head")
     if backbone not in BACKBONES:
         raise ValueError(f"Unknown backbone {backbone}")
     # Model black-box mang tên backbone: results/<dataset>/<backbone>/<head>_e<epochs>.../seed<seed>.json.
     configuration = configuration_name(classifier_head, epochs, head_lr,
-        augmentation_preset=augmentation_preset, lr=lr, weight_decay=weight_decay)
+        augmentation_preset=augmentation_preset, lr=lr, weight_decay=weight_decay, image_size=image_size)
     return run_paths(PROJECT_ROOT, checkpoint_metric, backbone, configuration, seed,
                      threshold_metric=threshold_metric)
 
@@ -201,7 +138,8 @@ def _config_paths(config):
     return _default_paths(config["seed"], config["augmentation_preset"], metric_from_config(config),
         config.get("epochs", DEFAULT_EPOCHS), config.get("learning_rate", DEFAULT_LR),
         config.get("weight_decay", DEFAULT_WEIGHT_DECAY), _head_preset(config),
-        config.get("head_learning_rate"), threshold_metric_from_config(config), backbone_from_config(config))
+        config.get("head_learning_rate"), threshold_metric_from_config(config), backbone_from_config(config),
+        config.get("target_size", 224))
 
 
 # Đọc head từ config; checkpoint cũ không có key này là head Linear.
@@ -224,19 +162,6 @@ def _build_optimizer(model: nn.Module, lr: float, weight_decay: float,
     ], weight_decay=weight_decay)
 
 
-# Tạo thư mục cha và từ chối ghi đè file đã có nếu chưa bật overwrite.
-def _prepare_output(path: str, overwrite: bool) -> None:
-    if os.path.exists(path) and not overwrite:
-        raise FileExistsError(f"Artifact already exists: {path}. Choose another path or pass --overwrite.")
-    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
-
-
-# Lưu dict kết quả thành JSON; không thực hiện thêm train hoặc chọn model.
-def _save_json(path: str, payload: Dict[str, Any]) -> None:
-    with open(path, "w", encoding="utf-8") as handle:
-        json.dump(payload, handle, ensure_ascii=False, indent=2)
-
-
 # Train/validation, lưu best epoch và ngưỡng validation; chưa đọc test trong hàm này.
 def run_blackbox_experiment(
     manifest_path: str = None,
@@ -257,6 +182,7 @@ def run_blackbox_experiment(
     head_lr: float = DEFAULT_HEAD_LR,
     threshold_metric: str = DEFAULT_THRESHOLD_METRIC,
     backbone: str = DEFAULT_BACKBONE,
+    image_size=224,
 ) -> Dict[str, Any]:
     if epochs < 1 or batch_size < 1 or num_workers < 0:
         raise ValueError("epochs/batch_size must be positive and num_workers non-negative")
@@ -266,25 +192,27 @@ def run_blackbox_experiment(
         raise ValueError("head learning rate must be positive and finite")
     selection_name(checkpoint_metric)
     threshold_selection_name(threshold_metric)
-    set_seed(seed)
-    device = get_device(device_name)
+    image_hw = image_size_hw(image_size)
+    runtime.set_seed(seed)
+    device = runtime.get_device(device_name)
 
     if manifest_path is None:
         manifest_path = os.path.join(PROJECT_ROOT, "data", "manifest.csv")
     manifest_path = os.path.abspath(manifest_path)
     checkpoint_path, results_path = prepare_training_outputs(
         _default_paths(seed, augmentation_preset, checkpoint_metric, epochs, lr, weight_decay,
-                       classifier_head, head_lr, threshold_metric, backbone), checkpoint_path, results_path,
+                       classifier_head, head_lr, threshold_metric, backbone, image_hw), checkpoint_path, results_path,
         overwrite, save_results,
     )
 
-    _prepare_output(checkpoint_path, overwrite)
+    runtime.prepare_output(checkpoint_path, overwrite)
     if save_results:
-        _prepare_output(results_path, overwrite)
+        runtime.prepare_output(results_path, overwrite)
 
     print(f"Khởi động black-box {BACKBONES[backbone]} (giai đoạn train/validation)")
     print(f"Thiết bị sử dụng: {device} | Random seed: {seed}")
-    print(f"Cấu hình: Epochs={epochs}, Batch Size={batch_size}, LR={lr}, Weight Decay={weight_decay}, Augmentation={augmentation_preset}")
+    print(f"Cấu hình: Epochs={epochs}, Batch Size={batch_size}, LR={lr}, Weight Decay={weight_decay}, "
+          f"Augmentation={augmentation_preset}, Ảnh={image_hw[0]}x{image_hw[1]}")
     if classifier_head != "linear" or head_lr is not None:
         print(f"Head: {BLACKBOX_HEADS[classifier_head]}, Head LR={head_lr if head_lr is not None else lr}")
 
@@ -293,7 +221,7 @@ def run_blackbox_experiment(
         project_root=PROJECT_ROOT,
         batch_size=batch_size,
         num_workers=num_workers,
-        target_size=224,
+        target_size=image_hw,
         augment_train=True,
         augmentation_preset=augmentation_preset,
         include_test=False,
@@ -328,7 +256,7 @@ def run_blackbox_experiment(
         "loss": "Weighted_CrossEntropy",
         "class_weights": [float(x) for x in class_weights.cpu().tolist()],
         "augmentation_preset": augmentation_preset,
-        "target_size": 224,
+        "target_size": image_size_config(image_hw),
         "num_workers": num_workers,
         "scheduler": "CosineAnnealingLR(eta_min=1e-6)",
         "checkpoint_selection": selection_name(checkpoint_metric),
@@ -346,7 +274,7 @@ def run_blackbox_experiment(
                        "classifier_hidden_dropout": 0.3, "classifier_normalization": "LayerNorm"})
     if head_lr is not None:
         config["head_learning_rate"] = head_lr
-    manifest_sha256 = _manifest_hash(manifest_path)
+    manifest_sha256 = runtime.file_sha256(manifest_path)
 
     print("\n--- Bắt đầu huấn luyện Black-box (EfficientNet-B0) ---")
     for epoch in range(1, epochs + 1):
@@ -412,7 +340,7 @@ def run_blackbox_experiment(
     load_blackbox_state_dict(model, checkpoint["model_state_dict"])
     val_metrics_at_05, val_loss_best, _, val_probs_best = evaluate(model, valid_loader, criterion, device)
     val_true = bundle["datasets"]["valid"].df["diagnosis_binary"].to_numpy(dtype=int)
-    threshold, _ = select_validation_threshold(val_true, val_probs_best, threshold_metric)
+    threshold, _ = select_threshold(val_true, val_probs_best, threshold_metric)
     val_preds_best = (val_probs_best >= threshold).astype(int)
     val_metrics_best = compute_metrics(val_true, val_preds_best, val_probs_best)
     checkpoint["decision_threshold"] = threshold
@@ -422,7 +350,7 @@ def run_blackbox_experiment(
     valid_table = print_metrics_table(
         val_metrics_best, title=f"Validation Set (Epoch {best_epoch}, threshold={threshold:.6f})"
     )
-    val_sample_preds = _extract_sample_predictions(
+    val_sample_preds = runtime.sample_prediction_records(
         bundle["datasets"]["valid"].df, val_preds_best, val_probs_best
     )
 
@@ -452,7 +380,7 @@ def run_blackbox_experiment(
     }
 
     if save_results:
-        _save_json(results_path, results)
+        runtime.save_json(results_path, results)
         print(f"Kết quả chi tiết đã lưu tại: {results_path}")
 
     return results
@@ -470,7 +398,7 @@ def evaluate_blackbox_test(
     if manifest_path is None:
         manifest_path = os.path.join(PROJECT_ROOT, "data", "manifest.csv")
     manifest_path = os.path.abspath(manifest_path)
-    device = get_device(device_name)
+    device = runtime.get_device(device_name)
     checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=True)
     if "decision_threshold" not in checkpoint or "config" not in checkpoint:
         raise ValueError("Checkpoint has no frozen validation threshold/config; use a newly trained checkpoint")
@@ -484,7 +412,7 @@ def evaluate_blackbox_test(
     if results_path is None:
         _, results_path = _config_paths(config)
     if save_results:
-        _prepare_output(results_path, overwrite)
+        runtime.prepare_output(results_path, overwrite)
 
     test_dataset = Derm7ptDataset(
         manifest_path=manifest_path,
@@ -515,7 +443,7 @@ def evaluate_blackbox_test(
         "summary": test_table,
         "test_loss": test_loss,
         "test_metrics": test_metrics,
-        "test_predictions": _extract_sample_predictions(test_dataset.df, test_preds, test_probs),
+        "test_predictions": runtime.sample_prediction_records(test_dataset.df, test_preds, test_probs),
     }
     if save_results:
         save_experiment_results(results_path, test=results, overwrite=overwrite)
@@ -540,6 +468,8 @@ def main(argv=None):
         help=f"Preset tăng cường dữ liệu: legacy_letterbox (giữ tỷ lệ ảnh) hoặc comparison (mặc định: {DEFAULT_AUGMENTATION_PRESET})",
     )
     parser.add_argument("--num_workers", type=int, default=0, help="DataLoader workers khi train; mặc định 0 vì worker trên macOS khởi động lại mỗi epoch")
+    parser.add_argument("--image_size", default="224",
+                        help="Kích thước ảnh đầu vào: N (vuông) hoặc CAOxRỘNG, ví dụ 512x768 (mặc định: 224)")
     parser.add_argument("--manifest_path", type=str, default=None)
     parser.add_argument("--checkpoint_path", type=str, default=None)
     parser.add_argument("--results_path", type=str, default=None, help="Một file JSON chứa kết quả validation và test")
@@ -562,7 +492,7 @@ def main(argv=None):
         checkpoint_path, results_path = prepare_training_outputs(
             _default_paths(args.seed, args.augmentation_preset, args.checkpoint_metric, args.epochs, args.lr,
                            args.weight_decay, args.classifier_head, args.head_lr, args.threshold_metric,
-                           args.backbone),
+                           args.backbone, args.image_size),
             args.checkpoint_path,
             args.results_path, args.overwrite, not args.no_save,
         )
@@ -584,6 +514,7 @@ def main(argv=None):
             head_lr=args.head_lr,
             threshold_metric=args.threshold_metric,
             backbone=args.backbone,
+            image_size=args.image_size,
         )
         if not args.no_save:
             save_experiment_results(results_path, validation=validation, overwrite=args.overwrite)
@@ -599,13 +530,14 @@ def main(argv=None):
     else:
         checkpoint_path = args.checkpoint_path or _default_paths(
             args.seed, args.augmentation_preset, args.checkpoint_metric, args.epochs, args.lr,
-            args.weight_decay, args.classifier_head, args.head_lr, args.threshold_metric, args.backbone)[0]
+            args.weight_decay, args.classifier_head, args.head_lr, args.threshold_metric, args.backbone,
+            args.image_size)[0]
         results_path = args.results_path
         if results_path is None:
             config = torch.load(checkpoint_path, map_location="cpu", weights_only=True)["config"]
             results_path = _config_paths(config)[1]
         if not args.no_save:
-            _prepare_output(results_path, args.overwrite)
+            runtime.prepare_output(results_path, args.overwrite)
         test = evaluate_blackbox_test(
             checkpoint_path=checkpoint_path,
             manifest_path=args.manifest_path,

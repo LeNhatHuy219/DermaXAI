@@ -3,7 +3,6 @@
 # Ghi numbers.json và các hình fig*.png/svg vào results/derm7pt/ecbm/limitations/.
 
 
-import json
 import math
 import os
 import sys
@@ -14,12 +13,12 @@ if PROJECT_ROOT not in sys.path:
 
 # Import src.dataset trước sklearn để tránh xung đột thư viện OpenMP trên một số nền tảng.
 from src.dataset import CONCEPT_NAMES
+from src import runtime
 
 import numpy as np
 import torch
 from sklearn.metrics import roc_auc_score
 
-from experiments import run_soft_cbm as shared
 from experiments.run_ecbm_lambda_study import exact_outputs, load_seed
 from experiments.run_ecbm_modes import MANIFEST_PATH, _plan
 from src.ecbm import exact_inference
@@ -41,10 +40,6 @@ INK, INK_2, MUTED, GRID, AXIS = "#0b0b0b", "#52514e", "#898781", "#e1e0d9", "#c3
 GROUP_LABELS = {"pigment_network": "Pigment network", "streaks": "Streaks", "pigmentation": "Pigmentation",
                 "regression_structures": "Regression", "dots_and_globules": "Dots/globules",
                 "blue_whitish_veil": "Blue-whitish veil", "vascular_structures": "Vascular"}
-
-
-def _load(path):
-    return json.load(open(path, encoding="utf-8"))
 
 
 def _summary(values):
@@ -122,7 +117,7 @@ def validation_analysis(device):
 # ---------- Đọc kết quả test đã lưu ----------
 
 def test_analysis():
-    ecbm = {s: _load(os.path.join(RESULTS, "ecbm", "test_modes", f"seed{s}.json")) for s in SEEDS}
+    ecbm = {s: runtime.load_json(os.path.join(RESULTS, "ecbm", "test_modes", f"seed{s}.json")) for s in SEEDS}
     out = {"curves": {}, "operating_point": {}, "per_group_concept_accuracy": {}, "per_seed": {}, "agreement_with_e_class": {}}
     for mode in ECBM_MODES:
         blocks = [ecbm[s]["modes"][mode] for s in SEEDS]
@@ -144,8 +139,8 @@ def test_analysis():
                                                                      for b in blocks])) for g in CONCEPT_NAMES}
         out["agreement_with_e_class"][mode] = _summary([b["agreement_with_e_class"] for b in blocks])
     for model, cohort in CBM_COHORTS.items():
-        runs = [_load(os.path.join(RESULTS, cohort, f"seed{s}.json")) for s in SEEDS]
-        summary = _load(os.path.join(RESULTS, cohort, "intervention", "summary.json"))
+        runs = [runtime.load_json(os.path.join(RESULTS, cohort, f"seed{s}.json")) for s in SEEDS]
+        summary = runtime.load_json(os.path.join(RESULTS, cohort, "intervention", "summary.json"))
         curve = summary["curve"]
         out["curves"][model] = [[float(curve[m]["f1_macro"]["values"][i]) for m in range(len(curve))] for i in range(len(SEEDS))]
         out["operating_point"][model] = [{key: [curve[0][key]["values"][i], curve[-1][key]["values"][i]]
@@ -155,7 +150,7 @@ def test_analysis():
                                    "decision_threshold": r["decision_threshold"]} for r in runs]
         out["per_group_concept_accuracy"][model] = {g: float(np.mean([r["test_concept_metrics"]["per_concept"][g]["accuracy"]
                                                                       for r in runs])) for g in CONCEPT_NAMES}
-    selection = _load(os.path.join(RESULTS, "ecbm", "lambda_global_study", "frozen_selection.json"))
+    selection = runtime.load_json(os.path.join(RESULTS, "ecbm", "lambda_global_study", "frozen_selection.json"))
     out["lambda_sweep_validation"] = [{k: e[k] for k in ("lambda_global", "m0_f1_macro", "m7_f1_macro", "curve_auc_f1_macro",
                                                           "flips_m7_mean")} for e in selection["summary"]]
     return out
@@ -294,10 +289,10 @@ def figures(val, points, test):
 
 def main():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
-    device = shared.get_device("auto")
+    device = runtime.get_device("auto")
     val, points = validation_analysis(device)
     test = test_analysis()
-    shared._save_json(os.path.join(OUTPUT_DIR, "numbers.json"),
+    runtime.save_json(os.path.join(OUTPUT_DIR, "numbers.json"),
                       {"note": "validation: tính mới từ checkpoint đã đóng băng; test: đọc lại kết quả đã lưu, không đọc lại ảnh test",
                        "validation": val, "test_saved": test})
     figures(val, points, test)

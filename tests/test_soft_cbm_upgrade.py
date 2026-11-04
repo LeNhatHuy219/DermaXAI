@@ -13,6 +13,7 @@ import unittest
 from unittest.mock import patch
 
 from src.dataset import CONCEPT_NAMES, CONCEPT_NUM_CLASSES, compute_diagnosis_weights
+from src import runtime
 import numpy as np
 import pandas as pd
 import torch
@@ -142,7 +143,7 @@ class SoftCBMUpgradeTests(unittest.TestCase):
             self.assertNotIn("test_metrics", pilot)
             self.assertEqual(len(pilot["validation_predictions"]), 203)
             checkpoint, result_path = run_soft_cbm._config_paths(pilot["hyperparameters"])
-            frozen_hash = run_soft_cbm._manifest_hash(checkpoint)
+            frozen_hash = runtime.file_sha256(checkpoint)
             self.assertEqual(pilot["checkpoint_sha256"], frozen_hash)
             config = pilot["hyperparameters"]
             self.assertEqual(config["diagnosis_head"], "MLP(28, 128, 2)")
@@ -156,7 +157,7 @@ class SoftCBMUpgradeTests(unittest.TestCase):
             self.assertEqual(final["mode"], "train_validation_test")
             self.assertEqual(final["decision_threshold"], before["decision_threshold"])
             self.assertEqual(final["best_epoch"], before["best_epoch"])
-            self.assertEqual(run_soft_cbm._manifest_hash(checkpoint), frozen_hash)
+            self.assertEqual(runtime.file_sha256(checkpoint), frozen_hash)
             self.assertEqual(len(final["test_predictions"]), 395)
             for key in ["validation_predictions", "validation_metrics", "validation_metrics_at_0.5",
                         "validation_concept_metrics", "history"]:

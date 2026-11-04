@@ -18,7 +18,9 @@ if PROJECT_ROOT not in sys.path:
 
 # Import src.dataset trước sklearn để tránh xung đột thư viện OpenMP trên một số nền tảng.
 from src.dataset import (CONCEPT_NAMES, CONCEPT_NUM_CLASSES, Derm7ptDataset, compute_concept_statistics,
-                         get_dataloaders)
+                         get_dataloaders, compute_train_observed_states)
+from src.selection import select_threshold
+from src import runtime
 
 import numpy as np
 import pandas as pd
@@ -27,7 +29,6 @@ import torch
 import torchvision
 from torch.utils.data import DataLoader
 
-from experiments import run_soft_cbm as shared
 from src.ecbm import CategoricalECBM, ecbm_training_loss, exact_inference, gradient_inference
 from src.metrics import compute_concept_metrics, compute_metrics, print_concept_metrics_table, print_metrics_table
 from src.protocol import (load_concept_schema, manifest_fingerprint, prepare_training_outputs,
@@ -61,7 +62,6 @@ INFERENCE_LR = 0.1
 PERTURBATION = (0.2, 0.2)              # tỷ lệ ca và tỷ lệ nhóm concept bị xáo trộn cho E_global
 # Soft và Hard ECBM train giống hệt nhau, chỉ khác cách E_global nhận concept khi suy luận gradient.
 INFERENCE_METHODS = ("gradient", "exact", "gradient_soft")
-INFERENCE_LABELS = {"gradient": "Hard ECBM (gradient)", "gradient_soft": "Soft ECBM (gradient)", "exact": "ECBM (exact)"}
 ECBM_PROTOCOLS = {settings["protocol"]: name for name, settings in RECIPES.items()}
 
 
@@ -118,9 +118,9 @@ def _inference_block(output, method, df, train_observed_states, split, threshold
                      threshold_metric=DEFAULT_THRESHOLD_METRIC):
     at_05, concepts = _score(output, 0.5, train_observed_states)
     if threshold is None:
-        threshold, _ = shared.select_validation_threshold(output["labels"], output["scores"], threshold_metric)
+        threshold, _ = select_threshold(output["labels"], output["scores"], threshold_metric)
     metrics, _ = _score(output, threshold, train_observed_states)
-    predictions = shared._extract_sample_predictions(df, (output["scores"] >= threshold).astype(int),
+    predictions = runtime.sample_prediction_records(df, (output["scores"] >= threshold).astype(int),
                                                      output["scores"], output["concepts"])
     return {"inference": method, "decision_threshold": float(threshold), f"{split}_metrics_at_0.5": at_05,
             f"{split}_metrics": metrics, f"{split}_concept_metrics": concepts, f"{split}_predictions": predictions}
@@ -251,8 +251,8 @@ def run_ecbm_experiment(
         raise ValueError("learning rate must be positive and weight decay non-negative")
     selection_name(checkpoint_metric)
     threshold_selection_name(threshold_metric)
-    shared.set_seed(seed)
-    device = shared.get_device(device_name)
+    runtime.set_seed(seed)
+    device = runtime.get_device(device_name)
 
     if manifest_path is None:
         manifest_path = os.path.join(PROJECT_ROOT, "data", "manifest.csv")
@@ -262,9 +262,9 @@ def run_ecbm_experiment(
                        lr=settings["lr"], head_lr=settings["head_lr"], weight_decay=settings["weight_decay"],
                        patience=settings["patience"], selection_inference=selection_inference),
         checkpoint_path, results_path, overwrite, save_results)
-    shared._prepare_output(checkpoint_path, overwrite)
+    runtime.prepare_output(checkpoint_path, overwrite)
     if save_results:
-        shared._prepare_output(results_path, overwrite)
+        runtime.prepare_output(results_path, overwrite)
 
     base = RECIPES[recipe]
     print(f"Khởi động Categorical ECBM, công thức {recipe} (EfficientNet-B0 -> E_class, E_concept, E_global)")
@@ -280,7 +280,7 @@ def run_ecbm_experiment(
     assert len(bundle["datasets"]["train"]) == 413, "Train split phải có đúng 413 mẫu"
     assert len(bundle["datasets"]["valid"]) == 203, "Valid split phải có đúng 203 mẫu"
     schema = load_concept_schema(manifest_path)
-    train_observed_states = shared.compute_train_observed_states(
+    train_observed_states = compute_train_observed_states(
         bundle["datasets"]["train"].df, bundle["datasets"]["train"].label_mapping)
 
     # Trọng số lớp/trạng thái tính từ train giống Soft/Hard CBM; công thức gốc không dùng trọng số.
@@ -340,7 +340,7 @@ def run_ecbm_experiment(
     }
     model = _build_model(config, pretrained=True).to(device)
     optimizer, scheduler = _build_optimizer(model, recipe, settings)
-    manifest_sha256 = shared._manifest_hash(manifest_path)
+    manifest_sha256 = runtime.file_sha256(manifest_path)
 
     best_score, best_epoch, stale = -1.0, -1, 0
     history: List[Dict[str, Any]] = []
@@ -412,7 +412,7 @@ def run_ecbm_experiment(
         "manifest_fingerprint": manifest_fingerprint(manifest_path),
         "concept_schema": schema,
         "checkpoint_path": os.path.abspath(checkpoint_path),
-        "checkpoint_sha256": shared._manifest_hash(checkpoint_path),
+        "checkpoint_sha256": runtime.file_sha256(checkpoint_path),
         "summary": f"Categorical ECBM ({recipe}), best epoch {best_epoch}, selection inference {selection_inference}\n\n"
                    f"{valid_table}\n\n{concept_table}",
         **{key: value for key, value in primary.items() if key != "inference"},
@@ -421,7 +421,7 @@ def run_ecbm_experiment(
         "history": history,
     }
     if save_results:
-        shared._save_json(results_path, results)
+        runtime.save_json(results_path, results)
         print(f"Kết quả chi tiết đã lưu tại: {results_path}")
     return results
 
@@ -432,7 +432,7 @@ def evaluate_ecbm_test(checkpoint_path: str, manifest_path: str = None, device_n
     if manifest_path is None:
         manifest_path = os.path.join(PROJECT_ROOT, "data", "manifest.csv")
     manifest_path = os.path.abspath(manifest_path)
-    device = shared.get_device(device_name)
+    device = runtime.get_device(device_name)
     checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=True)
     if "decision_thresholds" not in checkpoint or "config" not in checkpoint:
         raise ValueError("Checkpoint has no frozen validation thresholds/config; use a newly trained checkpoint")
@@ -442,11 +442,11 @@ def evaluate_ecbm_test(checkpoint_path: str, manifest_path: str = None, device_n
     validate_ecbm_config(config)
     if save_results:
         results_path = results_path or _config_paths(config)[1]
-        shared._prepare_output(results_path, overwrite)
+        runtime.prepare_output(results_path, overwrite)
 
     train_df = pd.read_csv(manifest_path, dtype={"is_inconsistent_profile": bool})
     train_df = train_df[train_df["split"] == "train"].reset_index(drop=True)
-    train_observed_states = shared.compute_train_observed_states(train_df, schema["label_mapping"])
+    train_observed_states = compute_train_observed_states(train_df, schema["label_mapping"])
     test_dataset = Derm7ptDataset(manifest_path=manifest_path, project_root=PROJECT_ROOT, split="test",
                                   label_mapping=schema["label_mapping"],
                                   transform=get_transforms("valid", target_size=config["target_size"], augment=False))
@@ -469,7 +469,7 @@ def evaluate_ecbm_test(checkpoint_path: str, manifest_path: str = None, device_n
         "model": config.get("model", "ecbm"),
         "mode": "final_test",
         "checkpoint_path": os.path.abspath(checkpoint_path),
-        "checkpoint_sha256": shared._manifest_hash(checkpoint_path),
+        "checkpoint_sha256": runtime.file_sha256(checkpoint_path),
         "best_epoch": int(checkpoint["epoch"]),
         "hyperparameters": config,
         "manifest_sha256": checkpoint["manifest_sha256"],
@@ -544,7 +544,7 @@ def main(argv=None):
     if results_path is None:
         results_path = _config_paths(torch.load(checkpoint_path, map_location="cpu", weights_only=True)["config"])[1]
     if not args.no_save:
-        shared._prepare_output(results_path, args.overwrite)
+        runtime.prepare_output(results_path, args.overwrite)
     test = evaluate_ecbm_test(checkpoint_path=checkpoint_path, manifest_path=args.manifest_path,
                               device_name=args.device, save_results=False, overwrite=args.overwrite)
     if not args.no_save:

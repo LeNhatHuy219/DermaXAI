@@ -1,5 +1,5 @@
 import random
-from typing import Callable, List, Optional, Sequence, Tuple, Union
+from typing import Callable, List, Sequence, Tuple, Union
 
 import numpy as np
 from PIL import Image
@@ -10,6 +10,30 @@ try:
     HAS_TORCHVISION = True
 except ImportError:
     HAS_TORCHVISION = False
+
+
+# Kích thước ảnh đầu vào dạng (cao, rộng). Nhận 224, "224", "512x768" hoặc [512, 768] (lưu trong config).
+def image_size_hw(size) -> Tuple[int, int]:
+    if isinstance(size, str):
+        parts = size.lower().split("x")
+        if len(parts) not in (1, 2):
+            raise ValueError(f"Invalid image size {size!r}; expected N or HxW")
+        size = [int(part) for part in parts]
+    if isinstance(size, (int, np.integer)) and not isinstance(size, bool):
+        size = [int(size), int(size)]
+    if not isinstance(size, (list, tuple)) or len(size) not in (1, 2) or \
+            any(isinstance(v, bool) or not isinstance(v, (int, np.integer)) for v in size):
+        raise ValueError(f"Invalid image size {size!r}; expected N or HxW")
+    height, width = (int(size[0]), int(size[0])) if len(size) == 1 else (int(size[0]), int(size[1]))
+    if min(height, width) < 32:
+        raise ValueError("Image size must be at least 32 pixels per side")
+    return height, width
+
+
+# Giá trị ghi vào config: số nguyên cho ảnh vuông (giữ nguyên config 224 cũ), [cao, rộng] cho ảnh chữ nhật.
+def image_size_config(size):
+    height, width = image_size_hw(size)
+    return height if height == width else [height, width]
 
 
 class LetterboxResize:
@@ -95,7 +119,7 @@ class SimpleCompose:
 
 def get_transforms(
     split: str = "train",
-    target_size: int = 224,
+    target_size: Union[int, str, Sequence[int]] = 224,
     augment: bool = True,
     augmentation_preset: str = "legacy_letterbox",
 ):
@@ -105,6 +129,8 @@ def get_transforms(
     is_train = split.lower() in ["train", "training"]
     if augmentation_preset not in {"legacy_letterbox", "comparison"}:
         raise ValueError(f"Unknown augmentation preset: {augmentation_preset}")
+    # Letterbox nhận (rộng, cao) theo PIL; torchvision nhận (cao, rộng).
+    height, width = image_size_hw(target_size)
 
     if is_train and augment and augmentation_preset == "comparison":
         if not HAS_TORCHVISION:
@@ -112,7 +138,7 @@ def get_transforms(
         # Cố định chính xác các tham số này cho Black-box/Soft CBM/ECBM khi so sánh backbone.
         return T.Compose([
             T.RandomResizedCrop(
-                (target_size, target_size),
+                (height, width),
                 scale=(0.85, 1.0),
                 ratio=(0.9, 1.1),
                 interpolation=T.InterpolationMode.BILINEAR,
@@ -129,7 +155,7 @@ def get_transforms(
         if is_train and augment:
             # Áp dụng LetterboxResize trước RandomRotation để chuẩn hóa kích thước ảnh.
             return T.Compose([
-                LetterboxResize((target_size, target_size)),
+                LetterboxResize((width, height)),
                 T.RandomHorizontalFlip(p=0.5),
                 T.RandomVerticalFlip(p=0.5),
                 T.RandomRotation(degrees=15, fill=0),
@@ -138,14 +164,14 @@ def get_transforms(
             ])
         else:
             return T.Compose([
-                LetterboxResize((target_size, target_size)),
+                LetterboxResize((width, height)),
                 T.ToTensor(),
                 T.Normalize(mean=mean, std=std),
             ])
     else:
         if is_train and augment:
             return SimpleCompose([
-                LetterboxResize((target_size, target_size)),
+                LetterboxResize((width, height)),
                 PILRandomHorizontalFlip(p=0.5),
                 PILRandomVerticalFlip(p=0.5),
                 PILRandomRotation(degrees=15),
@@ -154,7 +180,7 @@ def get_transforms(
             ])
         else:
             return SimpleCompose([
-                LetterboxResize((target_size, target_size)),
+                LetterboxResize((width, height)),
                 PILToTensor(),
                 TensorNormalize(mean=mean, std=std),
             ])

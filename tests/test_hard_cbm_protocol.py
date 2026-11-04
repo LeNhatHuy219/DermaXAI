@@ -22,10 +22,8 @@ from torch.utils.data import DataLoader, Dataset
 from src.cbm import HardJointCBM, SoftJointCBM, hard_categorical, make_diagnosis_head
 from src.intervention import evaluate_hard_interventions
 from src.protocol import load_concept_schema, manifest_fingerprint
-from experiments import (hard_cbm_common, hard_cbm_interventions_common,
-                         run_hard_cbm as run_hard_cbm, run_hard_cbm_interventions as run_hard_cbm_interventions)
+from experiments import run_hard_cbm, run_hard_cbm_interventions
 from experiments.run_soft_cbm_interventions import export_report, summarize_interventions
-from experiments.summarize_seeds import summarize_seeds
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -79,9 +77,9 @@ class HardCBMProtocolTests(unittest.TestCase):
         bundle = {"train": DataLoader(train, batch_size=128), "valid": DataLoader(valid, batch_size=128),
                   "datasets": {"train": train, "valid": valid},
                   "class_weights": compute_diagnosis_weights(str(self.manifest), str(ROOT))}
-        with patch.object(hard_cbm_common, "get_dataloaders", return_value=bundle) as loader, \
-             patch.object(hard_cbm_common, "get_hard_joint_cbm", TinyHardCBM), \
-             patch.object(hard_cbm_common, "Derm7ptDataset", TinyDataset), \
+        with patch.object(run_hard_cbm, "get_dataloaders", return_value=bundle) as loader, \
+             patch.object(run_hard_cbm, "get_hard_joint_cbm", TinyHardCBM), \
+             patch.object(run_hard_cbm, "Derm7ptDataset", TinyDataset), \
              contextlib.redirect_stdout(io.StringIO()):
             yield loader
 
@@ -145,13 +143,13 @@ class HardCBMProtocolTests(unittest.TestCase):
 
     def test_legacy_m4_model_name_is_still_recognized(self):
         # Artifact cũ ghi model M4_HardJointCBM; run mới ghi hard_cbm. Cả hai phải được nhận, tên lạ thì không.
-        metadata = hard_cbm_common._variant_metadata("straight_through")
+        metadata = run_hard_cbm._variant_metadata("straight_through")
         self.assertEqual(metadata["model"], "hard_cbm")
         for name in ("hard_cbm", "M4_HardJointCBM"):
-            self.assertEqual(hard_cbm_common._gradient_mode_from_config({**metadata, "model": name}), "straight_through")
+            self.assertEqual(run_hard_cbm._gradient_mode_from_config({**metadata, "model": name}), "straight_through")
         for name in ("soft_cbm", "M3_SoftJointCBM"):
             with self.assertRaises(ValueError):
-                hard_cbm_common._gradient_mode_from_config({**metadata, "model": name})
+                run_hard_cbm._gradient_mode_from_config({**metadata, "model": name})
 
     def test_default_paths_separate_seeds_and_nondefault_configurations(self):
         base = run_hard_cbm._default_paths(42)
@@ -164,7 +162,7 @@ class HardCBMProtocolTests(unittest.TestCase):
         upgraded = run_hard_cbm._default_paths(42, diagnosis_head="mlp128", diagnosis_lr=.001, epochs=20)
         self.assertTrue(upgraded[0].endswith(os.path.join("hard_cbm", "efficientnet_b0_mlp128_e20_headlr0.001", "seed42.pth")))
         self.assertNotEqual(upgraded, run_hard_cbm._default_paths(42))
-        with patch.object(hard_cbm_common, "evaluate_hard_cbm_test", side_effect=AssertionError("Pilot must not read test")):
+        with patch.object(run_hard_cbm, "evaluate_hard_cbm_test", side_effect=AssertionError("Pilot must not read test")):
             exported = self.train(extra=["--diagnosis_head", "mlp128", "--diagnosis_lr", "0.001", "--skip_test"])
         self.assertEqual(exported["mode"], "train_validation")
         self.assertNotIn("test_predictions", exported)
@@ -176,8 +174,8 @@ class HardCBMProtocolTests(unittest.TestCase):
 
     def test_mlp_intervention_preset_resolves_cohort_and_separate_output(self):
         # Resolve all three inputs from the MLP preset rather than explicit paths.
-        with patch.object(hard_cbm_common, "ROOT", self.path), \
-             patch.object(hard_cbm_interventions_common, "ROOT", self.path):
+        with patch.object(run_hard_cbm, "ROOT", self.path), \
+             patch.object(run_hard_cbm_interventions, "ROOT", self.path):
             for seed in (42, 123, 2026):
                 checkpoint, result = run_hard_cbm._default_paths(seed, diagnosis_head="mlp128", diagnosis_lr=.001, epochs=1)
                 self.train(seed, extra=["--diagnosis_head", "mlp128", "--diagnosis_lr", ".001",
@@ -238,7 +236,7 @@ class HardCBMProtocolTests(unittest.TestCase):
                 np.testing.assert_array_equal(vector[start:start+k], np.eye(k)[index])
 
     def test_skip_test_never_calls_evaluator_and_can_finish_test_later(self):
-        with patch.object(hard_cbm_common, "evaluate_hard_cbm_test", side_effect=AssertionError("Pilot must not read test")):
+        with patch.object(run_hard_cbm, "evaluate_hard_cbm_test", side_effect=AssertionError("Pilot must not read test")):
             validation = self.train(extra=["--skip_test"])
         self.assertNotIn("test_predictions", validation)
         saved = json.loads((self.path / "seed42.json").read_text())
@@ -267,7 +265,7 @@ class HardCBMProtocolTests(unittest.TestCase):
     def test_output_aliases_and_manifest_overwrite_fail_before_loading_data(self):
         checkpoint = self.path / "preserve.pth"
         checkpoint.write_bytes(b"preserve")
-        with patch.object(hard_cbm_common, "get_dataloaders", side_effect=AssertionError("No data loading")):
+        with patch.object(run_hard_cbm, "get_dataloaders", side_effect=AssertionError("No data loading")):
             for save in (True, False):
                 with self.assertRaisesRegex(ValueError, "distinct paths"):
                     run_hard_cbm.run_hard_cbm_experiment(checkpoint_path=str(checkpoint),
@@ -283,7 +281,7 @@ class HardCBMProtocolTests(unittest.TestCase):
     def test_existing_results_fail_before_training(self):
         result = self.path / "seed42.json"
         result.write_text("existing")
-        with patch.object(hard_cbm_common, "get_dataloaders", side_effect=AssertionError("No training")):
+        with patch.object(run_hard_cbm, "get_dataloaders", side_effect=AssertionError("No training")):
             with self.assertRaises(FileExistsError):
                 run_hard_cbm.main(self.args())
         self.assertEqual(result.read_text(), "existing")
@@ -405,17 +403,15 @@ class HardCBMProtocolTests(unittest.TestCase):
             evaluate_hard_interventions(head, vectors, targets, [1, 0], self.schema, .5, [10, 20],
                                         baseline_probabilities=[.6, .4])
 
-    def test_three_seed_summaries_and_m4_report(self):
+    def test_three_seed_m4_intervention_report(self):
         paths = []
         for seed in (42, 123, 2026):
             self.train(seed)
             paths.append(self.path / f"seed{seed}.json")
         with contextlib.redirect_stdout(io.StringIO()):
-            diagnosis = summarize_seeds(paths, self.manifest, self.path / "diagnosis_summary.json")
             result = run_hard_cbm_interventions.main(["--manifest_path", str(self.manifest),
                 "--checkpoints", *[str(self.path / f"seed{s}.pth") for s in (42, 123, 2026)],
                 "--predictions", *map(str, paths), "--output_dir", str(self.path / "report")])
-        self.assertEqual(diagnosis["seeds"], [42, 123, 2026])
         self.assertEqual(result["model"], run_hard_cbm.HARD_CBM_MODEL)
         self.assertEqual(result["num_cases"], 395)
         report = (self.path / "report/report.md").read_text()
@@ -425,21 +421,6 @@ class HardCBMProtocolTests(unittest.TestCase):
         for file in ("summary.json", "curve.csv", "per_concept.csv", "full_intervention_cases.csv",
                      "intervention_curve.png", "intervention_curve.svg"):
             self.assertGreater((self.path / "report" / file).stat().st_size, 0)
-        # A summary must not accept plausible diagnosis metrics while averaging
-        # a fabricated concept F1 or a soft vector masquerading as Hard CBM input.
-        original = json.loads(paths[-1].read_text())
-        for mutation in ("concept_f1", "soft_vector"):
-            changed = copy.deepcopy(original)
-            if mutation == "concept_f1":
-                changed["test_concept_metrics"]["overall_f1_macro_all_defined"] = .987654
-            else:
-                changed["test_predictions"][0]["hard_concept_vector"][:3] = [1/3]*3
-            paths[-1].write_text(json.dumps(changed))
-            output = self.path / f"bad_summary_{mutation}.json"
-            with self.subTest(mutation=mutation), self.assertRaises(ValueError):
-                summarize_seeds(paths, self.manifest, output)
-            self.assertFalse(output.exists())
-        paths[-1].write_text(json.dumps(original))
 
     def test_analytic_hard_intervention_curve_and_m3_report_regression(self):
         vectors = np.concatenate([np.eye(k)[[0]*4] for k in CONCEPT_NUM_CLASSES.values()], axis=1)

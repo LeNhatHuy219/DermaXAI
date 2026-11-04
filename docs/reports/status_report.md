@@ -7,8 +7,8 @@ Cập nhật ngày 02/11/2026. Mọi số liệu được đọc lại từ kế
 1. **Huấn luyện 4 mô hình theo cùng một quy trình:** Black-box, Soft CBM, Hard CBM và ECBM.
    - Cùng EfficientNet-B0, 50 epoch, AdamW, 3 seed (42/123/2026).
    - Checkpoint chọn theo validation Macro F1@0.5; ngưỡng chọn trên validation rồi giữ cố định cho test.
-2. **Chọn λ_global cho ECBM trên validation** theo luật ghi trước: chọn λ=1, thay cho λ=0.01 của paper. Xem [kế hoạch](ecbm/lambda_global_study/study_plan.json) và [báo cáo](ecbm/lambda_global_study/report.md).
-3. **Khóa kế hoạch rồi chấm test đúng một lần.** Checkpoint được khóa bằng SHA-256, kế hoạch test ghi trước trong [`test_plan.json`](test_plan.json).
+2. **Chọn λ_global cho ECBM trên validation** theo luật ghi trước: chọn λ=1, thay cho λ=0.01 của paper. Xem [kế hoạch](../../results/derm7pt/ecbm/lambda_global_study/study_plan.json) và [báo cáo](../../results/derm7pt/ecbm/lambda_global_study/report.md).
+3. **Khóa kế hoạch rồi chấm test đúng một lần.** Checkpoint được khóa bằng SHA-256, kế hoạch test ghi trước trong [`test_plan.json`](../../results/derm7pt/test_plan.json).
 4. **Đánh giá can thiệp concept:** sửa từ 0 đến 7 nhóm concept bằng nhãn thật, duyệt đủ 128 tập con, cho cả CBM và ECBM.
 5. **Phân tích hạn chế của ECBM:** 6 hạn chế, 7 hình (mục 5).
 
@@ -85,7 +85,7 @@ Phạm vi: ECBM categorical, cohort quy trình chung 50 epochs (`ecbm/efficientn
 
 - Số liệu **validation** (203 ca) được tính mới từ các checkpoint đã đóng băng.
 - Số liệu **test** (395 ca) chỉ đọc lại từ kết quả đã lưu (`ecbm/test_modes/`, thư mục `intervention/` của hai cohort CBM), không đọc lại ảnh test.
-- Tái tạo số liệu và hình: `python3 experiments/analyze_ecbm_limitations.py`. Số liệu đầy đủ trong [`numbers.json`](ecbm/limitations/numbers.json); hình nằm trong `ecbm/limitations/` (PNG và SVG).
+- Tái tạo số liệu và hình: `python3 experiments/analyze_ecbm_limitations.py`. Số liệu đầy đủ trong [`numbers.json`](../../results/derm7pt/ecbm/limitations/numbers.json); hình nằm trong `ecbm/limitations/` (PNG và SVG).
 
 ### Tóm tắt
 
@@ -108,7 +108,7 @@ log p(y=1|x)/p(y=0|x) = [E_class(x,0) − E_class(x,1)] + [phần đi qua concep
 
 Hình 1 vẽ hai phần này cho 609 điểm (203 ca × 3 seeds). Điểm nằm giữa hai đường chéo là ca mà phần concept lớn hơn E_class.
 
-![Hình 1](ecbm/limitations/fig1_logodds_decomposition.png)
+![Hình 1](../../results/derm7pt/ecbm/limitations/fig1_logodds_decomposition.png)
 
 **Bằng chứng (validation, trung bình 3 seeds).**
 
@@ -136,9 +136,9 @@ Trên test, chẩn đoán trùng nhãn với riêng E_class: λ paper 99.9%, λ=
 
 **Hiện tượng.** Với λ_global = 0.01 như paper, sửa concept gần như không làm đổi nhãn nào.
 
-![Hình 2](ecbm/limitations/fig2_lambda_sweep.png)
+![Hình 2](../../results/derm7pt/ecbm/limitations/fig2_lambda_sweep.png)
 
-![Hình 3](ecbm/limitations/fig3_intervention_curves_test.png)
+![Hình 3](../../results/derm7pt/ecbm/limitations/fig3_intervention_curves_test.png)
 
 **Bằng chứng.**
 
@@ -156,7 +156,7 @@ Trên test, chẩn đoán trùng nhãn với riêng E_class: λ paper 99.9%, λ=
 
 **Hiện tượng.** Sau khi sửa concept, mô hình bớt báo động giả, nhưng không bắt được thêm melanoma.
 
-![Hình 4](ecbm/limitations/fig4_operating_point_test.png)
+![Hình 4](../../results/derm7pt/ecbm/limitations/fig4_operating_point_test.png)
 
 **Bằng chứng (test, ngưỡng đóng băng).**
 
@@ -181,7 +181,7 @@ Với ECBM λ=1 và chỉ concept, khoảng 50% ca melanoma bị **giảm** xác
 
 **Hiện tượng.** Concept mà ECBM hiển thị cho bác sĩ đúng ít hơn concept của CBM, và càng kém hơn khi concept được phép ảnh hưởng chẩn đoán.
 
-![Hình 5](ecbm/limitations/fig5_concept_accuracy_by_group_test.png)
+![Hình 5](../../results/derm7pt/ecbm/limitations/fig5_concept_accuracy_by_group_test.png)
 
 **Bằng chứng.**
 
@@ -200,7 +200,7 @@ Với ECBM λ=1 và chỉ concept, khoảng 50% ca melanoma bị **giảm** xác
 
 ### 5.5. Không ổn định giữa các seed
 
-![Hình 6](ecbm/limitations/fig6_seed_variability_test.png)
+![Hình 6](../../results/derm7pt/ecbm/limitations/fig6_seed_variability_test.png)
 
 **Bằng chứng.**
 
@@ -223,7 +223,7 @@ Với ECBM λ=1 và chỉ concept, khoảng 50% ca melanoma bị **giảm** xác
 
 **Hiện tượng.** Nhánh concept → chẩn đoán rất mạnh khi nhận concept đúng, nhưng yếu hơn cả E_class khi nhận concept dự đoán.
 
-![Hình 7](ecbm/limitations/fig7_e_global_gt_vs_predicted.png)
+![Hình 7](../../results/derm7pt/ecbm/limitations/fig7_e_global_gt_vs_predicted.png)
 
 **Bằng chứng (validation, trung bình 3 seeds).**
 

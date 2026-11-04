@@ -1,0 +1,23 @@
+{
+  "locked_on": "2026-11-03, trước khi chạy A3",
+  "status": "Thăm dò hậu kiểm: giả thuyết hình thành sau khi xem A0-cal/A2 không đạt (A0-cal fit w_G = 0 ở 2/3 seed)",
+  "hypothesis": "Train có clamp concept ngẫu nhiên buộc likelihood coi trọng kênh can thiệp, nên E_global không bị triệt tiêu",
+  "data": "cache OOF/in-sample đã có của seeds 42/123/2026; validation 203 ca; test không được đọc",
+  "arms": {
+    "A3-IS": "global head, mixed-mask conditional joint NLL, local energies trong mẫu",
+    "A3-OOF": "global head, mixed-mask conditional joint NLL, local energies OOF",
+    "A3-cal": "chỉ (w_y, w_c, w_G, bias) như A0-cal nhưng với mixed masks, OOF, 4 mask cố định mỗi ca"
+  },
+  "mask_distribution": "π(∅) = 1/2; còn lại chọn k đều trong 1..7 rồi subset đều cỡ k; một mask mỗi ca mỗi update",
+  "budget": "giống A1/A2: 20 epoch, AdamW 1e-3, wd 0.01, batch 16, cùng thứ tự minibatch",
+  "primary": "A3-OOF − A1 về AUIC-F1 ≥ 0.01 ở ít nhất 2/3 seed",
+  "secondary": [
+    "A3-OOF − A2-OOF về AUIC-F1, cùng ngưỡng",
+    "A3-cal − A1 về AUIC-F1, cùng ngưỡng; w_G của A3-cal có > 0.05 ở cả 3 seed không"
+  ],
+  "guardrails": [
+    "Macro F1 tự động không thấp hơn A0 và A1 quá 0.01 ở mỗi seed",
+    "Concept Macro F1 không thấp hơn A0 và A1 quá 0.01 ở mỗi seed"
+  ],
+  "interpretation": "Kể cả khi đạt, đây là kết quả thăm dò trên validation đã góp phần hình thành giả thuyết; không trình bày như cải tiến đã kiểm chứng."
+}

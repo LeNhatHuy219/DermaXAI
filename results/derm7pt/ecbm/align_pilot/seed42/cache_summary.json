@@ -1,0 +1,23 @@
+{
+  "oof_train": {
+    "e_class_nll": 0.6071985960006714,
+    "e_class_f1_macro_argmax": 0.7278748786239423,
+    "e_class_mean_max_probability": 0.9505488872528076,
+    "local_concept_accuracy": 0.6734693987028939,
+    "local_concept_nll_sum": 5.811435103416443
+  },
+  "in_sample_train": {
+    "e_class_nll": 0.0059215836226940155,
+    "e_class_f1_macro_argmax": 1.0,
+    "e_class_mean_max_probability": 0.9946200251579285,
+    "local_concept_accuracy": 0.8654444813728333,
+    "local_concept_nll_sum": 2.6962724775075912
+  },
+  "full_valid": {
+    "e_class_nll": 0.7117298245429993,
+    "e_class_f1_macro_argmax": 0.7561759454633987,
+    "e_class_mean_max_probability": 0.9473565816879272,
+    "local_concept_accuracy": 0.6769880311829704,
+    "local_concept_nll_sum": 5.640929311513901
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "definitions": {
+    "preprocessing": "get_transforms('valid', 224, augment=False), model.eval()",
+    "e_class_nll": "mean_i -log softmax(-E_class(x_i,·))[y_i], không trọng số lớp",
+    "e_class_f1_macro_argmax": "Macro F1 của argmax softmax(-E_class), ngưỡng 0.5",
+    "local_concept_accuracy": "trung bình 7 nhóm của accuracy argmax softmax(-E_concept_g)",
+    "local_concept_nll_sum": "tổng 7 nhóm của mean CE(-E_concept_g), không trọng số trạng thái"
+  },
+  "checkpoints": {
+    "42": {
+      "checkpoint": "checkpoints/derm7pt/ecbm/efficientnet_b0_unified_exact_e50/seed42.pth",
+      "sha256": "9d84939f616d374cd91c32c97394277dd33ce05b3a1a3efc55057efd661eab94",
+      "epoch": 17,
+      "train": {
+        "e_class_nll": 0.02152285724878311,
+        "e_class_f1_macro_argmax": 0.9929526994744386,
+        "e_class_mean_max_probability": 0.981920599937439,
+        "local_concept_accuracy": 0.7661708763667515,
+        "local_concept_nll_sum": 4.344412177801132
+      },
+      "valid": {
+        "e_class_nll": 0.6686462759971619,
+        "e_class_f1_macro_argmax": 0.778061224489796,
+        "e_class_mean_max_probability": 0.9388180375099182,
+        "local_concept_accuracy": 0.6298381430762154,
+        "local_concept_nll_sum": 6.095468193292618
+      }
+    },
+    "123": {
+      "checkpoint": "checkpoints/derm7pt/ecbm/efficientnet_b0_unified_exact_e50/seed123.pth",
+      "sha256": "b6420f586b2f4165c13ea5297261a28c1dbf73f20a543e6dbd5d0b32e9bc667e",
+      "epoch": 10,
+      "train": {
+        "e_class_nll": 0.06347209215164185,
+        "e_class_f1_macro_argmax": 0.9791834677419355,
+        "e_class_mean_max_probability": 0.9545402526855469,
+        "local_concept_accuracy": 0.6755448026316506,
+        "local_concept_nll_sum": 5.699266880750656
+      },
+      "valid": {
+        "e_class_nll": 0.5916787385940552,
+        "e_class_f1_macro_argmax": 0.8033007220329447,
+        "e_class_mean_max_probability": 0.909941554069519,
+        "local_concept_accuracy": 0.5981703060013908,
+        "local_concept_nll_sum": 6.71850711107254
+      }
+    },
+    "2026": {
+      "checkpoint": "checkpoints/derm7pt/ecbm/efficientnet_b0_unified_exact_e50/seed2026.pth",
+      "sha256": "3c2b51c8c0ea612800c02e1f84f0ccde16b2e4a243ede33b3c5f87fdd49f8855",
+      "epoch": 30,
+      "train": {
+        "e_class_nll": 0.009587664157152176,
+        "e_class_f1_macro_argmax": 0.9964623752623238,
+        "e_class_mean_max_probability": 0.9916396737098694,
+        "local_concept_accuracy": 0.8426149998392377,
+        "local_concept_nll_sum": 2.9270651638507843
+      },
+      "valid": {
+        "e_class_nll": 0.7354661822319031,
+        "e_class_f1_macro_argmax": 0.7829559748427672,
+        "e_class_mean_max_probability": 0.9351578950881958,
+        "local_concept_accuracy": 0.6720619371959141,
+        "local_concept_nll_sum": 5.5850843489170074
+      }
+    }
+  }
+}

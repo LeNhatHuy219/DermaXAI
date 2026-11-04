@@ -3,6 +3,7 @@ import math
 from pathlib import Path
 
 from src.naming import DATASET
+from src.transforms import image_size_hw
 
 # Metric mặc định để chọn checkpoint (Macro-F1 hoặc Balanced Accuracy).
 
@@ -47,7 +48,7 @@ def metric_from_config(config):
 
 # Tên thư mục cho một cấu hình; seed nằm trong tên JSON để ba runs ở cùng cohort.
 def configuration_name(head, epochs, diagnosis_lr=None, *, augmentation_preset="legacy_letterbox",
-                       concept_loss_weight=1., lr=1e-4, default_lr=1e-4, weight_decay=.01):
+                       concept_loss_weight=1., lr=1e-4, default_lr=1e-4, weight_decay=.01, image_size=224):
     name = f"{head}_e{epochs}"
     if diagnosis_lr is not None:
         name += f"_headlr{diagnosis_lr:g}"
@@ -59,6 +60,10 @@ def configuration_name(head, epochs, diagnosis_lr=None, *, augmentation_preset="
         name += f"_lr{lr:g}"
     if weight_decay != .01:
         name += f"_wd{weight_decay:g}"
+    # Kích thước khác 224 ghi vào tên (_r512, _r512x768) để không ghi đè kết quả 224.
+    height, width = image_size_hw(image_size)
+    if (height, width) != (224, 224):
+        name += f"_r{height}" if height == width else f"_r{height}x{width}"
     return name
 
 
@@ -106,7 +111,7 @@ def select_threshold(y_true, y_prob, metric=DEFAULT_THRESHOLD_METRIC):
 
 # Đường dẫn run mới: checkpoints|results/<dataset>/<model>/[<backbone>_]<cấu hình>[_ckptbacc][_thrbacc]/seed<seed>.
 # Model black-box dùng id backbone làm <model> nên không lặp tiền tố; CBM/ECBM truyền backbone làm tiền tố.
-# Kết quả cũ theo tên M1–M5 (results/f1_macro, checkpoints/f1_macro, ...) giữ nguyên; xem results/NAME_MAPPING.md.
+# Kết quả cũ theo tên M1–M5 (results/archive/f1_macro, checkpoints/archive/f1_macro, ...) giữ nguyên; xem results/NAME_MAPPING.md.
 def run_paths(project_root, metric, model, configuration, seed, checkpoint_suffix=".pth",
               threshold_metric=DEFAULT_THRESHOLD_METRIC, backbone=None):
     selection_name(metric)

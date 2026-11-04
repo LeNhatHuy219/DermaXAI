@@ -16,12 +16,12 @@ if PROJECT_ROOT not in sys.path:
 
 # Import src.dataset trước sklearn để tránh xung đột thư viện OpenMP trên một số nền tảng.
 from src.dataset import CONCEPT_NAMES, Derm7ptDataset
+from src import runtime
 
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
-from experiments import run_soft_cbm as shared
 from experiments.run_ecbm import _build_model, validate_ecbm_config
 from src.ecbm import exact_inference
 from src.metrics import compute_metrics
@@ -34,10 +34,6 @@ PLAN_PATH = os.path.join(STUDY_DIR, "study_plan.json")
 REPORT_KEYS = ("f1_macro", "balanced_accuracy", "roc_auc", "sensitivity", "specificity")
 
 
-def _sha256(path):
-    return hashlib.sha256(open(path, "rb").read()).hexdigest()
-
-
 def _trapezoid(values, x):
     # NumPy 2.4 bỏ trapz; giữ tương thích NumPy 1.x như src/intervention.py.
     integrate = getattr(np, "trapezoid", None) or np.trapz
@@ -47,7 +43,7 @@ def _trapezoid(values, x):
 # Feature ảnh của một split, nhãn và concept GT; kiểm tra hash checkpoint, manifest và concept schema.
 def load_seed(entry, manifest_path, device, split="valid"):
     checkpoint_path = os.path.join(PROJECT_ROOT, entry["path"])
-    if _sha256(checkpoint_path) != entry["sha256"]:
+    if runtime.file_sha256(checkpoint_path) != entry["sha256"]:
         raise ValueError(f"Checkpoint {entry['path']} differs from the frozen hash")
     checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=True)
     validate_manifest(checkpoint, manifest_path)
@@ -139,7 +135,7 @@ def run_study(device_name="auto", overwrite=False):
     if os.path.exists(selection_path) and not overwrite:
         raise FileExistsError(f"{selection_path} đã tồn tại; dùng --overwrite nếu chủ động chạy lại")
     manifest_path = os.path.join(PROJECT_ROOT, "data", "manifest.csv")
-    device = shared.get_device(device_name)
+    device = runtime.get_device(device_name)
     threshold_metric = "f1_macro"
     per_seed = {}
     for seed, entry in plan["fixed"]["checkpoints"].items():
@@ -174,7 +170,7 @@ def run_study(device_name="auto", overwrite=False):
                                     "validation_f1_macro": compute_metrics(data["labels"], class_pred, class_scores)["f1_macro"]},
                    "threshold_selection": "maximize_validation_f1_macro_tie_nearest_0.5",
                    "results": results}
-        shared._save_json(os.path.join(STUDY_DIR, f"lambda_seed{seed}.json"), payload)
+        runtime.save_json(os.path.join(STUDY_DIR, f"lambda_seed{seed}.json"), payload)
         per_seed[seed] = results
 
     # Áp dụng quy tắc đã chốt trong study_plan.json: ràng buộc F1 m=0, rồi tối đa curve AUC; hòa chọn λ nhỏ hơn.
@@ -206,7 +202,7 @@ def run_study(device_name="auto", overwrite=False):
                  "chosen_decision_thresholds": chosen["decision_thresholds"],
                  "inference_energy_weights": [1.0, 1.0, chosen["lambda_global"]],
                  "test_read": False, "summary": summary}
-    shared._save_json(selection_path, selection)
+    runtime.save_json(selection_path, selection)
     _write_report(summary, chosen, floor)
     print(f"\nλ_global được chọn: {chosen['lambda_global']:g} (ngưỡng ràng buộc F1 m0 ≥ {floor:.4f})")
     return selection

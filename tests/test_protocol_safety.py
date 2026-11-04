@@ -27,7 +27,6 @@ from experiments.run_soft_cbm import (StateWeightedCE, _default_paths, run_soft_
                                 run_soft_cbm_intervention, validate_soft_cbm_config, SOFT_CBM_PROTOCOL)
 from experiments.run_oracle_lr import run_oracle_lr_experiment, evaluate_oracle_lr_test
 from experiments import run_blackbox, run_oracle_lr, run_soft_cbm, run_hard_cbm
-from experiments.summarize_seeds import summarize_seeds
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "data/manifest.csv"
@@ -115,7 +114,6 @@ class ProtocolSafetyTests(unittest.TestCase):
         # Dùng các dự đoán hợp lệ mà F1 và BAcc xếp hạng NGƯỢC nhau.
         # Ba epochs có dự đoán A/B/A: F1 phải chọn epoch 1 (không phải 2 hoặc 3).
         from test_hard_cbm_protocol import TinyHardCBM
-        from experiments import hard_cbm_common
         train, valid = TinyDataset(str(self.manifest), "train"), TinyDataset(str(self.manifest), "valid")
         bundle = {"train": DataLoader(train, batch_size=128), "valid": DataLoader(valid, batch_size=128),
                   "datasets": {"train": train, "valid": valid},
@@ -144,7 +142,7 @@ class ProtocolSafetyTests(unittest.TestCase):
                     # F1 kiểm tra DEFAULT mới; BAcc kiểm tra chế độ tái lập protocol cũ.
                     if metric != "f1_macro":
                         kwargs["checkpoint_metric"] = metric
-                    module = run_blackbox if label == "blackbox" else run_soft_cbm if label == "soft_cbm" else hard_cbm_common
+                    module = run_blackbox if label == "blackbox" else run_soft_cbm if label == "soft_cbm" else run_hard_cbm
                     original = module.evaluate
 
                     def evaluate(*args, **kw):
@@ -173,7 +171,7 @@ class ProtocolSafetyTests(unittest.TestCase):
                     else:
                         stack.enter_context(patch.object(module, "get_hard_joint_cbm", TinyHardCBM))
                         kwargs["gradient_mode"] = "straight_through"
-                        runner = hard_cbm_common.run_hard_cbm_experiment
+                        runner = run_hard_cbm.run_hard_cbm_experiment
                     stack.enter_context(contextlib.redirect_stdout(io.StringIO()))
                     result = runner(**kwargs)
                     frozen = torch.load(checkpoint, map_location="cpu", weights_only=True)
@@ -188,9 +186,8 @@ class ProtocolSafetyTests(unittest.TestCase):
 
     def test_checkpoint_criteria_have_separate_paths_and_legacy_config_is_recognized(self):
         from src.selection import metric_from_config
-        from experiments import hard_cbm_common
         for paths in [run_blackbox._default_paths, run_oracle_lr._default_paths,
-                      run_soft_cbm._default_paths, hard_cbm_common._default_paths]:
+                      run_soft_cbm._default_paths, run_hard_cbm._default_paths]:
             new = paths(checkpoint_metric="f1_macro")
             old = paths(checkpoint_metric="balanced_accuracy")
             self.assertNotEqual(new, old)
@@ -421,45 +418,6 @@ class ProtocolSafetyTests(unittest.TestCase):
             self.assertFalse(fresh.exists())
         with self.assertRaisesRegex(ValueError, "distinct paths"):
             run_oracle_lr.main(["--checkpoint_path", str(checkpoint), "--results_path", str(checkpoint), "--overwrite"])
-
-    def test_seed_summary_checks_protocol_distinct_seeds_and_metric_integrity(self):
-        df = pd.read_csv(self.manifest)
-        test = df[df.split == "test"]
-        labels = test.diagnosis_binary.to_numpy(dtype=int)
-        paths, runs = [], []
-        for i, seed in enumerate([42, 123, 2026]):
-            probs = np.where(labels == 1, .9, .1)
-            probs[:i*10] = 1-probs[:i*10]
-            preds = (probs >= .5).astype(int)
-            run = {"model": "M1_BlackBox_EfficientNetB0", "mode": "final_test",
-                   "hyperparameters": {"seed": seed, "epochs": 10, "device": "cpu"},
-                   "manifest_fingerprint": manifest_fingerprint(self.manifest), "decision_threshold": .5,
-                   "test_metrics": compute_metrics(labels, preds, probs),
-                   "test_predictions": [{"case_num": int(case), "y_true": int(y), "y_pred": int(p), "y_prob": float(s)}
-                                        for case, y, p, s in zip(test.case_num, labels, preds, probs)]}
-            path = self.path / f"seed{seed}.json"
-            path.write_text(json.dumps(run))
-            paths.append(path)
-            runs.append(run)
-        summary = summarize_seeds(paths, self.manifest, self.path / "summary.json")
-        values = [run["test_metrics"]["balanced_accuracy"] for run in runs]
-        self.assertAlmostEqual(summary["diagnosis_metrics"]["balanced_accuracy"]["mean"], np.mean(values))
-        self.assertAlmostEqual(summary["diagnosis_metrics"]["balanced_accuracy"]["sample_sd"], np.std(values, ddof=1))
-        for mutation in ["duplicate_seed", "changed_protocol", "bad_metrics", "wrong_cases"]:
-            changed = copy.deepcopy(runs[-1])
-            if mutation == "duplicate_seed":
-                changed["hyperparameters"]["seed"] = 42
-            elif mutation == "changed_protocol":
-                changed["hyperparameters"]["epochs"] = 20
-            elif mutation == "bad_metrics":
-                changed["test_metrics"]["balanced_accuracy"] = .123
-            else:
-                changed["test_predictions"] = changed["test_predictions"][1:]
-            paths[-1].write_text(json.dumps(changed))
-            with self.assertRaises(ValueError):
-                summarize_seeds(paths, self.manifest, self.path / "bad_summary.json")
-        self.assertFalse((self.path / "bad_summary.json").exists())
-
 
 if __name__ == "__main__":
     unittest.main()

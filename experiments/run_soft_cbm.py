@@ -2,11 +2,9 @@
 
 
 import argparse
-import hashlib
 import json
 import os
 import platform
-import random
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
@@ -19,7 +17,8 @@ if PROJECT_ROOT not in sys.path:
 # Import src.dataset trước sklearn để tránh xung đột thư viện OpenMP trên một số nền tảng.
 
 from src.dataset import (CONCEPT_NAMES, CONCEPT_NUM_CLASSES, Derm7ptDataset,
-                         get_dataloaders, compute_concept_statistics)
+                         get_dataloaders, compute_concept_statistics, compute_train_observed_states)
+from src import runtime
 
 import numpy as np
 import pandas as pd
@@ -63,82 +62,6 @@ DEFAULT_DIAGNOSIS_HEAD = "mlp128"
 DEFAULT_DIAGNOSIS_LR = 1e-3
 SOFT_CBM_PROTOCOL = "soft_joint_state_weighted_v1"
 DIAGNOSIS_HEADS = {"linear": "Linear(28, 2)", "mlp128": "MLP(28, 128, 2)"}
-
-
-# Gán seed cho Python/NumPy/PyTorch để kiểm soát nguồn ngẫu nhiên của run.
-def set_seed(seed: int = DEFAULT_SEED) -> None:
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed_all(seed)
-    if torch.backends.mps.is_available():
-        torch.mps.manual_seed(seed)
-
-
-# Chọn thiết bị theo CLI; auto ưu tiên CUDA, rồi MPS, rồi CPU.
-def get_device(device_arg: str = "auto") -> torch.device:
-    if device_arg != "auto":
-        return torch.device(device_arg)
-    if torch.cuda.is_available():
-        return torch.device("cuda")
-    if torch.backends.mps.is_available():
-        return torch.device("mps")
-    return torch.device("cpu")
-
-
-# Tính SHA-256 nội dung file để ghép đúng manifest/checkpoint với export.
-def _manifest_hash(manifest_path: str) -> str:
-    digest = hashlib.sha256()
-    with open(manifest_path, "rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
-# Chọn ngưỡng trên validation theo tiêu chí đã khai báo (mặc định Macro F1); giữ ngưỡng cho test.
-def select_validation_threshold(y_true: np.ndarray, y_prob: np.ndarray,
-                                metric: str = DEFAULT_THRESHOLD_METRIC) -> Tuple[float, float]:
-    return select_threshold(y_true, y_prob, metric)
-
-
-# Ghi lại states có trong train để báo cáo thêm concept F1 trên states đã quan sát.
-def compute_train_observed_states(
-    train_df: pd.DataFrame, label_mapping: Dict[str, Dict[str, int]]
-) -> Dict[str, List[int]]:
-    # Trạng thái concept nào thực sự xuất hiện trong train, dùng cho Macro-F1 "train-observed"
-    observed: Dict[str, List[int]] = {}
-    for c_name in CONCEPT_NAMES:
-        observed_vals = train_df[c_name].unique().tolist()
-        observed[c_name] = sorted({label_mapping[c_name][v] for v in observed_vals})
-    return observed
-
-
-# Ghép case IDs/GT/probabilities/predictions thành records để lưu và kiểm tra từng ca.
-def _extract_sample_predictions(
-    df: pd.DataFrame, y_pred: np.ndarray, y_prob: np.ndarray,
-    concept_outputs: Dict[str, Any] = None,
-) -> List[Dict[str, Any]]:
-    records = []
-    for index, ((_, row), pred, prob) in enumerate(zip(df.iterrows(), y_pred, y_prob)):
-        records.append({
-            "case_num": int(row["case_num"]),
-            "source_index": int(row["source_index"]),
-            "split": str(row["split"]),
-            "diagnosis": str(row["diagnosis"]),
-            "is_inconsistent": bool(row["is_inconsistent_profile"]),
-            "y_true": int(row["diagnosis_binary"]),
-            "y_pred": int(pred),
-            "y_prob": float(prob),
-        })
-        if concept_outputs is not None:
-            records[-1].update({
-                "concept_true": {c: int(concept_outputs["true"][c][index]) for c in CONCEPT_NAMES},
-                "concept_pred": {c: int(concept_outputs["pred"][c][index]) for c in CONCEPT_NAMES},
-                "concept_probabilities": {c: concept_outputs["probabilities"][c][index].tolist()
-                                          for c in CONCEPT_NAMES},
-            })
-    return records
 
 
 # Tính loss từng concept group bằng criterion tương ứng rồi lấy mean của bảy groups.
@@ -379,19 +302,6 @@ def _build_optimizer(model, lr, weight_decay, diagnosis_lr=None):
     ], weight_decay=weight_decay)
 
 
-# Tạo thư mục cha và từ chối ghi đè file đã có nếu chưa bật overwrite.
-def _prepare_output(path: str, overwrite: bool) -> None:
-    if os.path.exists(path) and not overwrite:
-        raise FileExistsError(f"Artifact already exists: {path}. Choose another path or pass --overwrite.")
-    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
-
-
-# Lưu dict kết quả thành JSON; không thực hiện thêm train hoặc chọn model.
-def _save_json(path: str, payload: Dict[str, Any]) -> None:
-    with open(path, "w", encoding="utf-8") as handle:
-        json.dump(payload, handle, ensure_ascii=False, indent=2)
-
-
 # Train/validation, chọn best epoch rồi chọn ngưỡng, lưu cả config/history/predictions.
 def run_soft_cbm_experiment(
     manifest_path: str = None,
@@ -425,8 +335,8 @@ def run_soft_cbm_experiment(
         raise ValueError("Unknown Soft CBM diagnosis head")
     if diagnosis_lr is not None and (not np.isfinite(diagnosis_lr) or diagnosis_lr <= 0):
         raise ValueError("diagnosis learning rate must be positive and finite")
-    set_seed(seed)
-    device = get_device(device_name)
+    runtime.set_seed(seed)
+    device = runtime.get_device(device_name)
 
     if manifest_path is None:
         manifest_path = os.path.join(PROJECT_ROOT, "data", "manifest.csv")
@@ -437,9 +347,9 @@ def run_soft_cbm_experiment(
         checkpoint_path, results_path, overwrite, save_results,
     )
 
-    _prepare_output(checkpoint_path, overwrite)
+    runtime.prepare_output(checkpoint_path, overwrite)
     if save_results:
-        _prepare_output(results_path, overwrite)
+        runtime.prepare_output(results_path, overwrite)
 
     print(f"Khởi động Soft CBM (EfficientNet-B0 -> 7 concept heads -> g {DIAGNOSIS_HEADS[diagnosis_head]})")
     print(f"Thiết bị sử dụng: {device} | Random seed: {seed}")
@@ -525,7 +435,7 @@ def run_soft_cbm_experiment(
     if diagnosis_head == "mlp128":
         config.update(diagnosis_hidden_dim=128, diagnosis_dropout=0.3,
                       diagnosis_normalization="LayerNorm")
-    manifest_sha256 = _manifest_hash(manifest_path)
+    manifest_sha256 = runtime.file_sha256(manifest_path)
 
     print("\n--- Bắt đầu huấn luyện Soft CBM (Soft Joint CBM) ---")
     for epoch in range(1, epochs + 1):
@@ -608,7 +518,7 @@ def run_soft_cbm_experiment(
         concept_outputs=val_concept_outputs,
     )
     val_true = bundle["datasets"]["valid"].df["diagnosis_binary"].to_numpy(dtype=int)
-    threshold, _ = select_validation_threshold(val_true, val_probs_best, threshold_metric)
+    threshold, _ = select_threshold(val_true, val_probs_best, threshold_metric)
     val_preds_best = (val_probs_best >= threshold).astype(int)
     val_metrics_best = compute_metrics(val_true, val_preds_best, val_probs_best)
     checkpoint["decision_threshold"] = threshold
@@ -619,7 +529,7 @@ def run_soft_cbm_experiment(
         val_metrics_best, title=f"Validation Set (Epoch {best_epoch}, threshold={threshold:.6f})"
     )
     concept_table = print_concept_metrics_table(val_concept_metrics_at_05)
-    val_sample_preds = _extract_sample_predictions(
+    val_sample_preds = runtime.sample_prediction_records(
         bundle["datasets"]["valid"].df, val_preds_best, val_probs_best, val_concept_outputs
     )
 
@@ -640,7 +550,7 @@ def run_soft_cbm_experiment(
         "manifest_fingerprint": manifest_fingerprint(manifest_path),
         "concept_schema": schema,
         "checkpoint_path": os.path.abspath(checkpoint_path),
-        "checkpoint_sha256": _manifest_hash(checkpoint_path),
+        "checkpoint_sha256": runtime.file_sha256(checkpoint_path),
         "decision_threshold": threshold,
         "summary": summary_text,
         "validation_metrics_at_0.5": val_metrics_at_05,
@@ -653,7 +563,7 @@ def run_soft_cbm_experiment(
     }
 
     if save_results:
-        _save_json(results_path, results)
+        runtime.save_json(results_path, results)
         print(f"Kết quả chi tiết đã lưu tại: {results_path}")
 
     return results
@@ -671,7 +581,7 @@ def evaluate_soft_cbm_test(
     if manifest_path is None:
         manifest_path = os.path.join(PROJECT_ROOT, "data", "manifest.csv")
     manifest_path = os.path.abspath(manifest_path)
-    device = get_device(device_name)
+    device = runtime.get_device(device_name)
     checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=True)
     if "decision_threshold" not in checkpoint or "config" not in checkpoint:
         raise ValueError("Checkpoint has no frozen validation threshold/config; use a newly trained checkpoint")
@@ -686,7 +596,7 @@ def evaluate_soft_cbm_test(
     if results_path is None:
         _, results_path = _config_paths(config)
     if save_results:
-        _prepare_output(results_path, overwrite)
+        runtime.prepare_output(results_path, overwrite)
 
     train_df = pd.read_csv(manifest_path, dtype={"is_inconsistent_profile": bool})
     train_df = train_df[train_df["split"] == "train"].reset_index(drop=True)
@@ -724,7 +634,7 @@ def evaluate_soft_cbm_test(
         "model": "soft_cbm",
         "mode": "final_test",
         "checkpoint_path": os.path.abspath(checkpoint_path),
-        "checkpoint_sha256": _manifest_hash(checkpoint_path),
+        "checkpoint_sha256": runtime.file_sha256(checkpoint_path),
         "best_epoch": int(checkpoint["epoch"]),
         "hyperparameters": config,
         "manifest_sha256": checkpoint["manifest_sha256"],
@@ -735,7 +645,7 @@ def evaluate_soft_cbm_test(
         "test_loss": test_loss,
         "test_metrics": test_metrics,
         "test_concept_metrics": test_concept_metrics,
-        "test_predictions": _extract_sample_predictions(test_dataset.df, test_preds, test_probs,
+        "test_predictions": runtime.sample_prediction_records(test_dataset.df, test_preds, test_probs,
                                                        test_concept_outputs or None),
     }
     if save_results:
@@ -759,7 +669,7 @@ def run_soft_cbm_intervention(checkpoint_path, predictions_path, manifest_path=N
         raise ValueError("Expected frozen Soft CBM test predictions")
     if export.get("hyperparameters") != checkpoint["config"]:
         raise ValueError("Prediction training config differs from checkpoint")
-    if export.get("checkpoint_sha256") != _manifest_hash(checkpoint_path):
+    if export.get("checkpoint_sha256") != runtime.file_sha256(checkpoint_path):
         raise ValueError("Prediction export does not belong to this checkpoint; re-export Soft CBM test")
     threshold = float(checkpoint["decision_threshold"])
     if export.get("decision_threshold") != threshold:
@@ -798,7 +708,7 @@ def run_soft_cbm_intervention(checkpoint_path, predictions_path, manifest_path=N
     result.update({"model": "soft_cbm", "mode": "intervention_analysis",
                    "hyperparameters": checkpoint["config"],
                    "concept_schema": schema, "manifest_fingerprint": manifest_fingerprint(manifest_path),
-                   "checkpoint_sha256": _manifest_hash(checkpoint_path),
+                   "checkpoint_sha256": runtime.file_sha256(checkpoint_path),
                    "checkpoint_epoch": int(checkpoint["epoch"]),
                    "evaluation_environment": {"device": "cpu", "platform": platform.platform(),
                                               "torch_version": str(torch.__version__),
@@ -809,8 +719,8 @@ def run_soft_cbm_intervention(checkpoint_path, predictions_path, manifest_path=N
     results_path = results_path or str(Path(predictions_path).parent / "intervention" / Path(predictions_path).name)
     if Path(results_path).resolve() in {Path(checkpoint_path).resolve(), Path(predictions_path).resolve(), Path(manifest_path).resolve()}:
         raise ValueError("Intervention output must not overwrite its inputs")
-    _prepare_output(results_path, overwrite)
-    _save_json(results_path, result)
+    runtime.prepare_output(results_path, overwrite)
+    runtime.save_json(results_path, result)
     print(f"Saved {result['num_subsets']} intervention subsets to {results_path}")
     return result
 
@@ -901,7 +811,7 @@ def main(argv=None):
             config = torch.load(checkpoint_path, map_location="cpu", weights_only=True)["config"]
             results_path = _config_paths(config)[1]
         if not args.no_save:
-            _prepare_output(results_path, args.overwrite)
+            runtime.prepare_output(results_path, args.overwrite)
         test = evaluate_soft_cbm_test(
             checkpoint_path=checkpoint_path,
             manifest_path=args.manifest_path,

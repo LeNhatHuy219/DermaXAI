@@ -1,0 +1,135 @@
+{
+  "created": "2026-11-04",
+  "question": "Đưa ảnh vào mô hình ở độ phân giải gốc 512x768 (cao x rộng) thay vì letterbox 224x224 có cải thiện nhận diện concept/chẩn đoán trên validation không?",
+  "design": {
+    "models": [
+      "blackbox (EfficientNet-B0, linear_e50_headlr0.001)",
+      "hard_cbm (mlp128_e50_headlr0.001)"
+    ],
+    "seed": 42,
+    "split": "validation 203 ca; KHÔNG chấm test (--skip_test)",
+    "change": "chỉ đổi --image_size 224 -> 512x768; giữ nguyên backbone, 50 epochs, batch 16, AdamW, LR, cosine, augmentation, quy tắc chọn checkpoint và ngưỡng",
+    "device": "Kaggle Tesla T4",
+    "outputs": "results/derm7pt/<model>/<cấu hình>_r512x768/seed42.json"
+  },
+  "reference_224": {
+    "note": "6 lần chạy 224 đã có: 3 seed x {MPS gốc, Kaggle T4 train lại}; chỉ validation",
+    "runs": {
+      "blackbox": [
+        {
+          "seed": 42,
+          "device": "mps",
+          "f1_macro": 0.7586486878352907,
+          "roc_auc": 0.7897714153775108,
+          "concept_accuracy": null
+        },
+        {
+          "seed": 42,
+          "device": "kaggle_t4",
+          "f1_macro": 0.7495016611295682,
+          "roc_auc": 0.7891941814823366,
+          "concept_accuracy": null
+        },
+        {
+          "seed": 123,
+          "device": "mps",
+          "f1_macro": 0.7463231760069211,
+          "roc_auc": 0.8092819210344031,
+          "concept_accuracy": null
+        },
+        {
+          "seed": 123,
+          "device": "kaggle_t4",
+          "f1_macro": 0.7363556736838925,
+          "roc_auc": 0.8073193257908104,
+          "concept_accuracy": null
+        },
+        {
+          "seed": 2026,
+          "device": "mps",
+          "f1_macro": 0.7560682528238405,
+          "roc_auc": 0.7911567767259293,
+          "concept_accuracy": null
+        },
+        {
+          "seed": 2026,
+          "device": "kaggle_t4",
+          "f1_macro": 0.7543937850229241,
+          "roc_auc": 0.7902332024936505,
+          "concept_accuracy": null
+        }
+      ],
+      "hard_cbm": [
+        {
+          "seed": 42,
+          "device": "mps",
+          "f1_macro": 0.7915058986814711,
+          "roc_auc": 0.8150542599861463,
+          "concept_accuracy": 0.6608022519352569
+        },
+        {
+          "seed": 42,
+          "device": "kaggle_t4",
+          "f1_macro": 0.7827586206896552,
+          "roc_auc": 0.8305818517663357,
+          "concept_accuracy": 0.6509500351864884
+        },
+        {
+          "seed": 123,
+          "device": "mps",
+          "f1_macro": 0.7870629370629371,
+          "roc_auc": 0.8005656892172708,
+          "concept_accuracy": 0.6685432793807179
+        },
+        {
+          "seed": 123,
+          "device": "kaggle_t4",
+          "f1_macro": 0.8240848647841028,
+          "roc_auc": 0.8136111752482105,
+          "concept_accuracy": 0.6741731175228712
+        },
+        {
+          "seed": 2026,
+          "device": "mps",
+          "f1_macro": 0.8119527864933513,
+          "roc_auc": 0.828215192796121,
+          "concept_accuracy": 0.6608022519352569
+        },
+        {
+          "seed": 2026,
+          "device": "kaggle_t4",
+          "f1_macro": 0.8410613310134841,
+          "roc_auc": 0.8308127453244054,
+          "concept_accuracy": 0.6523574947220266
+        }
+      ]
+    }
+  },
+  "criteria": {
+    "C1_concept": {
+      "rule": "Hard CBM validation concept accuracy >= trung bình 6 lần chạy 224 + 0.02",
+      "threshold": 0.6813
+    },
+    "C2_auc": {
+      "rule": "ROC-AUC validation của Black-box HOẶC Hard CBM >= max 6 lần chạy 224 của chính model đó + 0.01",
+      "threshold": {
+        "blackbox": 0.8193,
+        "hard_cbm": 0.8408
+      }
+    },
+    "G_guard": {
+      "rule": "Macro F1 validation của mỗi model >= min 6 lần chạy 224 của model đó - 0.02",
+      "threshold": {
+        "blackbox": 0.7164,
+        "hard_cbm": 0.7628
+      }
+    },
+    "decision": "ĐẠT (chạy tiếp 3 seeds và thêm Soft CBM, ECBM) nếu (C1 hoặc C2) và G. Ngược lại: dừng, báo cáo là kết quả âm ở 1 seed.",
+    "why": "1 seed nên dùng ngưỡng so với toàn bộ biến thiên của 224 (đổi seed và đổi máy); Macro F1 dao động tới 0.03 chỉ vì đổi máy nên chỉ dùng làm điều kiện chặn."
+  },
+  "caveats": [
+    "1 seed, chỉ là pilot để quyết định có đáng tốn GPU chạy đủ hay không",
+    "EfficientNet-B0 pretrain ở 224; ở 512x768 vùng nhìn tương đối của mỗi filter nhỏ hơn",
+    "Ngưỡng chẩn đoán vẫn chọn trên chính validation nên Macro F1 validation hơi lạc quan, giống bộ 224"
+  ]
+}

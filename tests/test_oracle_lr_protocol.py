@@ -11,20 +11,20 @@ if PROJECT_ROOT not in sys.path:
 
 # Giữ đúng thứ tự import an toàn: src.dataset (kéo theo torch) trước sklearn.
 from src.dataset import CONCEPT_NAMES, TOTAL_CONCEPT_STATES  # noqa: F401
+from src.selection import select_threshold
+from src.runtime import file_sha256
 
 import numpy as np
 import pandas as pd
 
 from experiments.run_oracle_lr import (
     _default_paths,
-    _manifest_hash,
     _select_best_C,
     build_oracle_features,
     concept_state_names,
     evaluate_oracle_lr_test,
     run_oracle_lr_experiment,
-    select_validation_threshold,
-)
+    )
 
 
 class OracleLRProtocolTests(unittest.TestCase):
@@ -64,10 +64,10 @@ class OracleLRProtocolTests(unittest.TestCase):
             compute_metrics(y_valid, best_model.predict_proba(X_valid)[:, 1] >= .5)["f1_macro"])
 
     def test_threshold_selection_matches_expected_tie_break(self):
-        threshold, f1 = select_validation_threshold(np.array([0, 0, 1, 1]), np.array([0.1, 0.55, 0.45, 0.8]))
+        threshold, f1 = select_threshold(np.array([0, 0, 1, 1]), np.array([0.1, 0.55, 0.45, 0.8]))
         self.assertAlmostEqual(threshold, 0.45)
         self.assertAlmostEqual(f1, 0.7333333333333334)
-        threshold, bacc = select_validation_threshold(
+        threshold, bacc = select_threshold(
             np.array([0, 0, 1, 1]), np.array([0.1, 0.55, 0.45, 0.8]), "balanced_accuracy")
         self.assertAlmostEqual(threshold, 0.45)
         self.assertAlmostEqual(bacc, 0.75)
@@ -102,7 +102,7 @@ class OracleLRProtocolTests(unittest.TestCase):
         self.assertNotEqual(_default_paths(42), _default_paths(123))
 
     def test_manifest_hash_is_deterministic(self):
-        self.assertEqual(_manifest_hash(self.manifest_path), _manifest_hash(self.manifest_path))
+        self.assertEqual(file_sha256(self.manifest_path), file_sha256(self.manifest_path))
 
     def test_full_train_then_test_protocol_on_real_manifest(self):
         with tempfile.TemporaryDirectory(prefix="oracle_lr_protocol_") as temp_dir:

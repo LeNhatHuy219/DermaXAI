@@ -14,6 +14,7 @@ import numpy as np
 from sklearn.metrics import f1_score
 
 from src.metrics import compute_metrics
+from src import runtime
 
 RESULTS = os.path.join(PROJECT_ROOT, "results", "derm7pt")
 PLAN_PATH = os.path.join(RESULTS, "test_plan.json")
@@ -22,24 +23,15 @@ NUM_BOOTSTRAP = 2000
 BOOTSTRAP_SEED = 20261005
 
 
-def _load(path):
-    return json.load(open(path, encoding="utf-8"))
-
-
-def _stats(values):
-    values = [float(v) for v in values]
-    return {"mean": float(np.mean(values)), "sd": float(np.std(values, ddof=1)), "values": values}
-
-
 # Dự đoán test từng seed (sắp theo case_num) và metrics tổng hợp của mỗi model/chế độ.
 def collect():
-    plan = _load(PLAN_PATH)
+    plan = runtime.load_json(PLAN_PATH)
     runs = {}
     for model in ("efficientnet_b0", "soft_cbm", "hard_cbm"):
         cohort = os.path.join(PROJECT_ROOT, plan["models"][model]["cohort"])
         seeds = {}
         for seed in SEEDS:
-            run = _load(os.path.join(cohort, f"seed{seed}.json"))
+            run = runtime.load_json(os.path.join(cohort, f"seed{seed}.json"))
             records = sorted(run["test_predictions"], key=lambda r: r["case_num"])
             concept = run.get("test_concept_metrics", {}).get("overall_f1_macro_all_defined")
             seeds[seed] = {"case_ids": [r["case_num"] for r in records], "y_true": [r["y_true"] for r in records],
@@ -47,12 +39,12 @@ def collect():
                            "concept_f1": concept}
         intervention = None
         if model != "efficientnet_b0":
-            summary = _load(os.path.join(cohort, "intervention", "summary.json"))
+            summary = runtime.load_json(os.path.join(cohort, "intervention", "summary.json"))
             intervention = {"m7_f1_macro": summary["curve"][-1]["f1_macro"]["values"],
                             "curve_auc_f1_macro": summary["intervention_curve_auc"]["f1_macro"]["absolute"]["values"]}
         runs[model] = {"seeds": seeds, "intervention": intervention}
     ecbm_dir = os.path.join(RESULTS, "ecbm", "test_modes")
-    ecbm_runs = {seed: _load(os.path.join(ecbm_dir, f"seed{seed}.json")) for seed in SEEDS}
+    ecbm_runs = {seed: runtime.load_json(os.path.join(ecbm_dir, f"seed{seed}.json")) for seed in SEEDS}
     for mode in plan["models"]["ecbm"]["modes"]:
         seeds, m7, auc = {}, [], []
         for seed, run in ecbm_runs.items():
@@ -78,13 +70,13 @@ def table(runs):
     rows = {}
     for name, run in runs.items():
         metrics = [compute_metrics(d["y_true"], d["y_pred"], d["y_prob"]) for d in run["seeds"].values()]
-        row = {key: _stats([m[key] for m in metrics])
+        row = {key: runtime.mean_sd([m[key] for m in metrics])
                for key in ("f1_macro", "balanced_accuracy", "roc_auc", "sensitivity", "specificity")}
         concept = [d["concept_f1"] for d in run["seeds"].values()]
-        row["concept_f1_macro"] = _stats(concept) if all(c is not None for c in concept) else None
+        row["concept_f1_macro"] = runtime.mean_sd(concept) if all(c is not None for c in concept) else None
         if run["intervention"]:
-            row["m7_f1_macro"] = _stats(run["intervention"]["m7_f1_macro"])
-            row["curve_auc_f1_macro"] = _stats(run["intervention"]["curve_auc_f1_macro"])
+            row["m7_f1_macro"] = runtime.mean_sd(run["intervention"]["m7_f1_macro"])
+            row["curve_auc_f1_macro"] = runtime.mean_sd(run["intervention"]["curve_auc_f1_macro"])
         rows[name] = row
     return rows
 
