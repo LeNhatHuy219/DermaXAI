@@ -35,9 +35,9 @@ from src.protocol import (load_concept_schema, manifest_fingerprint, prepare_tra
                           save_experiment_results, validate_concept_schema, validate_manifest)
 from src.selection import (DEFAULT_CHECKPOINT_METRIC, DEFAULT_THRESHOLD_METRIC, add_selection_argument,
                            add_threshold_argument, metric_from_config, run_paths, selection_name,
-                           selection_score, threshold_metric_from_config, threshold_selection_name)
+                           selection_score, threshold_metric_from_config, threshold_selection_name, image_size_suffix)
 from src.naming import DEFAULT_BACKBONE
-from src.transforms import get_transforms
+from src.transforms import get_transforms, image_size_config, image_size_hw
 
 # Công thức train. "unified" dùng đúng ngân sách/optimizer/lịch LR/trọng số của Black-box, Soft CBM, Hard CBM;
 # "paper" giữ công thức mã gốc (xmed-lab/ECBM, configs/cub.json) để kiểm tra cài đặt.
@@ -171,9 +171,10 @@ def _configuration(recipe, settings):
 
 
 def _default_paths(seed=DEFAULT_SEED, recipe=DEFAULT_RECIPE, checkpoint_metric=DEFAULT_CHECKPOINT_METRIC,
-                   threshold_metric=DEFAULT_THRESHOLD_METRIC, **overrides) -> Tuple[str, str]:
+                   threshold_metric=DEFAULT_THRESHOLD_METRIC, image_size=224, **overrides) -> Tuple[str, str]:
     settings = _resolve(recipe, **overrides)
-    return run_paths(PROJECT_ROOT, checkpoint_metric, "ecbm", _configuration(recipe, settings), seed,
+    configuration = _configuration(recipe, settings) + image_size_suffix(image_size)
+    return run_paths(PROJECT_ROOT, checkpoint_metric, "ecbm", configuration, seed,
                      threshold_metric=threshold_metric, backbone=DEFAULT_BACKBONE)
 
 
@@ -186,7 +187,8 @@ def _config_paths(config):
                           threshold_metric_from_config(config), epochs=config["epochs"],
                           batch_size=config["batch_size"], lr=config["learning_rate"],
                           head_lr=config.get("head_learning_rate"), weight_decay=config["weight_decay"],
-                          patience=config.get("patience"), selection_inference=config["selection_inference"])
+                          patience=config.get("patience"), selection_inference=config["selection_inference"],
+                          image_size=config.get("target_size", 224))
 
 
 def validate_ecbm_config(config):
@@ -242,7 +244,9 @@ def run_ecbm_experiment(
     checkpoint_metric: str = DEFAULT_CHECKPOINT_METRIC,
     selection_inference: str = None,
     threshold_metric: str = DEFAULT_THRESHOLD_METRIC,
+    image_size=224,
 ) -> Dict[str, Any]:
+    image_hw = image_size_hw(image_size)
     settings = _resolve(recipe, epochs, batch_size, lr, head_lr, weight_decay, patience, selection_inference)
     epochs, batch_size, selection_inference = settings["epochs"], settings["batch_size"], settings["selection_inference"]
     if epochs < 1 or batch_size < 1 or num_workers < 0 or (settings["patience"] is not None and settings["patience"] < 1):
@@ -260,7 +264,7 @@ def run_ecbm_experiment(
     checkpoint_path, results_path = prepare_training_outputs(
         _default_paths(seed, recipe, checkpoint_metric, threshold_metric, epochs=epochs, batch_size=batch_size,
                        lr=settings["lr"], head_lr=settings["head_lr"], weight_decay=settings["weight_decay"],
-                       patience=settings["patience"], selection_inference=selection_inference),
+                       patience=settings["patience"], selection_inference=selection_inference, image_size=image_hw),
         checkpoint_path, results_path, overwrite, save_results)
     runtime.prepare_output(checkpoint_path, overwrite)
     if save_results:
@@ -271,11 +275,12 @@ def run_ecbm_experiment(
     print(f"Thiết bị sử dụng: {device} | Random seed: {seed} | Chọn checkpoint bằng suy luận: {selection_inference}")
     print(f"Cấu hình: Epochs={epochs}, Patience={settings['patience']}, Batch Size={batch_size}, {base['optimizer']} "
           f"LR={settings['lr']}, Head LR={settings['head_lr']}, Weight Decay={settings['weight_decay']}, "
-          f"λ train={TRAIN_WEIGHTS}, λ suy luận={INFERENCE_WEIGHTS}, ngưỡng theo {threshold_metric}")
+          f"λ train={TRAIN_WEIGHTS}, λ suy luận={INFERENCE_WEIGHTS}, ngưỡng theo {threshold_metric}, "
+          f"ảnh={image_hw[0]}x{image_hw[1]}")
 
     bundle = get_dataloaders(
         manifest_path=manifest_path, project_root=PROJECT_ROOT, batch_size=batch_size, num_workers=num_workers,
-        target_size=224, augment_train=True, augmentation_preset=augmentation_preset, include_test=False)
+        target_size=image_hw, augment_train=True, augmentation_preset=augmentation_preset, include_test=False)
     train_loader, valid_loader = bundle["train"], bundle["valid"]
     assert len(bundle["datasets"]["train"]) == 413, "Train split phải có đúng 413 mẫu"
     assert len(bundle["datasets"]["valid"]) == 203, "Valid split phải có đúng 203 mẫu"
@@ -327,7 +332,7 @@ def run_ecbm_experiment(
         "seed": seed,
         "device": str(device),
         "augmentation_preset": augmentation_preset,
-        "target_size": 224,
+        "target_size": image_size_config(image_hw),
         "num_workers": num_workers,
         "checkpoint_selection": selection_name(checkpoint_metric),
         "threshold_selection": threshold_selection_name(threshold_metric),
@@ -506,6 +511,7 @@ def main(argv=None):
                         default=DEFAULT_AUGMENTATION_PRESET)
     parser.add_argument("--num_workers", type=int, default=0,
                         help="Mặc định 0 như các runner khác; worker trên macOS khởi động lại mỗi epoch")
+    parser.add_argument("--image_size", default="224", help="N (vuông) hoặc CAOxRỘNG, ví dụ 512x768")
     parser.add_argument("--manifest_path", type=str, default=None)
     parser.add_argument("--checkpoint_path", type=str, default=None)
     parser.add_argument("--results_path", type=str, default=None)
@@ -519,7 +525,8 @@ def main(argv=None):
     overrides = dict(epochs=args.epochs, batch_size=args.batch_size, lr=args.lr, head_lr=args.head_lr,
                      weight_decay=args.weight_decay, patience=args.patience,
                      selection_inference=args.selection_inference)
-    defaults = _default_paths(args.seed, args.recipe, args.checkpoint_metric, args.threshold_metric, **overrides)
+    defaults = _default_paths(args.seed, args.recipe, args.checkpoint_metric, args.threshold_metric,
+                              image_size=args.image_size, **overrides)
 
     if args.mode == "train":
         checkpoint_path, results_path = prepare_training_outputs(
@@ -528,7 +535,7 @@ def main(argv=None):
             manifest_path=args.manifest_path, recipe=args.recipe, seed=args.seed, device_name=args.device,
             checkpoint_path=checkpoint_path, save_results=False, augmentation_preset=args.augmentation_preset,
             overwrite=args.overwrite, num_workers=args.num_workers, checkpoint_metric=args.checkpoint_metric,
-            threshold_metric=args.threshold_metric, **overrides)
+            threshold_metric=args.threshold_metric, image_size=args.image_size, **overrides)
         if not args.no_save:
             save_experiment_results(results_path, validation=validation, overwrite=args.overwrite)
         if args.skip_test:

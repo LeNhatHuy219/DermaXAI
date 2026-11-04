@@ -36,7 +36,7 @@ from src.metrics import (
 )
 from src.models import SoftJointCBM, get_soft_joint_cbm, load_soft_joint_cbm_state_dict
 from src.cbm import make_diagnosis_head
-from src.transforms import get_transforms
+from src.transforms import get_transforms, image_size_config, image_size_hw
 from src.protocol import (manifest_fingerprint, load_concept_schema, prepare_training_outputs,
                           save_experiment_results,
                           validate_manifest, validate_concept_schema)
@@ -263,12 +263,13 @@ def _default_paths(
     lr: float = DEFAULT_LR,
     weight_decay: float = DEFAULT_WEIGHT_DECAY,
     threshold_metric: str = DEFAULT_THRESHOLD_METRIC,
+    image_size=224,
 ) -> Tuple[str, str]:
     if diagnosis_head not in DIAGNOSIS_HEADS:
         raise ValueError("Unknown Soft CBM diagnosis head")
     configuration = configuration_name(diagnosis_head, epochs, diagnosis_lr,
         augmentation_preset=augmentation_preset, concept_loss_weight=concept_loss_weight,
-        lr=lr, weight_decay=weight_decay)
+        lr=lr, weight_decay=weight_decay, image_size=image_size)
     return run_paths(PROJECT_ROOT, checkpoint_metric, "soft_cbm", configuration, seed,
                      threshold_metric=threshold_metric, backbone=DEFAULT_BACKBONE)
 
@@ -282,6 +283,7 @@ def _config_paths(config):
         epochs=config.get("epochs", DEFAULT_EPOCHS), lr=config.get("learning_rate", DEFAULT_LR),
         weight_decay=config.get("weight_decay", DEFAULT_WEIGHT_DECAY),
         threshold_metric=threshold_metric_from_config(config),
+        image_size=config.get("target_size", 224),
     )
 
 
@@ -322,7 +324,9 @@ def run_soft_cbm_experiment(
     diagnosis_head: str = DEFAULT_DIAGNOSIS_HEAD,
     diagnosis_lr: float = DEFAULT_DIAGNOSIS_LR,
     threshold_metric: str = DEFAULT_THRESHOLD_METRIC,
+    image_size=224,
 ) -> Dict[str, Any]:
+    image_hw = image_size_hw(image_size)
     if epochs < 1 or batch_size < 1 or num_workers < 0:
         raise ValueError("epochs/batch_size must be positive and num_workers non-negative")
     selection_name(checkpoint_metric)
@@ -343,7 +347,7 @@ def run_soft_cbm_experiment(
     manifest_path = os.path.abspath(manifest_path)
     checkpoint_path, results_path = prepare_training_outputs(
         _default_paths(seed, augmentation_preset, concept_loss_weight, checkpoint_metric,
-                       diagnosis_head, diagnosis_lr, epochs, lr, weight_decay, threshold_metric),
+                       diagnosis_head, diagnosis_lr, epochs, lr, weight_decay, threshold_metric, image_hw),
         checkpoint_path, results_path, overwrite, save_results,
     )
 
@@ -364,7 +368,7 @@ def run_soft_cbm_experiment(
         project_root=PROJECT_ROOT,
         batch_size=batch_size,
         num_workers=num_workers,
-        target_size=224,
+        target_size=image_hw,
         augment_train=True,
         augmentation_preset=augmentation_preset,
         include_test=False,
@@ -417,7 +421,7 @@ def run_soft_cbm_experiment(
         "dropout": 0.2,
         "class_weights": [float(x) for x in class_weights.cpu().tolist()],
         "augmentation_preset": augmentation_preset,
-        "target_size": 224,
+        "target_size": image_size_config(image_hw),
         "num_workers": num_workers,
         "scheduler": "CosineAnnealingLR(eta_min=1e-6)",
         "checkpoint_selection": selection_name(checkpoint_metric),
@@ -750,6 +754,7 @@ def main(argv=None):
         default=DEFAULT_AUGMENTATION_PRESET,
     )
     parser.add_argument("--num_workers", type=int, default=0)
+    parser.add_argument("--image_size", default="224", help="N (vuông) hoặc CAOxRỘNG, ví dụ 512x768")
     parser.add_argument("--manifest_path", type=str, default=None)
     parser.add_argument("--checkpoint_path", type=str, default=None)
     parser.add_argument("--results_path", type=str, default=None, help="File JSON chứa validation/test; kết quả can thiệp khi --mode intervention")
@@ -764,7 +769,7 @@ def main(argv=None):
     defaults = _default_paths(
         args.seed, args.augmentation_preset, args.concept_loss_weight, args.checkpoint_metric,
         args.diagnosis_head, args.diagnosis_lr, args.epochs, args.lr, args.weight_decay,
-        args.threshold_metric,
+        args.threshold_metric, args.image_size,
     )
 
     if args.mode == "train":
@@ -791,6 +796,7 @@ def main(argv=None):
             diagnosis_head=args.diagnosis_head,
             diagnosis_lr=args.diagnosis_lr,
             threshold_metric=args.threshold_metric,
+            image_size=args.image_size,
         )
         if not args.no_save:
             save_experiment_results(results_path, validation=validation, overwrite=args.overwrite)

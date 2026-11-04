@@ -60,11 +60,15 @@ def configuration_name(head, epochs, diagnosis_lr=None, *, augmentation_preset="
         name += f"_lr{lr:g}"
     if weight_decay != .01:
         name += f"_wd{weight_decay:g}"
-    # Kích thước khác 224 ghi vào tên (_r512, _r512x768) để không ghi đè kết quả 224.
+    return name + image_size_suffix(image_size)
+
+
+# Kích thước khác 224 ghi vào tên (_r512, _r512x768) để không ghi đè kết quả 224.
+def image_size_suffix(image_size=224):
     height, width = image_size_hw(image_size)
-    if (height, width) != (224, 224):
-        name += f"_r{height}" if height == width else f"_r{height}x{width}"
-    return name
+    if (height, width) == (224, 224):
+        return ""
+    return f"_r{height}" if height == width else f"_r{height}x{width}"
 
 
 # Tiêu chí chọn ngưỡng quyết định trên validation; mặc định Macro F1, cùng tiêu chí chọn checkpoint.
