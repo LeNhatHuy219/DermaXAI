@@ -1,0 +1,2871 @@
+{
+  "model": "efficientnet_b0",
+  "mode": "train_validation",
+  "best_epoch": 16,
+  "hyperparameters": {
+    "backbone": "EfficientNet-B0",
+    "pretrained_weights": "EfficientNet_B0_Weights.DEFAULT",
+    "epochs": 50,
+    "batch_size": 16,
+    "learning_rate": 0.0001,
+    "weight_decay": 0.01,
+    "seed": 123,
+    "device": "cuda",
+    "loss": "Weighted_CrossEntropy",
+    "class_weights": [
+      0.6393188834190369,
+      2.2944445610046387
+    ],
+    "augmentation_preset": "legacy_letterbox",
+    "target_size": [
+      512,
+      768
+    ],
+    "num_workers": 0,
+    "scheduler": "CosineAnnealingLR(eta_min=1e-6)",
+    "checkpoint_selection": "validation_f1_macro_at_0.5",
+    "threshold_selection": "maximize_validation_f1_macro_tie_nearest_0.5",
+    "torch_version": "2.11.0+cu128",
+    "torchvision_version": "0.26.0+cu128",
+    "numpy_version": "2.1.3",
+    "pandas_version": "2.3.3",
+    "scikit_learn_version": "1.6.1",
+    "platform": "Linux-6.18.55+-x86_64-with-glibc2.39",
+    "head_learning_rate": 0.001
+  },
+  "manifest_sha256": "e21cdc7756f12c3ad6684d27edff0e63f96097ee955c2b0e9c5f25c50e3ac102",
+  "manifest_fingerprint": {
+    "version": "newline_lf_v1",
+    "raw_sha256": "e21cdc7756f12c3ad6684d27edff0e63f96097ee955c2b0e9c5f25c50e3ac102",
+    "normalized_sha256": "e21cdc7756f12c3ad6684d27edff0e63f96097ee955c2b0e9c5f25c50e3ac102"
+  },
+  "checkpoint_path": "/kaggle/working/train/blackbox_seed123/model.pth",
+  "decision_threshold": 0.631098747253418,
+  "summary": "Black-box Baseline (EfficientNet-B0)\nBest Epoch: 16/50\nTraining samples: 413, Valid: 203\nThreshold selected on validation: 0.631099\n\n--- Validation Set (Epoch 16, threshold=0.631099) ---\nTotal:             203 (Class 0: 142, Class 1: 61)\nAccuracy:          81.28%\nBalanced Accuracy: 78.67%\nSensitivity:       72.13%\nSpecificity:       85.21%\nPrecision:         67.69%\nF1 (Melanoma):     0.6984\nF1 (Macro):        0.7813\nROC-AUC:           0.8399\nPR-AUC (AP):       0.7179\nConfusion Matrix:  TN=121, FP=21, FN=17, TP=44",
+  "validation_metrics_at_0.5": {
+    "accuracy": 0.7881773399014779,
+    "balanced_accuracy": 0.7737820364811823,
+    "sensitivity": 0.7377049180327869,
+    "specificity": 0.8098591549295775,
+    "precision": 0.625,
+    "f1_melanoma": 0.6766917293233082,
+    "f1_macro": 0.7595912859070754,
+    "roc_auc": 0.8398753174786424,
+    "pr_auc": 0.717860527851904,
+    "confusion_matrix": {
+      "tn": 115,
+      "fp": 27,
+      "fn": 16,
+      "tp": 45
+    },
+    "total_samples": 203,
+    "pos_samples": 61,
+    "neg_samples": 142
+  },
+  "validation_metrics": {
+    "accuracy": 0.812807881773399,
+    "balanced_accuracy": 0.786712075733087,
+    "sensitivity": 0.7213114754098361,
+    "specificity": 0.852112676056338,
+    "precision": 0.676923076923077,
+    "f1_melanoma": 0.6984126984126984,
+    "f1_macro": 0.7813492063492063,
+    "roc_auc": 0.8398753174786424,
+    "pr_auc": 0.717860527851904,
+    "confusion_matrix": {
+      "tn": 121,
+      "fp": 21,
+      "fn": 17,
+      "tp": 44
+    },
+    "total_samples": 203,
+    "pos_samples": 61,
+    "neg_samples": 142
+  },
+  "validation_loss": 0.69058399658485,
+  "validation_predictions": [
+    {
+      "case_num": 2,
+      "source_index": 1,
+      "split": "valid",
+      "diagnosis": "basal cell carcinoma",
+      "is_inconsistent": true,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.001079611130990088
+    },
+    {
+      "case_num": 6,
+      "source_index": 5,
+      "split": "valid",
+      "diagnosis": "basal cell carcinoma",
+      "is_inconsistent": true,
+      "y_true": 0,
+      "y_pred": 1,
+      "y_prob": 0.983037531375885
+    },
+    {
+      "case_num": 12,
+      "source_index": 11,
+      "split": "valid",
+      "diagnosis": "basal cell carcinoma",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 1,
+      "y_prob": 0.9900931715965271
+    },
+    {
+      "case_num": 14,
+      "source_index": 13,
+      "split": "valid",
+      "diagnosis": "basal cell carcinoma",
+      "is_inconsistent": true,
+      "y_true": 0,
+      "y_pred": 1,
+      "y_prob": 0.7730404734611511
+    },
+    {
+      "case_num": 20,
+      "source_index": 19,
+      "split": "valid",
+      "diagnosis": "basal cell carcinoma",
+      "is_inconsistent": true,
+      "y_true": 0,
+      "y_pred": 1,
+      "y_prob": 0.930701494216919
+    },
+    {
+      "case_num": 26,
+      "source_index": 25,
+      "split": "valid",
+      "diagnosis": "basal cell carcinoma",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.0025905421935021877
+    },
+    {
+      "case_num": 37,
+      "source_index": 36,
+      "split": "valid",
+      "diagnosis": "basal cell carcinoma",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.517256498336792
+    },
+    {
+      "case_num": 57,
+      "source_index": 56,
+      "split": "valid",
+      "diagnosis": "blue nevus",
+      "is_inconsistent": true,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 4.6541245524167607e-07
+    },
+    {
+      "case_num": 59,
+      "source_index": 58,
+      "split": "valid",
+      "diagnosis": "blue nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 2.85904935282133e-08
+    },
+    {
+      "case_num": 70,
+      "source_index": 69,
+      "split": "valid",
+      "diagnosis": "blue nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 1,
+      "y_prob": 0.9422972202301025
+    },
+    {
+      "case_num": 75,
+      "source_index": 74,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 6.084953565732576e-05
+    },
+    {
+      "case_num": 76,
+      "source_index": 75,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 2.1067249690531753e-05
+    },
+    {
+      "case_num": 77,
+      "source_index": 76,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.013583089224994183
+    },
+    {
+      "case_num": 83,
+      "source_index": 82,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.41842636466026306
+    },
+    {
+      "case_num": 105,
+      "source_index": 104,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": true,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.2917422950267792
+    },
+    {
+      "case_num": 122,
+      "source_index": 121,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.007426070515066385
+    },
+    {
+      "case_num": 128,
+      "source_index": 127,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.014691120944917202
+    },
+    {
+      "case_num": 131,
+      "source_index": 130,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 3.2095194910652936e-05
+    },
+    {
+      "case_num": 133,
+      "source_index": 132,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 1,
+      "y_prob": 0.8972765803337097
+    },
+    {
+      "case_num": 142,
+      "source_index": 141,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.003358416724950075
+    },
+    {
+      "case_num": 143,
+      "source_index": 142,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": true,
+      "y_true": 0,
+      "y_pred": 1,
+      "y_prob": 0.9397020936012268
+    },
+    {
+      "case_num": 156,
+      "source_index": 155,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.024269545450806618
+    },
+    {
+      "case_num": 165,
+      "source_index": 164,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.13834838569164276
+    },
+    {
+      "case_num": 166,
+      "source_index": 165,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 1,
+      "y_prob": 0.9983829259872437
+    },
+    {
+      "case_num": 175,
+      "source_index": 174,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 9.695103386775372e-09
+    },
+    {
+      "case_num": 187,
+      "source_index": 186,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.000427048682468012
+    },
+    {
+      "case_num": 190,
+      "source_index": 189,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 8.022926340345293e-05
+    },
+    {
+      "case_num": 192,
+      "source_index": 191,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": true,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.00038919184589758515
+    },
+    {
+      "case_num": 195,
+      "source_index": 194,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.0003427940246183425
+    },
+    {
+      "case_num": 204,
+      "source_index": 203,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.070046067237854
+    },
+    {
+      "case_num": 210,
+      "source_index": 209,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.0001275808463105932
+    },
+    {
+      "case_num": 211,
+      "source_index": 210,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": true,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.005102354567497969
+    },
+    {
+      "case_num": 217,
+      "source_index": 216,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": true,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.00044956005876883864
+    },
+    {
+      "case_num": 219,
+      "source_index": 218,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.0012521639000624418
+    },
+    {
+      "case_num": 226,
+      "source_index": 225,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.018400952219963074
+    },
+    {
+      "case_num": 234,
+      "source_index": 233,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": true,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.0011872041504830122
+    },
+    {
+      "case_num": 238,
+      "source_index": 237,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.006105491425842047
+    },
+    {
+      "case_num": 240,
+      "source_index": 239,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.03292033448815346
+    },
+    {
+      "case_num": 245,
+      "source_index": 244,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.0013139345683157444
+    },
+    {
+      "case_num": 247,
+      "source_index": 246,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": true,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.09766823053359985
+    },
+    {
+      "case_num": 248,
+      "source_index": 247,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": true,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.015218934044241905
+    },
+    {
+      "case_num": 258,
+      "source_index": 257,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.05497128143906593
+    },
+    {
+      "case_num": 266,
+      "source_index": 265,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": true,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.00013575721823144704
+    },
+    {
+      "case_num": 278,
+      "source_index": 277,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.020538557320833206
+    },
+    {
+      "case_num": 284,
+      "source_index": 283,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 1,
+      "y_prob": 0.9440132975578308
+    },
+    {
+      "case_num": 286,
+      "source_index": 285,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.6292920708656311
+    },
+    {
+      "case_num": 307,
+      "source_index": 306,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 1.447560975975648e-06
+    },
+    {
+      "case_num": 317,
+      "source_index": 316,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.00147334358189255
+    },
+    {
+      "case_num": 318,
+      "source_index": 317,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": true,
+      "y_true": 0,
+      "y_pred": 1,
+      "y_prob": 0.9778407216072083
+    },
+    {
+      "case_num": 323,
+      "source_index": 322,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.0004776769201271236
+    },
+    {
+      "case_num": 330,
+      "source_index": 329,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": true,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.0028830242808908224
+    },
+    {
+      "case_num": 332,
+      "source_index": 331,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.1600576937198639
+    },
+    {
+      "case_num": 334,
+      "source_index": 333,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.0016989260911941528
+    },
+    {
+      "case_num": 346,
+      "source_index": 345,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": true,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.2216472327709198
+    },
+    {
+      "case_num": 356,
+      "source_index": 355,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.005857214331626892
+    },
+    {
+      "case_num": 365,
+      "source_index": 364,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.019200097769498825
+    },
+    {
+      "case_num": 375,
+      "source_index": 374,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.2999764680862427
+    },
+    {
+      "case_num": 376,
+      "source_index": 375,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.0013951462460681796
+    },
+    {
+      "case_num": 378,
+      "source_index": 377,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.5470848679542542
+    },
+    {
+      "case_num": 393,
+      "source_index": 392,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.05605294555425644
+    },
+    {
+      "case_num": 396,
+      "source_index": 395,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.05299624055624008
+    },
+    {
+      "case_num": 398,
+      "source_index": 397,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 1,
+      "y_prob": 0.7093669772148132
+    },
+    {
+      "case_num": 399,
+      "source_index": 398,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.5883001089096069
+    },
+    {
+      "case_num": 407,
+      "source_index": 406,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.001613894011825323
+    },
+    {
+      "case_num": 410,
+      "source_index": 409,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 2.0553270587697625e-05
+    },
+    {
+      "case_num": 412,
+      "source_index": 411,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 1,
+      "y_prob": 0.9094942212104797
+    },
+    {
+      "case_num": 419,
+      "source_index": 418,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": true,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.3660863935947418
+    },
+    {
+      "case_num": 422,
+      "source_index": 421,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": true,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.00037564014201052487
+    },
+    {
+      "case_num": 431,
+      "source_index": 430,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.026812968775629997
+    },
+    {
+      "case_num": 436,
+      "source_index": 435,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": true,
+      "y_true": 0,
+      "y_pred": 1,
+      "y_prob": 0.9840121269226074
+    },
+    {
+      "case_num": 437,
+      "source_index": 436,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": true,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.04623674601316452
+    },
+    {
+      "case_num": 440,
+      "source_index": 439,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": true,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.008571016602218151
+    },
+    {
+      "case_num": 442,
+      "source_index": 441,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": true,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.0018735540797933936
+    },
+    {
+      "case_num": 455,
+      "source_index": 454,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.014412601478397846
+    },
+    {
+      "case_num": 458,
+      "source_index": 457,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 9.91051820165012e-06
+    },
+    {
+      "case_num": 461,
+      "source_index": 460,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.005996409337967634
+    },
+    {
+      "case_num": 466,
+      "source_index": 465,
+      "split": "valid",
+      "diagnosis": "clark nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 6.460107397288084e-05
+    },
+    {
+      "case_num": 473,
+      "source_index": 472,
+      "split": "valid",
+      "diagnosis": "combined nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 1,
+      "y_prob": 0.6793573498725891
+    },
+    {
+      "case_num": 475,
+      "source_index": 474,
+      "split": "valid",
+      "diagnosis": "combined nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.0003991996345575899
+    },
+    {
+      "case_num": 479,
+      "source_index": 478,
+      "split": "valid",
+      "diagnosis": "combined nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.006276525557041168
+    },
+    {
+      "case_num": 489,
+      "source_index": 488,
+      "split": "valid",
+      "diagnosis": "congenital nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.0025069855619221926
+    },
+    {
+      "case_num": 498,
+      "source_index": 497,
+      "split": "valid",
+      "diagnosis": "congenital nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.01343783549964428
+    },
+    {
+      "case_num": 507,
+      "source_index": 506,
+      "split": "valid",
+      "diagnosis": "dermal nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 4.180807081866078e-05
+    },
+    {
+      "case_num": 513,
+      "source_index": 512,
+      "split": "valid",
+      "diagnosis": "dermal nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.00015511085803154856
+    },
+    {
+      "case_num": 520,
+      "source_index": 519,
+      "split": "valid",
+      "diagnosis": "dermal nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.009953329339623451
+    },
+    {
+      "case_num": 523,
+      "source_index": 522,
+      "split": "valid",
+      "diagnosis": "dermal nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 2.6444110972079216e-06
+    },
+    {
+      "case_num": 526,
+      "source_index": 525,
+      "split": "valid",
+      "diagnosis": "dermal nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.09884150326251984
+    },
+    {
+      "case_num": 529,
+      "source_index": 528,
+      "split": "valid",
+      "diagnosis": "dermal nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.003398753236979246
+    },
+    {
+      "case_num": 534,
+      "source_index": 533,
+      "split": "valid",
+      "diagnosis": "dermatofibroma",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.0015106291975826025
+    },
+    {
+      "case_num": 538,
+      "source_index": 537,
+      "split": "valid",
+      "diagnosis": "dermatofibroma",
+      "is_inconsistent": true,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 4.555969042030483e-07
+    },
+    {
+      "case_num": 539,
+      "source_index": 538,
+      "split": "valid",
+      "diagnosis": "dermatofibroma",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.27759861946105957
+    },
+    {
+      "case_num": 541,
+      "source_index": 540,
+      "split": "valid",
+      "diagnosis": "dermatofibroma",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.33036544919013977
+    },
+    {
+      "case_num": 545,
+      "source_index": 544,
+      "split": "valid",
+      "diagnosis": "dermatofibroma",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.197468101978302
+    },
+    {
+      "case_num": 548,
+      "source_index": 547,
+      "split": "valid",
+      "diagnosis": "dermatofibroma",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.2112729251384735
+    },
+    {
+      "case_num": 552,
+      "source_index": 551,
+      "split": "valid",
+      "diagnosis": "dermatofibroma",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.004017419181764126
+    },
+    {
+      "case_num": 554,
+      "source_index": 553,
+      "split": "valid",
+      "diagnosis": "lentigo",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 9.5258372311946e-05
+    },
+    {
+      "case_num": 555,
+      "source_index": 554,
+      "split": "valid",
+      "diagnosis": "lentigo",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.018574237823486328
+    },
+    {
+      "case_num": 558,
+      "source_index": 557,
+      "split": "valid",
+      "diagnosis": "lentigo",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.4325094521045685
+    },
+    {
+      "case_num": 559,
+      "source_index": 558,
+      "split": "valid",
+      "diagnosis": "lentigo",
+      "is_inconsistent": true,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 1.6819734810269438e-05
+    },
+    {
+      "case_num": 571,
+      "source_index": 570,
+      "split": "valid",
+      "diagnosis": "lentigo",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.0034373835660517216
+    },
+    {
+      "case_num": 577,
+      "source_index": 576,
+      "split": "valid",
+      "diagnosis": "melanoma (in situ)",
+      "is_inconsistent": false,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.975921094417572
+    },
+    {
+      "case_num": 587,
+      "source_index": 586,
+      "split": "valid",
+      "diagnosis": "melanoma (in situ)",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.6788997650146484
+    },
+    {
+      "case_num": 594,
+      "source_index": 593,
+      "split": "valid",
+      "diagnosis": "melanoma (in situ)",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.9882458448410034
+    },
+    {
+      "case_num": 598,
+      "source_index": 597,
+      "split": "valid",
+      "diagnosis": "melanoma (in situ)",
+      "is_inconsistent": false,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.9951049089431763
+    },
+    {
+      "case_num": 601,
+      "source_index": 600,
+      "split": "valid",
+      "diagnosis": "melanoma (in situ)",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.9945393204689026
+    },
+    {
+      "case_num": 602,
+      "source_index": 601,
+      "split": "valid",
+      "diagnosis": "melanoma (in situ)",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.9452455639839172
+    },
+    {
+      "case_num": 608,
+      "source_index": 607,
+      "split": "valid",
+      "diagnosis": "melanoma (in situ)",
+      "is_inconsistent": false,
+      "y_true": 1,
+      "y_pred": 0,
+      "y_prob": 0.11412942409515381
+    },
+    {
+      "case_num": 610,
+      "source_index": 609,
+      "split": "valid",
+      "diagnosis": "melanoma (in situ)",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.9412288665771484
+    },
+    {
+      "case_num": 613,
+      "source_index": 612,
+      "split": "valid",
+      "diagnosis": "melanoma (in situ)",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.9997894167900085
+    },
+    {
+      "case_num": 614,
+      "source_index": 613,
+      "split": "valid",
+      "diagnosis": "melanoma (in situ)",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.7199059724807739
+    },
+    {
+      "case_num": 616,
+      "source_index": 615,
+      "split": "valid",
+      "diagnosis": "melanoma (in situ)",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 0,
+      "y_prob": 0.11262279748916626
+    },
+    {
+      "case_num": 623,
+      "source_index": 622,
+      "split": "valid",
+      "diagnosis": "melanoma (in situ)",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 0,
+      "y_prob": 0.039546675980091095
+    },
+    {
+      "case_num": 626,
+      "source_index": 625,
+      "split": "valid",
+      "diagnosis": "melanoma (in situ)",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.9902532696723938
+    },
+    {
+      "case_num": 630,
+      "source_index": 629,
+      "split": "valid",
+      "diagnosis": "melanoma (in situ)",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 0,
+      "y_prob": 0.012813616544008255
+    },
+    {
+      "case_num": 632,
+      "source_index": 631,
+      "split": "valid",
+      "diagnosis": "melanoma (in situ)",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 0,
+      "y_prob": 0.15358097851276398
+    },
+    {
+      "case_num": 638,
+      "source_index": 637,
+      "split": "valid",
+      "diagnosis": "melanoma (in situ)",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 0,
+      "y_prob": 0.03233463317155838
+    },
+    {
+      "case_num": 647,
+      "source_index": 646,
+      "split": "valid",
+      "diagnosis": "melanoma (less than 0.76 mm)",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.9992015957832336
+    },
+    {
+      "case_num": 654,
+      "source_index": 653,
+      "split": "valid",
+      "diagnosis": "melanoma (less than 0.76 mm)",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.9918854236602783
+    },
+    {
+      "case_num": 655,
+      "source_index": 654,
+      "split": "valid",
+      "diagnosis": "melanoma (less than 0.76 mm)",
+      "is_inconsistent": false,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.7019362449645996
+    },
+    {
+      "case_num": 659,
+      "source_index": 658,
+      "split": "valid",
+      "diagnosis": "melanoma (less than 0.76 mm)",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.9434362649917603
+    },
+    {
+      "case_num": 663,
+      "source_index": 662,
+      "split": "valid",
+      "diagnosis": "melanoma (less than 0.76 mm)",
+      "is_inconsistent": false,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.631098747253418
+    },
+    {
+      "case_num": 665,
+      "source_index": 664,
+      "split": "valid",
+      "diagnosis": "melanoma (less than 0.76 mm)",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 0,
+      "y_prob": 0.22356058657169342
+    },
+    {
+      "case_num": 667,
+      "source_index": 666,
+      "split": "valid",
+      "diagnosis": "melanoma (less than 0.76 mm)",
+      "is_inconsistent": false,
+      "y_true": 1,
+      "y_pred": 0,
+      "y_prob": 0.5295379757881165
+    },
+    {
+      "case_num": 678,
+      "source_index": 677,
+      "split": "valid",
+      "diagnosis": "melanoma (less than 0.76 mm)",
+      "is_inconsistent": false,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.9998478889465332
+    },
+    {
+      "case_num": 682,
+      "source_index": 681,
+      "split": "valid",
+      "diagnosis": "melanoma (less than 0.76 mm)",
+      "is_inconsistent": false,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.9984706044197083
+    },
+    {
+      "case_num": 686,
+      "source_index": 685,
+      "split": "valid",
+      "diagnosis": "melanoma (less than 0.76 mm)",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 0,
+      "y_prob": 0.18697521090507507
+    },
+    {
+      "case_num": 687,
+      "source_index": 686,
+      "split": "valid",
+      "diagnosis": "melanoma (less than 0.76 mm)",
+      "is_inconsistent": false,
+      "y_true": 1,
+      "y_pred": 0,
+      "y_prob": 0.01694626174867153
+    },
+    {
+      "case_num": 690,
+      "source_index": 689,
+      "split": "valid",
+      "diagnosis": "melanoma (less than 0.76 mm)",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 0,
+      "y_prob": 0.02152027003467083
+    },
+    {
+      "case_num": 692,
+      "source_index": 691,
+      "split": "valid",
+      "diagnosis": "melanoma (less than 0.76 mm)",
+      "is_inconsistent": false,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.8977937698364258
+    },
+    {
+      "case_num": 698,
+      "source_index": 697,
+      "split": "valid",
+      "diagnosis": "melanoma (less than 0.76 mm)",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.9913329482078552
+    },
+    {
+      "case_num": 699,
+      "source_index": 698,
+      "split": "valid",
+      "diagnosis": "melanoma (less than 0.76 mm)",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.9136565923690796
+    },
+    {
+      "case_num": 701,
+      "source_index": 700,
+      "split": "valid",
+      "diagnosis": "melanoma (less than 0.76 mm)",
+      "is_inconsistent": false,
+      "y_true": 1,
+      "y_pred": 0,
+      "y_prob": 0.37820199131965637
+    },
+    {
+      "case_num": 706,
+      "source_index": 705,
+      "split": "valid",
+      "diagnosis": "melanoma (less than 0.76 mm)",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 0,
+      "y_prob": 0.015929128974676132
+    },
+    {
+      "case_num": 712,
+      "source_index": 711,
+      "split": "valid",
+      "diagnosis": "melanoma (less than 0.76 mm)",
+      "is_inconsistent": false,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.796240508556366
+    },
+    {
+      "case_num": 719,
+      "source_index": 718,
+      "split": "valid",
+      "diagnosis": "melanoma (less than 0.76 mm)",
+      "is_inconsistent": false,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.7156261205673218
+    },
+    {
+      "case_num": 723,
+      "source_index": 722,
+      "split": "valid",
+      "diagnosis": "melanoma (less than 0.76 mm)",
+      "is_inconsistent": false,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.8285853266716003
+    },
+    {
+      "case_num": 731,
+      "source_index": 730,
+      "split": "valid",
+      "diagnosis": "melanoma (less than 0.76 mm)",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 0,
+      "y_prob": 0.0012981160543859005
+    },
+    {
+      "case_num": 734,
+      "source_index": 733,
+      "split": "valid",
+      "diagnosis": "melanoma (less than 0.76 mm)",
+      "is_inconsistent": false,
+      "y_true": 1,
+      "y_pred": 0,
+      "y_prob": 0.006460112985223532
+    },
+    {
+      "case_num": 740,
+      "source_index": 739,
+      "split": "valid",
+      "diagnosis": "melanoma (less than 0.76 mm)",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.9999971389770508
+    },
+    {
+      "case_num": 743,
+      "source_index": 742,
+      "split": "valid",
+      "diagnosis": "melanoma (0.76 to 1.5 mm)",
+      "is_inconsistent": false,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.9971074461936951
+    },
+    {
+      "case_num": 750,
+      "source_index": 749,
+      "split": "valid",
+      "diagnosis": "melanoma (0.76 to 1.5 mm)",
+      "is_inconsistent": false,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.9882839918136597
+    },
+    {
+      "case_num": 751,
+      "source_index": 750,
+      "split": "valid",
+      "diagnosis": "melanoma (0.76 to 1.5 mm)",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 0,
+      "y_prob": 0.11530664563179016
+    },
+    {
+      "case_num": 754,
+      "source_index": 753,
+      "split": "valid",
+      "diagnosis": "melanoma (0.76 to 1.5 mm)",
+      "is_inconsistent": false,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.9584014415740967
+    },
+    {
+      "case_num": 765,
+      "source_index": 764,
+      "split": "valid",
+      "diagnosis": "melanoma (0.76 to 1.5 mm)",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.9755218625068665
+    },
+    {
+      "case_num": 768,
+      "source_index": 767,
+      "split": "valid",
+      "diagnosis": "melanoma (0.76 to 1.5 mm)",
+      "is_inconsistent": false,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.9446219801902771
+    },
+    {
+      "case_num": 770,
+      "source_index": 769,
+      "split": "valid",
+      "diagnosis": "melanoma (0.76 to 1.5 mm)",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.9700311422348022
+    },
+    {
+      "case_num": 772,
+      "source_index": 771,
+      "split": "valid",
+      "diagnosis": "melanoma (0.76 to 1.5 mm)",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.9995172023773193
+    },
+    {
+      "case_num": 774,
+      "source_index": 773,
+      "split": "valid",
+      "diagnosis": "melanoma (0.76 to 1.5 mm)",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.9999688863754272
+    },
+    {
+      "case_num": 778,
+      "source_index": 777,
+      "split": "valid",
+      "diagnosis": "melanoma (0.76 to 1.5 mm)",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.9460456967353821
+    },
+    {
+      "case_num": 779,
+      "source_index": 778,
+      "split": "valid",
+      "diagnosis": "melanoma (0.76 to 1.5 mm)",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.9994794726371765
+    },
+    {
+      "case_num": 783,
+      "source_index": 782,
+      "split": "valid",
+      "diagnosis": "melanoma (0.76 to 1.5 mm)",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.8524839282035828
+    },
+    {
+      "case_num": 785,
+      "source_index": 784,
+      "split": "valid",
+      "diagnosis": "melanoma (0.76 to 1.5 mm)",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.6374176144599915
+    },
+    {
+      "case_num": 790,
+      "source_index": 789,
+      "split": "valid",
+      "diagnosis": "melanoma (0.76 to 1.5 mm)",
+      "is_inconsistent": false,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.9998961687088013
+    },
+    {
+      "case_num": 800,
+      "source_index": 799,
+      "split": "valid",
+      "diagnosis": "melanoma (more than 1.5 mm)",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.8093487620353699
+    },
+    {
+      "case_num": 803,
+      "source_index": 802,
+      "split": "valid",
+      "diagnosis": "melanoma (more than 1.5 mm)",
+      "is_inconsistent": false,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.9563258290290833
+    },
+    {
+      "case_num": 805,
+      "source_index": 804,
+      "split": "valid",
+      "diagnosis": "melanoma (more than 1.5 mm)",
+      "is_inconsistent": false,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.9781704545021057
+    },
+    {
+      "case_num": 807,
+      "source_index": 806,
+      "split": "valid",
+      "diagnosis": "melanoma (more than 1.5 mm)",
+      "is_inconsistent": false,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.9991965889930725
+    },
+    {
+      "case_num": 809,
+      "source_index": 808,
+      "split": "valid",
+      "diagnosis": "melanoma (more than 1.5 mm)",
+      "is_inconsistent": false,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.9023376107215881
+    },
+    {
+      "case_num": 814,
+      "source_index": 813,
+      "split": "valid",
+      "diagnosis": "melanoma (more than 1.5 mm)",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 0,
+      "y_prob": 0.0005935282097198069
+    },
+    {
+      "case_num": 823,
+      "source_index": 822,
+      "split": "valid",
+      "diagnosis": "melanoma (more than 1.5 mm)",
+      "is_inconsistent": false,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.9855331778526306
+    },
+    {
+      "case_num": 824,
+      "source_index": 823,
+      "split": "valid",
+      "diagnosis": "melanoma metastasis",
+      "is_inconsistent": true,
+      "y_true": 1,
+      "y_pred": 1,
+      "y_prob": 0.6669696569442749
+    },
+    {
+      "case_num": 828,
+      "source_index": 827,
+      "split": "valid",
+      "diagnosis": "melanosis",
+      "is_inconsistent": true,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.2599732279777527
+    },
+    {
+      "case_num": 836,
+      "source_index": 835,
+      "split": "valid",
+      "diagnosis": "melanosis",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.06568463146686554
+    },
+    {
+      "case_num": 839,
+      "source_index": 838,
+      "split": "valid",
+      "diagnosis": "melanosis",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.08641472458839417
+    },
+    {
+      "case_num": 844,
+      "source_index": 843,
+      "split": "valid",
+      "diagnosis": "miscellaneous",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 1,
+      "y_prob": 0.9637443423271179
+    },
+    {
+      "case_num": 848,
+      "source_index": 847,
+      "split": "valid",
+      "diagnosis": "miscellaneous",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 2.023541856033262e-05
+    },
+    {
+      "case_num": 851,
+      "source_index": 850,
+      "split": "valid",
+      "diagnosis": "miscellaneous",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.30674347281455994
+    },
+    {
+      "case_num": 857,
+      "source_index": 856,
+      "split": "valid",
+      "diagnosis": "recurrent nevus",
+      "is_inconsistent": true,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.001456861151382327
+    },
+    {
+      "case_num": 860,
+      "source_index": 859,
+      "split": "valid",
+      "diagnosis": "reed or spitz nevus",
+      "is_inconsistent": true,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.07500184327363968
+    },
+    {
+      "case_num": 875,
+      "source_index": 874,
+      "split": "valid",
+      "diagnosis": "reed or spitz nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.04208797961473465
+    },
+    {
+      "case_num": 876,
+      "source_index": 875,
+      "split": "valid",
+      "diagnosis": "reed or spitz nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.5548509359359741
+    },
+    {
+      "case_num": 877,
+      "source_index": 876,
+      "split": "valid",
+      "diagnosis": "reed or spitz nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 2.01115217350889e-05
+    },
+    {
+      "case_num": 879,
+      "source_index": 878,
+      "split": "valid",
+      "diagnosis": "reed or spitz nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.06070258095860481
+    },
+    {
+      "case_num": 882,
+      "source_index": 881,
+      "split": "valid",
+      "diagnosis": "reed or spitz nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 3.90891800634563e-05
+    },
+    {
+      "case_num": 883,
+      "source_index": 882,
+      "split": "valid",
+      "diagnosis": "reed or spitz nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.2763824462890625
+    },
+    {
+      "case_num": 892,
+      "source_index": 891,
+      "split": "valid",
+      "diagnosis": "reed or spitz nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.49534493684768677
+    },
+    {
+      "case_num": 894,
+      "source_index": 893,
+      "split": "valid",
+      "diagnosis": "reed or spitz nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 1,
+      "y_prob": 0.9383952617645264
+    },
+    {
+      "case_num": 895,
+      "source_index": 894,
+      "split": "valid",
+      "diagnosis": "reed or spitz nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 1,
+      "y_prob": 0.9529545307159424
+    },
+    {
+      "case_num": 896,
+      "source_index": 895,
+      "split": "valid",
+      "diagnosis": "reed or spitz nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 1,
+      "y_prob": 0.9774439930915833
+    },
+    {
+      "case_num": 900,
+      "source_index": 899,
+      "split": "valid",
+      "diagnosis": "reed or spitz nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.04814055189490318
+    },
+    {
+      "case_num": 902,
+      "source_index": 901,
+      "split": "valid",
+      "diagnosis": "reed or spitz nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.002617677440866828
+    },
+    {
+      "case_num": 906,
+      "source_index": 905,
+      "split": "valid",
+      "diagnosis": "reed or spitz nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.008581221103668213
+    },
+    {
+      "case_num": 918,
+      "source_index": 917,
+      "split": "valid",
+      "diagnosis": "reed or spitz nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.0009483388857915998
+    },
+    {
+      "case_num": 925,
+      "source_index": 924,
+      "split": "valid",
+      "diagnosis": "reed or spitz nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.16590218245983124
+    },
+    {
+      "case_num": 929,
+      "source_index": 928,
+      "split": "valid",
+      "diagnosis": "reed or spitz nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.0013513370649889112
+    },
+    {
+      "case_num": 933,
+      "source_index": 932,
+      "split": "valid",
+      "diagnosis": "reed or spitz nevus",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.01496833749115467
+    },
+    {
+      "case_num": 939,
+      "source_index": 938,
+      "split": "valid",
+      "diagnosis": "seborrheic keratosis",
+      "is_inconsistent": true,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.02272585779428482
+    },
+    {
+      "case_num": 941,
+      "source_index": 940,
+      "split": "valid",
+      "diagnosis": "seborrheic keratosis",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.42864853143692017
+    },
+    {
+      "case_num": 950,
+      "source_index": 949,
+      "split": "valid",
+      "diagnosis": "seborrheic keratosis",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.11165422946214676
+    },
+    {
+      "case_num": 955,
+      "source_index": 954,
+      "split": "valid",
+      "diagnosis": "seborrheic keratosis",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 1,
+      "y_prob": 0.7261436581611633
+    },
+    {
+      "case_num": 958,
+      "source_index": 957,
+      "split": "valid",
+      "diagnosis": "seborrheic keratosis",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.007515317760407925
+    },
+    {
+      "case_num": 961,
+      "source_index": 960,
+      "split": "valid",
+      "diagnosis": "seborrheic keratosis",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.14418363571166992
+    },
+    {
+      "case_num": 966,
+      "source_index": 965,
+      "split": "valid",
+      "diagnosis": "seborrheic keratosis",
+      "is_inconsistent": true,
+      "y_true": 0,
+      "y_pred": 1,
+      "y_prob": 0.8983839750289917
+    },
+    {
+      "case_num": 967,
+      "source_index": 966,
+      "split": "valid",
+      "diagnosis": "seborrheic keratosis",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.00127274333499372
+    },
+    {
+      "case_num": 969,
+      "source_index": 968,
+      "split": "valid",
+      "diagnosis": "seborrheic keratosis",
+      "is_inconsistent": true,
+      "y_true": 0,
+      "y_pred": 1,
+      "y_prob": 0.9983910918235779
+    },
+    {
+      "case_num": 976,
+      "source_index": 975,
+      "split": "valid",
+      "diagnosis": "seborrheic keratosis",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.14299455285072327
+    },
+    {
+      "case_num": 988,
+      "source_index": 987,
+      "split": "valid",
+      "diagnosis": "vascular lesion",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 5.291709385346621e-05
+    },
+    {
+      "case_num": 994,
+      "source_index": 993,
+      "split": "valid",
+      "diagnosis": "vascular lesion",
+      "is_inconsistent": true,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.005458055529743433
+    },
+    {
+      "case_num": 997,
+      "source_index": 996,
+      "split": "valid",
+      "diagnosis": "vascular lesion",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.5707905888557434
+    },
+    {
+      "case_num": 999,
+      "source_index": 998,
+      "split": "valid",
+      "diagnosis": "vascular lesion",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.004182645119726658
+    },
+    {
+      "case_num": 1001,
+      "source_index": 1000,
+      "split": "valid",
+      "diagnosis": "vascular lesion",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 4.570415330817923e-05
+    },
+    {
+      "case_num": 1005,
+      "source_index": 1004,
+      "split": "valid",
+      "diagnosis": "vascular lesion",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.0020190465729683638
+    },
+    {
+      "case_num": 1006,
+      "source_index": 1005,
+      "split": "valid",
+      "diagnosis": "vascular lesion",
+      "is_inconsistent": false,
+      "y_true": 0,
+      "y_pred": 0,
+      "y_prob": 0.0019156966591253877
+    }
+  ],
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.6596257893715874,
+      "train_balanced_accuracy": 0.6041279669762643,
+      "validation_loss": 0.6531848910406892,
+      "validation_balanced_accuracy_at_0.5": 0.6212768413761256,
+      "validation_f1_macro_at_0.5": 0.5848670756646217,
+      "validation_f1_melanoma_at_0.5": 0.5030674846625767,
+      "validation_roc_auc": 0.690602632186562,
+      "validation_pr_auc": 0.48135929975854796,
+      "learning_rates": [
+        0.0001,
+        0.001
+      ]
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.49019934911704816,
+      "train_balanced_accuracy": 0.7665118679050568,
+      "validation_loss": 0.5582178942675661,
+      "validation_balanced_accuracy_at_0.5": 0.6262987762641422,
+      "validation_f1_macro_at_0.5": 0.6338870431893687,
+      "validation_f1_melanoma_at_0.5": 0.45714285714285713,
+      "validation_roc_auc": 0.7507504040637265,
+      "validation_pr_auc": 0.6041186690507795,
+      "learning_rates": [
+        9.990232305719945e-05,
+        0.0009990143508499217
+      ]
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.42915382714306183,
+      "train_balanced_accuracy": 0.7919160646714827,
+      "validation_loss": 0.5387012935037097,
+      "validation_balanced_accuracy_at_0.5": 0.6811937196952205,
+      "validation_f1_macro_at_0.5": 0.6683006535947713,
+      "validation_f1_melanoma_at_0.5": 0.5588235294117647,
+      "validation_roc_auc": 0.7864234587855,
+      "validation_pr_auc": 0.6612859111930625,
+      "learning_rates": [
+        9.960967771506666e-05,
+        0.0009960612933065818
+      ]
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.3455601931339892,
+      "train_balanced_accuracy": 0.8389920880632955,
+      "validation_loss": 0.5180452775779029,
+      "validation_balanced_accuracy_at_0.5": 0.7678942507504041,
+      "validation_f1_macro_at_0.5": 0.7475124378109452,
+      "validation_f1_melanoma_at_0.5": 0.6666666666666666,
+      "validation_roc_auc": 0.8254444700992843,
+      "validation_pr_auc": 0.683123472518443,
+      "learning_rates": [
+        9.912321891107009e-05,
+        0.00099115248173898
+      ]
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.2341504737770875,
+      "train_balanced_accuracy": 0.9276057791537669,
+      "validation_loss": 0.5486538443952945,
+      "validation_balanced_accuracy_at_0.5": 0.6930847379358116,
+      "validation_f1_macro_at_0.5": 0.7063522012578616,
+      "validation_f1_melanoma_at_0.5": 0.5660377358490566,
+      "validation_roc_auc": 0.8137843454167628,
+      "validation_pr_auc": 0.6472940114483273,
+      "learning_rates": [
+        9.844486647586723e-05,
+        0.0009843072889837512
+      ]
+    },
+    {
+      "epoch": 6,
+      "train_loss": 0.23592077087403499,
+      "train_balanced_accuracy": 0.8942724458204334,
+      "validation_loss": 0.5346435672543907,
+      "validation_balanced_accuracy_at_0.5": 0.7340106211036712,
+      "validation_f1_macro_at_0.5": 0.7351022183558069,
+      "validation_f1_melanoma_at_0.5": 0.628099173553719,
+      "validation_roc_auc": 0.8121680905102747,
+      "validation_pr_auc": 0.6784159408804207,
+      "learning_rates": [
+        9.757729755661011e-05,
+        0.0009755527298894294
+      ]
+    },
+    {
+      "epoch": 7,
+      "train_loss": 0.15895709790487844,
+      "train_balanced_accuracy": 0.9409012727898176,
+      "validation_loss": 0.5126225529926751,
+      "validation_balanced_accuracy_at_0.5": 0.714096051720157,
+      "validation_f1_macro_at_0.5": 0.7160839160839161,
+      "validation_f1_melanoma_at_0.5": 0.6,
+      "validation_roc_auc": 0.8346802124220734,
+      "validation_pr_auc": 0.7034197305680245,
+      "learning_rates": [
+        9.652393605146844e-05,
+        0.0009649233547011816
+      ]
+    },
+    {
+      "epoch": 8,
+      "train_loss": 0.15299479400887905,
+      "train_balanced_accuracy": 0.9292397660818713,
+      "validation_loss": 0.6824600781713214,
+      "validation_balanced_accuracy_at_0.5": 0.7246017086123298,
+      "validation_f1_macro_at_0.5": 0.7192729941015438,
+      "validation_f1_melanoma_at_0.5": 0.6141732283464567,
+      "validation_roc_auc": 0.8090510274763334,
+      "validation_pr_auc": 0.6543354131124282,
+      "learning_rates": [
+        9.528893909706797e-05,
+        0.0009524611127067769
+      ]
+    },
+    {
+      "epoch": 9,
+      "train_loss": 0.08877694393907275,
+      "train_balanced_accuracy": 0.9718610251117992,
+      "validation_loss": 0.6553655354847462,
+      "validation_balanced_accuracy_at_0.5": 0.6754791041329946,
+      "validation_f1_macro_at_0.5": 0.6838295923041686,
+      "validation_f1_melanoma_at_0.5": 0.5405405405405406,
+      "validation_roc_auc": 0.800854306164858,
+      "validation_pr_auc": 0.6506411275905244,
+      "learning_rates": [
+        9.387718066217124e-05,
+        0.0009382151866819099
+      ]
+    },
+    {
+      "epoch": 10,
+      "train_loss": 0.11855489086837803,
+      "train_balanced_accuracy": 0.9440832473340214,
+      "validation_loss": 0.6142628395498679,
+      "validation_balanced_accuracy_at_0.5": 0.7480374047564073,
+      "validation_f1_macro_at_0.5": 0.7421894843789687,
+      "validation_f1_melanoma_at_0.5": 0.6456692913385826,
+      "validation_roc_auc": 0.8341029785268991,
+      "validation_pr_auc": 0.6894094352606398,
+      "learning_rates": [
+        9.229423231234974e-05,
+        0.0009222417987882566
+      ]
+    },
+    {
+      "epoch": 11,
+      "train_loss": 0.14574601578799057,
+      "train_balanced_accuracy": 0.9539215686274509,
+      "validation_loss": 0.5999834022204864,
+      "validation_balanced_accuracy_at_0.5": 0.7234472408219811,
+      "validation_f1_macro_at_0.5": 0.7213452299245025,
+      "validation_f1_melanoma_at_0.5": 0.6129032258064516,
+      "validation_roc_auc": 0.8170168552297391,
+      "validation_pr_auc": 0.6492883526619888,
+      "learning_rates": [
+        9.054634122155989e-05,
+        0.0009046039886902864
+      ]
+    },
+    {
+      "epoch": 12,
+      "train_loss": 0.06050063743646151,
+      "train_balanced_accuracy": 0.9913484692122463,
+      "validation_loss": 0.56533244222843,
+      "validation_balanced_accuracy_at_0.5": 0.7129415839298083,
+      "validation_f1_macro_at_0.5": 0.7178304202525656,
+      "validation_f1_melanoma_at_0.5": 0.5982905982905983,
+      "validation_roc_auc": 0.8432232740706535,
+      "validation_pr_auc": 0.6971146078682801,
+      "learning_rates": [
+        8.864040551740155e-05,
+        0.0008853713647665069
+      ]
+    },
+    {
+      "epoch": 13,
+      "train_loss": 0.06272475360092182,
+      "train_balanced_accuracy": 0.983608531131751,
+      "validation_loss": 0.6522749142693769,
+      "validation_balanced_accuracy_at_0.5": 0.7070537981990302,
+      "validation_f1_macro_at_0.5": 0.7070537981990302,
+      "validation_f1_melanoma_at_0.5": 0.5901639344262295,
+      "validation_roc_auc": 0.8294851073655045,
+      "validation_pr_auc": 0.6631774948311117,
+      "learning_rates": [
+        8.658394705735986e-05,
+        0.0008646198293969952
+      ]
+    },
+    {
+      "epoch": 14,
+      "train_loss": 0.03865685131734566,
+      "train_balanced_accuracy": 0.9882524939800481,
+      "validation_loss": 0.6895358324638141,
+      "validation_balanced_accuracy_at_0.5": 0.7071115215885477,
+      "validation_f1_macro_at_0.5": 0.7164115646258504,
+      "validation_f1_melanoma_at_0.5": 0.5892857142857143,
+      "validation_roc_auc": 0.8257908104363888,
+      "validation_pr_auc": 0.6610413787031739,
+      "learning_rates": [
+        8.438508174347008e-05,
+        0.0008424312794113801
+      ]
+    },
+    {
+      "epoch": 15,
+      "train_loss": 0.049118516028612925,
+      "train_balanced_accuracy": 0.9780529755761953,
+      "validation_loss": 0.7034080383812853,
+      "validation_balanced_accuracy_at_0.5": 0.6766335719233434,
+      "validation_f1_macro_at_0.5": 0.6828887286709926,
+      "validation_f1_melanoma_at_0.5": 0.543859649122807,
+      "validation_roc_auc": 0.8240591087508659,
+      "validation_pr_auc": 0.674332033187609,
+      "learning_rates": [
+        8.205248749256013e-05,
+        0.0008188932828794706
+      ]
+    },
+    {
+      "epoch": 16,
+      "train_loss": 0.06292088990061392,
+      "train_balanced_accuracy": 0.9669418644650842,
+      "validation_loss": 0.69058399658485,
+      "validation_balanced_accuracy_at_0.5": 0.7737820364811823,
+      "validation_f1_macro_at_0.5": 0.7595912859070754,
+      "validation_f1_melanoma_at_0.5": 0.6766917293233082,
+      "validation_roc_auc": 0.8398753174786424,
+      "validation_pr_auc": 0.717860527851904,
+      "learning_rates": [
+        7.959536998847742e-05,
+        0.0007940987335200906
+      ]
+    },
+    {
+      "epoch": 17,
+      "train_loss": 0.050014420241099436,
+      "train_balanced_accuracy": 0.9789645682834538,
+      "validation_loss": 0.819760762558782,
+      "validation_balanced_accuracy_at_0.5": 0.7035903948279842,
+      "validation_f1_macro_at_0.5": 0.711830620073092,
+      "validation_f1_melanoma_at_0.5": 0.584070796460177,
+      "validation_roc_auc": 0.7955437543292543,
+      "validation_pr_auc": 0.646042807653655,
+      "learning_rates": [
+        7.702342635146032e-05,
+        0.0007681454840920089
+      ]
+    },
+    {
+      "epoch": 18,
+      "train_loss": 0.04543817333525304,
+      "train_balanced_accuracy": 0.9882524939800481,
+      "validation_loss": 0.9484141505704138,
+      "validation_balanced_accuracy_at_0.5": 0.6778457631032094,
+      "validation_f1_macro_at_0.5": 0.6890882380520739,
+      "validation_f1_melanoma_at_0.5": 0.5420560747663551,
+      "validation_roc_auc": 0.7686446548141307,
+      "validation_pr_auc": 0.6126047198454678,
+      "learning_rates": [
+        7.434680686803489e-05,
+        0.0007411359602138069
+      ]
+    },
+    {
+      "epoch": 19,
+      "train_loss": 0.042130187645410225,
+      "train_balanced_accuracy": 0.9867045063639491,
+      "validation_loss": 0.9230779741197971,
+      "validation_balanced_accuracy_at_0.5": 0.6626067882706073,
+      "validation_f1_macro_at_0.5": 0.6720109371116083,
+      "validation_f1_melanoma_at_0.5": 0.5185185185185185,
+      "validation_roc_auc": 0.7708381436157931,
+      "validation_pr_auc": 0.6221440976411081,
+      "learning_rates": [
+        7.157607493247108e-05,
+        0.0007131767561367538
+      ]
+    },
+    {
+      "epoch": 20,
+      "train_loss": 0.06272312974868473,
+      "train_balanced_accuracy": 0.9805125558995529,
+      "validation_loss": 0.9105164260406212,
+      "validation_balanced_accuracy_at_0.5": 0.6790579542830755,
+      "validation_f1_macro_at_0.5": 0.6948366013071896,
+      "validation_f1_melanoma_at_0.5": 0.54,
+      "validation_roc_auc": 0.7656430385592242,
+      "validation_pr_auc": 0.6132419522686406,
+      "learning_rates": [
+        6.872216535789155e-05,
+        0.0006843782140659967
+      ]
+    },
+    {
+      "epoch": 21,
+      "train_loss": 0.05325659616121946,
+      "train_balanced_accuracy": 0.9746818025455797,
+      "validation_loss": 0.9079496625608998,
+      "validation_balanced_accuracy_at_0.5": 0.6824059108750866,
+      "validation_f1_macro_at_0.5": 0.6761816807992611,
+      "validation_f1_melanoma_at_0.5": 0.5581395348837209,
+      "validation_roc_auc": 0.779496652043408,
+      "validation_pr_auc": 0.6426617711152988,
+      "learning_rates": [
+        6.579634122155988e-05,
+        0.0006548539886902863
+      ]
+    },
+    {
+      "epoch": 22,
+      "train_loss": 0.04383738738085542,
+      "train_balanced_accuracy": 0.9873409012727898,
+      "validation_loss": 0.8964143326423438,
+      "validation_balanced_accuracy_at_0.5": 0.6976448857076887,
+      "validation_f1_macro_at_0.5": 0.6919401978417266,
+      "validation_f1_melanoma_at_0.5": 0.578125,
+      "validation_roc_auc": 0.7919649041791733,
+      "validation_pr_auc": 0.6571501209503535,
+      "learning_rates": [
+        6.28101494146603e-05,
+        0.0006247205986388449
+      ]
+    },
+    {
+      "epoch": 23,
+      "train_loss": 0.03374873152674688,
+      "train_balanced_accuracy": 0.9882524939800481,
+      "validation_loss": 0.8345225174438777,
+      "validation_balanced_accuracy_at_0.5": 0.6964904179173401,
+      "validation_f1_macro_at_0.5": 0.693693950177936,
+      "validation_f1_melanoma_at_0.5": 0.576,
+      "validation_roc_auc": 0.7924266912953128,
+      "validation_pr_auc": 0.6559655945069214,
+      "learning_rates": [
+        5.9775375071993364e-05,
+        0.0005940969666355696
+      ]
+    },
+    {
+      "epoch": 24,
+      "train_loss": 0.0569920484032978,
+      "train_balanced_accuracy": 0.9842449260405917,
+      "validation_loss": 0.7544053169013244,
+      "validation_balanced_accuracy_at_0.5": 0.7363772800738859,
+      "validation_f1_macro_at_0.5": 0.7418448525714962,
+      "validation_f1_melanoma_at_0.5": 0.6324786324786325,
+      "validation_roc_auc": 0.8159778342184253,
+      "validation_pr_auc": 0.6981899801746929,
+      "learning_rates": [
+        5.670399506143306e-05,
+        0.0005631039501653701
+      ]
+    },
+    {
+      "epoch": 25,
+      "train_loss": 0.0325227497592591,
+      "train_balanced_accuracy": 0.9882524939800481,
+      "validation_loss": 0.8310976791851626,
+      "validation_balanced_accuracy_at_0.5": 0.715308242900023,
+      "validation_f1_macro_at_0.5": 0.7240931468784924,
+      "validation_f1_melanoma_at_0.5": 0.6017699115044248,
+      "validation_roc_auc": 0.8006234126067884,
+      "validation_pr_auc": 0.6574654212507918,
+      "learning_rates": [
+        5.3608130716701005e-05,
+        0.0005318638645048921
+      ]
+    },
+    {
+      "epoch": 26,
+      "train_loss": 0.014712091218499743,
+      "train_balanced_accuracy": 1.0,
+      "validation_loss": 0.8115015316185693,
+      "validation_balanced_accuracy_at_0.5": 0.7105749249595936,
+      "validation_f1_macro_at_0.5": 0.7115557488763231,
+      "validation_f1_melanoma_at_0.5": 0.5950413223140496,
+      "validation_roc_auc": 0.8117063033941353,
+      "validation_pr_auc": 0.6864764787711874,
+      "learning_rates": [
+        5.049999999999999e-05,
+        0.0005005
+      ]
+    },
+    {
+      "epoch": 27,
+      "train_loss": 0.015369735060588932,
+      "train_balanced_accuracy": 0.9969040247678018,
+      "validation_loss": 0.8211866675926547,
+      "validation_balanced_accuracy_at_0.5": 0.715308242900023,
+      "validation_f1_macro_at_0.5": 0.7240931468784924,
+      "validation_f1_melanoma_at_0.5": 0.6017699115044248,
+      "validation_roc_auc": 0.8155160471022859,
+      "validation_pr_auc": 0.6895648007734245,
+      "learning_rates": [
+        4.7391869283298976e-05,
+        0.00046913613549510796
+      ]
+    },
+    {
+      "epoch": 28,
+      "train_loss": 0.013279713254780497,
+      "train_balanced_accuracy": 0.9984520123839009,
+      "validation_loss": 0.8734723097585105,
+      "validation_balanced_accuracy_at_0.5": 0.7117871161394597,
+      "validation_f1_macro_at_0.5": 0.7194784907474165,
+      "validation_f1_melanoma_at_0.5": 0.5964912280701754,
+      "validation_roc_auc": 0.7985453705841608,
+      "validation_pr_auc": 0.6654244746083475,
+      "learning_rates": [
+        4.429600493856693e-05,
+        0.00043789604983463003
+      ]
+    },
+    {
+      "epoch": 29,
+      "train_loss": 0.015262744662331611,
+      "train_balanced_accuracy": 0.9953560371517027,
+      "validation_loss": 0.8798456890829678,
+      "validation_balanced_accuracy_at_0.5": 0.7047448626183329,
+      "validation_f1_macro_at_0.5": 0.7103448275862069,
+      "validation_f1_melanoma_at_0.5": 0.5862068965517241,
+      "validation_roc_auc": 0.7988917109212653,
+      "validation_pr_auc": 0.6611438073053817,
+      "learning_rates": [
+        4.122462492800662e-05,
+        0.00040690303336443054
+      ]
+    },
+    {
+      "epoch": 30,
+      "train_loss": 0.008388134964333608,
+      "train_balanced_accuracy": 0.9984520123839009,
+      "validation_loss": 0.9156326857106439,
+      "validation_balanced_accuracy_at_0.5": 0.7094781805587624,
+      "validation_f1_macro_at_0.5": 0.7224707929405916,
+      "validation_f1_melanoma_at_0.5": 0.5925925925925926,
+      "validation_roc_auc": 0.8024705610713462,
+      "validation_pr_auc": 0.6744616891249796,
+      "learning_rates": [
+        3.8189850585339674e-05,
+        0.000376279401361155
+      ]
+    },
+    {
+      "epoch": 31,
+      "train_loss": 0.02954178870842763,
+      "train_balanced_accuracy": 0.9928964568283454,
+      "validation_loss": 0.8904594342990462,
+      "validation_balanced_accuracy_at_0.5": 0.6859847610251675,
+      "validation_f1_macro_at_0.5": 0.6893832391713748,
+      "validation_f1_melanoma_at_0.5": 0.559322033898305,
+      "validation_roc_auc": 0.8050103902101131,
+      "validation_pr_auc": 0.6772529835456879,
+      "learning_rates": [
+        3.5203658778440106e-05,
+        0.00034614601130971394
+      ]
+    },
+    {
+      "epoch": 32,
+      "train_loss": 0.016630473455355545,
+      "train_balanced_accuracy": 0.9928964568283454,
+      "validation_loss": 0.9058934746704665,
+      "validation_balanced_accuracy_at_0.5": 0.6988570768875548,
+      "validation_f1_macro_at_0.5": 0.6997825141365811,
+      "validation_f1_melanoma_at_0.5": 0.5785123966942148,
+      "validation_roc_auc": 0.8067420918956361,
+      "validation_pr_auc": 0.671939961043339,
+      "learning_rates": [
+        3.227783464210844e-05,
+        0.00031662178593400354
+      ]
+    },
+    {
+      "epoch": 33,
+      "train_loss": 0.014160396841289273,
+      "train_balanced_accuracy": 0.9984520123839009,
+      "validation_loss": 0.876476243798956,
+      "validation_balanced_accuracy_at_0.5": 0.712883860540291,
+      "validation_f1_macro_at_0.5": 0.7078147489628313,
+      "validation_f1_melanoma_at_0.5": 0.5984251968503937,
+      "validation_roc_auc": 0.8090510274763334,
+      "validation_pr_auc": 0.676088778429411,
+      "learning_rates": [
+        2.942392506752889e-05,
+        0.00028782324386324626
+      ]
+    },
+    {
+      "epoch": 34,
+      "train_loss": 0.018840583580259692,
+      "train_balanced_accuracy": 0.9953560371517027,
+      "validation_loss": 0.9050528638321778,
+      "validation_balanced_accuracy_at_0.5": 0.7035903948279842,
+      "validation_f1_macro_at_0.5": 0.711830620073092,
+      "validation_f1_melanoma_at_0.5": 0.584070796460177,
+      "validation_roc_auc": 0.8084737935811591,
+      "validation_pr_auc": 0.6604260114407962,
+      "learning_rates": [
+        2.6653193131965075e-05,
+        0.00025986403978619317
+      ]
+    },
+    {
+      "epoch": 35,
+      "train_loss": 0.00790712031869547,
+      "train_balanced_accuracy": 0.9984520123839009,
+      "validation_loss": 0.8598900936507239,
+      "validation_balanced_accuracy_at_0.5": 0.7105749249595936,
+      "validation_f1_macro_at_0.5": 0.7115557488763231,
+      "validation_f1_melanoma_at_0.5": 0.5950413223140496,
+      "validation_roc_auc": 0.8099746017086124,
+      "validation_pr_auc": 0.6747249354883135,
+      "learning_rates": [
+        2.3976573648539646e-05,
+        0.00023285451590799105
+      ]
+    },
+    {
+      "epoch": 36,
+      "train_loss": 0.015402580048780682,
+      "train_balanced_accuracy": 0.9953560371517027,
+      "validation_loss": 0.9312766686155292,
+      "validation_balanced_accuracy_at_0.5": 0.7001269914569384,
+      "validation_f1_macro_at_0.5": 0.7156138563423331,
+      "validation_f1_melanoma_at_0.5": 0.5769230769230769,
+      "validation_roc_auc": 0.8088201339182637,
+      "validation_pr_auc": 0.6732781473595328,
+      "learning_rates": [
+        2.1404630011522576e-05,
+        0.0002069012664799097
+      ]
+    },
+    {
+      "epoch": 37,
+      "train_loss": 0.04229658972088599,
+      "train_balanced_accuracy": 0.9857929136566908,
+      "validation_loss": 0.9108400085729919,
+      "validation_balanced_accuracy_at_0.5": 0.6930847379358116,
+      "validation_f1_macro_at_0.5": 0.7063522012578616,
+      "validation_f1_melanoma_at_0.5": 0.5660377358490566,
+      "validation_roc_auc": 0.8091664742553684,
+      "validation_pr_auc": 0.6783388420482623,
+      "learning_rates": [
+        1.8947512507439848e-05,
+        0.00018210671712052946
+      ]
+    },
+    {
+      "epoch": 38,
+      "train_loss": 0.022537635053005114,
+      "train_balanced_accuracy": 0.9944444444444445,
+      "validation_loss": 0.8471069951069179,
+      "validation_balanced_accuracy_at_0.5": 0.7327984299238051,
+      "validation_f1_macro_at_0.5": 0.7261690647482014,
+      "validation_f1_melanoma_at_0.5": 0.625,
+      "validation_roc_auc": 0.8193257908104363,
+      "validation_pr_auc": 0.68869004807081,
+      "learning_rates": [
+        1.66149182565299e-05,
+        0.00015856872058861996
+      ]
+    },
+    {
+      "epoch": 39,
+      "train_loss": 0.016447314763662672,
+      "train_balanced_accuracy": 0.9969040247678018,
+      "validation_loss": 0.8638417675283742,
+      "validation_balanced_accuracy_at_0.5": 0.7269683675825445,
+      "validation_f1_macro_at_0.5": 0.7259042201729438,
+      "validation_f1_melanoma_at_0.5": 0.6178861788617886,
+      "validation_roc_auc": 0.8144770260909721,
+      "validation_pr_auc": 0.6803630453257736,
+      "learning_rates": [
+        1.4416052942640132e-05,
+        0.00013638017060300502
+      ]
+    },
+    {
+      "epoch": 40,
+      "train_loss": 0.020034664974617828,
+      "train_balanced_accuracy": 0.9888888888888889,
+      "validation_loss": 0.9340855841859809,
+      "validation_balanced_accuracy_at_0.5": 0.7071115215885477,
+      "validation_f1_macro_at_0.5": 0.7164115646258504,
+      "validation_f1_melanoma_at_0.5": 0.5892857142857143,
+      "validation_roc_auc": 0.8069729854537059,
+      "validation_pr_auc": 0.6683835102139906,
+      "learning_rates": [
+        1.235959448259843e-05,
+        0.0001156286352334933
+      ]
+    },
+    {
+      "epoch": 41,
+      "train_loss": 0.021463779636746675,
+      "train_balanced_accuracy": 0.9913484692122463,
+      "validation_loss": 0.9125882466438369,
+      "validation_balanced_accuracy_at_0.5": 0.6965481413068575,
+      "validation_f1_macro_at_0.5": 0.7027640818765875,
+      "validation_f1_melanoma_at_0.5": 0.5739130434782609,
+      "validation_roc_auc": 0.8088201339182637,
+      "validation_pr_auc": 0.6697234078281599,
+      "learning_rates": [
+        1.04536587784401e-05,
+        9.639601130971378e-05
+      ]
+    },
+    {
+      "epoch": 42,
+      "train_loss": 0.0060730685455133784,
+      "train_balanced_accuracy": 1.0,
+      "validation_loss": 0.9026561369156015,
+      "validation_balanced_accuracy_at_0.5": 0.7234472408219811,
+      "validation_f1_macro_at_0.5": 0.7213452299245025,
+      "validation_f1_melanoma_at_0.5": 0.6129032258064516,
+      "validation_roc_auc": 0.8074347725698453,
+      "validation_pr_auc": 0.6651202431321552,
+      "learning_rates": [
+        8.70576768765026e-06,
+        7.875820121174356e-05
+      ]
+    },
+    {
+      "epoch": 43,
+      "train_loss": 0.010380815571404037,
+      "train_balanced_accuracy": 1.0,
+      "validation_loss": 0.9032069717721986,
+      "validation_balanced_accuracy_at_0.5": 0.709420457169245,
+      "validation_f1_macro_at_0.5": 0.713276836158192,
+      "validation_f1_melanoma_at_0.5": 0.5932203389830508,
+      "validation_roc_auc": 0.8113599630570306,
+      "validation_pr_auc": 0.6755076191260246,
+      "learning_rates": [
+        7.122819337828748e-06,
+        6.278481331809012e-05
+      ]
+    },
+    {
+      "epoch": 44,
+      "train_loss": 0.009642036918090706,
+      "train_balanced_accuracy": 0.9984520123839009,
+      "validation_loss": 0.8996428569843029,
+      "validation_balanced_accuracy_at_0.5": 0.7117293927499423,
+      "validation_f1_macro_at_0.5": 0.70973461450469,
+      "validation_f1_melanoma_at_0.5": 0.5967741935483871,
+      "validation_roc_auc": 0.8080120064650196,
+      "validation_pr_auc": 0.6688211521406787,
+      "learning_rates": [
+        5.711060902932039e-06,
+        4.853888729322332e-05
+      ]
+    },
+    {
+      "epoch": 45,
+      "train_loss": 0.02541117534406718,
+      "train_balanced_accuracy": 0.9898004815961472,
+      "validation_loss": 0.893806000354842,
+      "validation_balanced_accuracy_at_0.5": 0.7199261140614177,
+      "validation_f1_macro_at_0.5": 0.7168113879003559,
+      "validation_f1_melanoma_at_0.5": 0.608,
+      "validation_roc_auc": 0.811013622719926,
+      "validation_pr_auc": 0.6810349350634038,
+      "learning_rates": [
+        4.476063948531556e-06,
+        3.607664529881844e-05
+      ]
+    },
+    {
+      "epoch": 46,
+      "train_loss": 0.0056671533788854285,
+      "train_balanced_accuracy": 0.9984520123839009,
+      "validation_loss": 0.9234420727626443,
+      "validation_balanced_accuracy_at_0.5": 0.700069268067421,
+      "validation_f1_macro_at_0.5": 0.7072819033886085,
+      "validation_f1_melanoma_at_0.5": 0.5789473684210527,
+      "validation_roc_auc": 0.8105518356037866,
+      "validation_pr_auc": 0.6775101000549978,
+      "learning_rates": [
+        3.4227024433898985e-06,
+        2.5447270110570804e-05
+      ]
+    },
+    {
+      "epoch": 47,
+      "train_loss": 0.014904282768944743,
+      "train_balanced_accuracy": 0.9938080495356036,
+      "validation_loss": 0.8848107288330059,
+      "validation_balanced_accuracy_at_0.5": 0.7070537981990302,
+      "validation_f1_macro_at_0.5": 0.7070537981990302,
+      "validation_f1_melanoma_at_0.5": 0.5901639344262295,
+      "validation_roc_auc": 0.8118217501731702,
+      "validation_pr_auc": 0.6784701616860026,
+      "learning_rates": [
+        2.555133524132766e-06,
+        1.6692711016248827e-05
+      ]
+    },
+    {
+      "epoch": 48,
+      "train_loss": 0.013998224411258975,
+      "train_balanced_accuracy": 0.9953560371517027,
+      "validation_loss": 0.8626742594935036,
+      "validation_balanced_accuracy_at_0.5": 0.7281228353728931,
+      "validation_f1_macro_at_0.5": 0.7238095238095239,
+      "validation_f1_melanoma_at_0.5": 0.6190476190476191,
+      "validation_roc_auc": 0.812860771184484,
+      "validation_pr_auc": 0.6805950448209224,
+      "learning_rates": [
+        1.8767810889299075e-06,
+        9.84751826101998e-06
+      ]
+    },
+    {
+      "epoch": 49,
+      "train_loss": 0.015401206544733472,
+      "train_balanced_accuracy": 0.9953560371517027,
+      "validation_loss": 0.9122559516300709,
+      "validation_balanced_accuracy_at_0.5": 0.7117871161394597,
+      "validation_f1_macro_at_0.5": 0.7194784907474165,
+      "validation_f1_melanoma_at_0.5": 0.5964912280701754,
+      "validation_roc_auc": 0.8081274532440544,
+      "validation_pr_auc": 0.672732309696179,
+      "learning_rates": [
+        1.3903222849333503e-06,
+        4.938706693418354e-06
+      ]
+    },
+    {
+      "epoch": 50,
+      "train_loss": 0.004606036682439558,
+      "train_balanced_accuracy": 1.0,
+      "validation_loss": 0.8923936547904179,
+      "validation_balanced_accuracy_at_0.5": 0.7035326714384669,
+      "validation_f1_macro_at_0.5": 0.7025769197621305,
+      "validation_f1_melanoma_at_0.5": 0.5853658536585366,
+      "validation_roc_auc": 0.8105518356037867,
+      "validation_pr_auc": 0.6731215159745687,
+      "learning_rates": [
+        1.0976769428005576e-06,
+        1.9856491500783555e-06
+      ]
+    }
+  ],
+  "validation_summary": "Black-box Baseline (EfficientNet-B0)\nBest Epoch: 16/50\nTraining samples: 413, Valid: 203\nThreshold selected on validation: 0.631099\n\n--- Validation Set (Epoch 16, threshold=0.631099) ---\nTotal:             203 (Class 0: 142, Class 1: 61)\nAccuracy:          81.28%\nBalanced Accuracy: 78.67%\nSensitivity:       72.13%\nSpecificity:       85.21%\nPrecision:         67.69%\nF1 (Melanoma):     0.6984\nF1 (Macro):        0.7813\nROC-AUC:           0.8399\nPR-AUC (AP):       0.7179\nConfusion Matrix:  TN=121, FP=21, FN=17, TP=44"
+}

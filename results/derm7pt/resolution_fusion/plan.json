@@ -1,0 +1,34 @@
+{
+ "created": "2026-11-04",
+ "written_before_running": true,
+ "question": "Kết hợp mô hình 224 với mô hình 512x768 (cùng loại mô hình, cùng seed) có tốt hơn từng độ phân giải riêng lẻ trên validation không, về chẩn đoán và về concept?",
+ "data": {
+  "split": "validation 203 ca; KHÔNG đọc test",
+  "source": "validation_predictions đã lưu trong results JSON; không train, không chạy lại mô hình",
+  "primary_pairs": "224 = results/derm7pt/<cấu hình>/seed*.json (máy cá nhân, có checkpoint); 512x768 = results/derm7pt/<cấu hình>_r512x768/seed*.json (Kaggle T4)",
+  "secondary_pairs": "224 train lại trên Kaggle T4 (kernel v3, không lưu checkpoint) + 512x768; chỉ để kiểm tra độ bền, không dùng để quyết định",
+  "models": ["blackbox", "hard_cbm", "soft_cbm", "ecbm"],
+  "seeds": [42, 123, 2026]
+ },
+ "fusion": {
+  "diagnosis": "trung bình cộng xác suất melanoma của hai mô hình (trọng số 0.5/0.5, không tinh chỉnh)",
+  "concepts": "trung bình cộng vector xác suất của từng nhóm concept, dự đoán = argmax",
+  "threshold": "mọi nhánh (224, 512x768, kết hợp) đều chọn ngưỡng bằng src.selection.select_threshold trên validation, tiêu chí f1_macro, như pipeline hiện tại",
+  "single_resolution_concepts": "để công bằng, concept của từng độ phân giải riêng lẻ cũng lấy argmax của concept_probabilities đã lưu"
+ },
+ "metrics": ["accuracy", "balanced_accuracy", "f1_macro", "roc_auc", "concept_accuracy", "sensitivity", "specificity"],
+ "criteria": {
+  "reference": "với mỗi mô hình và mỗi chỉ số, 'bản đơn tốt nhất' = độ phân giải có trung bình 3 seed cao hơn ở chỉ số đó",
+  "K1_diagnosis": "ROC-AUC kết hợp (trung bình 3 seed) >= bản đơn tốt nhất, VÀ kết hợp >= bản đó ở ít nhất 2/3 seed",
+  "K2_concept": "concept accuracy kết hợp (trung bình) >= bản đơn tốt nhất + 0.01, VÀ cao hơn bản đó ở ít nhất 2/3 seed (chỉ cho Hard CBM, Soft CBM, ECBM)",
+  "G_guard": "Macro F1 kết hợp (trung bình) >= bản đơn có Macro F1 tốt nhất - 0.02",
+  "decision": "Theo từng mô hình: 'kết hợp có ích cho chẩn đoán' nếu K1 và G; 'kết hợp có ích cho concept' nếu K2 và G. Không thử trọng số khác, không chọn lại theo kết quả."
+ },
+ "caveats": [
+  "Ngưỡng chọn và chấm trên cùng validation nên Accuracy/F1 hơi lạc quan; như nhau cho cả ba nhánh",
+  "Kết hợp tốn gấp đôi thời gian suy luận",
+  "Với Hard CBM và Soft CBM, chẩn đoán kết hợp là trung bình đầu ra của hai mô hình, nên không còn đi qua đúng một vector concept; concept hiển thị (kết hợp) không trùng hẳn với concept mà từng head chẩn đoán đã dùng",
+  "Cặp chính trộn hai máy (224 trên máy cá nhân, 512x768 trên T4); cặp phụ cùng máy T4 dùng để kiểm tra",
+  "3 seed, không kiểm định thống kê; chỉ báo trung bình ± độ lệch chuẩn"
+ ]
+}
