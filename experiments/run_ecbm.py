@@ -32,7 +32,8 @@ from torch.utils.data import DataLoader
 from src.ecbm import CategoricalECBM, ecbm_training_loss, exact_inference, gradient_inference
 from src.metrics import compute_concept_metrics, compute_metrics, print_concept_metrics_table, print_metrics_table
 from src.protocol import (load_concept_schema, manifest_fingerprint, prepare_training_outputs,
-                          save_experiment_results, validate_concept_schema, validate_manifest)
+                          save_experiment_results, validate_concept_schema, validate_manifest,
+                          concept_schema_name, concept_schema_suffix)
 from src.selection import (DEFAULT_CHECKPOINT_METRIC, DEFAULT_THRESHOLD_METRIC, add_selection_argument,
                            add_threshold_argument, metric_from_config, run_paths, selection_name,
                            selection_score, threshold_metric_from_config, threshold_selection_name, image_size_suffix)
@@ -171,9 +172,11 @@ def _configuration(recipe, settings):
 
 
 def _default_paths(seed=DEFAULT_SEED, recipe=DEFAULT_RECIPE, checkpoint_metric=DEFAULT_CHECKPOINT_METRIC,
-                   threshold_metric=DEFAULT_THRESHOLD_METRIC, image_size=224, **overrides) -> Tuple[str, str]:
+                   threshold_metric=DEFAULT_THRESHOLD_METRIC, image_size=224, concept_schema=None,
+                   **overrides) -> Tuple[str, str]:
     settings = _resolve(recipe, **overrides)
-    configuration = _configuration(recipe, settings) + image_size_suffix(image_size)
+    configuration = (_configuration(recipe, settings) + image_size_suffix(image_size)
+                     + concept_schema_suffix(concept_schema))
     return run_paths(PROJECT_ROOT, checkpoint_metric, "ecbm", configuration, seed,
                      threshold_metric=threshold_metric, backbone=DEFAULT_BACKBONE)
 
@@ -188,7 +191,8 @@ def _config_paths(config):
                           batch_size=config["batch_size"], lr=config["learning_rate"],
                           head_lr=config.get("head_learning_rate"), weight_decay=config["weight_decay"],
                           patience=config.get("patience"), selection_inference=config["selection_inference"],
-                          image_size=config.get("target_size", 224))
+                          image_size=config.get("target_size", 224),
+                          concept_schema=config.get("concept_schema_name"))
 
 
 def validate_ecbm_config(config):
@@ -261,10 +265,12 @@ def run_ecbm_experiment(
     if manifest_path is None:
         manifest_path = os.path.join(PROJECT_ROOT, "data", "manifest.csv")
     manifest_path = os.path.abspath(manifest_path)
+    schema_name = concept_schema_name(manifest_path, PROJECT_ROOT)
     checkpoint_path, results_path = prepare_training_outputs(
         _default_paths(seed, recipe, checkpoint_metric, threshold_metric, epochs=epochs, batch_size=batch_size,
                        lr=settings["lr"], head_lr=settings["head_lr"], weight_decay=settings["weight_decay"],
-                       patience=settings["patience"], selection_inference=selection_inference, image_size=image_hw),
+                       patience=settings["patience"], selection_inference=selection_inference, image_size=image_hw,
+                       concept_schema=schema_name),
         checkpoint_path, results_path, overwrite, save_results)
     runtime.prepare_output(checkpoint_path, overwrite)
     if save_results:
@@ -343,6 +349,8 @@ def run_ecbm_experiment(
         "scikit_learn_version": str(sklearn.__version__),
         "platform": platform.platform(),
     }
+    if schema_name:
+        config["concept_schema_name"] = schema_name
     model = _build_model(config, pretrained=True).to(device)
     optimizer, scheduler = _build_optimizer(model, recipe, settings)
     manifest_sha256 = runtime.file_sha256(manifest_path)
@@ -526,7 +534,11 @@ def main(argv=None):
                      weight_decay=args.weight_decay, patience=args.patience,
                      selection_inference=args.selection_inference)
     defaults = _default_paths(args.seed, args.recipe, args.checkpoint_metric, args.threshold_metric,
-                              image_size=args.image_size, **overrides)
+                              image_size=args.image_size,
+                              concept_schema=concept_schema_name(
+                                  args.manifest_path or os.path.join(PROJECT_ROOT, "data", "manifest.csv"),
+                                  PROJECT_ROOT),
+                              **overrides)
 
     if args.mode == "train":
         checkpoint_path, results_path = prepare_training_outputs(

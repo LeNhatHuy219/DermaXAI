@@ -1,0 +1,52 @@
+{
+ "created": "2026-11-05",
+ "written_before_running": true,
+ "direction": "data-centric: giải quyết mất cân bằng ở tầng concept bằng cách gộp trạng thái hiếm (D4a), kèm đo trần của dataset",
+ "question": "Train lại Hard CBM, Soft CBM, ECBM với schema concept đã gộp (D4a) có giữ được chẩn đoán và làm concept tốt hơn so với mô hình gốc được gộp dự đoán sau khi train không?",
+ "schema_D4a": {
+  "source": "results/derm7pt/concept_merge_check/plan.json (merge_D4a), không thay đổi",
+  "files": "data/d4a/manifest.csv, data/d4a/label_mapping.json, tạo bằng experiments/build_concept_schema_d4a.py",
+  "states": "pigmentation 5→3, regression_structures 4→2, vascular_structures 8→3; 28 → 19 trạng thái; ECBM 8,640 → 972 tổ hợp",
+  "note_vs_kawahara": "Khác code Kawahara ở một điểm: 'within regression' xếp vào nhóm atypical (train: 61% melanoma, gần 'dotted' 56%), còn Kawahara xếp vào nhóm điểm 0. Giữ nguyên như quy tắc đã kiểm tra."
+ },
+ "design": {
+  "models": ["hard_cbm", "soft_cbm", "ecbm"],
+  "not_retrained": "Black-box không dùng concept nên không đổi",
+  "seeds": [42, 123, 2026],
+  "image_size": "224 (như bộ chính thức)",
+  "device": "máy cá nhân (MPS), giống bộ 224 chính thức để so cùng máy",
+  "change": "chỉ đổi --manifest_path data/d4a/manifest.csv; giữ nguyên backbone, 50 epoch, batch 16, LR, augmentation, trọng số cân bằng, quy tắc chọn checkpoint và ngưỡng",
+  "split": "chỉ train/validation (--skip_test); KHÔNG đọc test",
+  "pilot": "seed 42 chạy trước để kiểm tra pipeline; không đổi thiết lập theo kết quả pilot"
+ },
+ "baseline": {
+  "models": "Hard CBM, Soft CBM, ECBM 224 chính thức (results/derm7pt/<cấu hình>/seed*.json)",
+  "diagnosis": "chỉ số validation đã lưu của mô hình gốc (không đổi khi gộp concept)",
+  "concepts": "xác suất concept validation đã lưu, cộng trong từng nhóm gộp rồi argmax (gộp sau khi train), chấm trên schema D4a"
+ },
+ "metrics": {
+  "diagnosis": ["accuracy", "balanced_accuracy", "f1_macro", "roc_auc"],
+  "concepts_D4a": ["concept_accuracy (trung bình 7 nhóm)", "concept_f1_macro (train-observed, trung bình 7 nhóm)", "accuracy từng nhóm"],
+  "same_code_for_both_arms": "src.metrics.compute_concept_metrics với train-observed states của schema D4a"
+ },
+ "criteria": {
+  "G1_diagnosis": "trung bình 3 seed: ROC-AUC >= baseline - 0.01 VÀ Macro F1 >= baseline - 0.02",
+  "G2_concept_not_worse": "trung bình 3 seed: concept accuracy >= baseline - 0.01 VÀ concept Macro F1 >= baseline - 0.01",
+  "I_improvement": "concept accuracy hoặc concept Macro F1 >= baseline + 0.01 (trung bình) VÀ cao hơn baseline ở ít nhất 2/3 seed",
+  "decision": "Dùng schema D4a cho các bước data-centric tiếp theo nếu cả 3 mô hình đạt G1 và G2. Mô hình nào đạt thêm I thì ghi là D4a cải thiện concept. Nếu có mô hình không đạt G1 hoặc G2: giữ schema gốc làm chính, báo cáo D4a là kết quả âm/trung tính."
+ },
+ "dataset_ceiling": {
+  "purpose": "đo trần của dữ liệu (mục 1 hướng data-centric của thầy), mô tả, không dùng để chọn",
+  "splits": "train và validation; KHÔNG dùng nhãn test",
+  "quantities": [
+   "tỉ lệ ảnh có hồ sơ concept mâu thuẫn (cùng hồ sơ nhưng có cả melanoma lẫn không) trong từng split, cho schema gốc và D4a",
+   "trần accuracy của bộ phân loại chỉ nhìn hồ sơ concept cứng: tổng số ca của nhãn chiếm đa số trong mỗi hồ sơ / tổng số ca (in-sample)"
+  ],
+  "literature": "Nápoles et al. 2026 trên toàn bộ dataset: 30.3% ảnh, trần 92.1%"
+ },
+ "caveats": [
+  "Concept accuracy trên schema D4a không so trực tiếp với số trên schema gốc (ít trạng thái hơn); chỉ so hai nhánh trên cùng schema D4a",
+  "Ngưỡng chẩn đoán chọn trên validation như quy trình chung",
+  "3 seed, không kiểm định thống kê; báo trung bình ± độ lệch chuẩn"
+ ]
+}

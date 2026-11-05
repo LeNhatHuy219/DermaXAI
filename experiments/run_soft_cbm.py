@@ -39,7 +39,8 @@ from src.cbm import make_diagnosis_head
 from src.transforms import get_transforms, image_size_config, image_size_hw
 from src.protocol import (manifest_fingerprint, load_concept_schema, prepare_training_outputs,
                           save_experiment_results,
-                          validate_manifest, validate_concept_schema)
+                          validate_manifest, validate_concept_schema,
+                          concept_schema_name, concept_schema_suffix)
 from src.intervention import evaluate_soft_interventions
 from src.naming import DEFAULT_BACKBONE, canonical_model
 from src.selection import (DEFAULT_CHECKPOINT_METRIC, selection_name, selection_score,
@@ -62,6 +63,17 @@ DEFAULT_DIAGNOSIS_HEAD = "mlp128"
 DEFAULT_DIAGNOSIS_LR = 1e-3
 SOFT_CBM_PROTOCOL = "soft_joint_state_weighted_v1"
 DIAGNOSIS_HEADS = {"linear": "Linear(28, 2)", "mlp128": "MLP(28, 128, 2)"}
+
+
+# Nhãn head theo số trạng thái của schema: 28 với schema gốc (trùng DIAGNOSIS_HEADS), 19 với D4a.
+def _head_label(preset, total_states=28):
+    labels = {"linear": f"Linear({int(total_states)}, 2)", "mlp128": f"MLP({int(total_states)}, 128, 2)"}
+    return labels[preset]
+
+
+def _config_total_states(config):
+    weights = config.get("concept_state_weights") if isinstance(config, dict) else None
+    return sum(len(v) for v in weights.values()) if isinstance(weights, dict) else 28
 
 
 # Tính loss từng concept group bằng criterion tương ứng rồi lấy mean của bảy groups.
@@ -105,9 +117,10 @@ def build_concept_criteria(state_weights, device):
 # Đọc kiến trúc diagnosis head đã lưu; chấp nhận Linear hoặc MLP128.
 def _head_preset(config):
     # Checkpoints Linear cũ có thể chưa khai báo kiến trúc head.
-    description = config.get("diagnosis_head", DIAGNOSIS_HEADS["linear"])
-    for preset, expected in DIAGNOSIS_HEADS.items():
-        if description == expected:
+    total_states = _config_total_states(config)
+    description = config.get("diagnosis_head", _head_label("linear", total_states))
+    for preset in DIAGNOSIS_HEADS:
+        if description == _head_label(preset, total_states):
             return preset
     raise ValueError("Unknown Soft CBM diagnosis head in checkpoint")
 
@@ -264,12 +277,13 @@ def _default_paths(
     weight_decay: float = DEFAULT_WEIGHT_DECAY,
     threshold_metric: str = DEFAULT_THRESHOLD_METRIC,
     image_size=224,
+    concept_schema=None,
 ) -> Tuple[str, str]:
     if diagnosis_head not in DIAGNOSIS_HEADS:
         raise ValueError("Unknown Soft CBM diagnosis head")
     configuration = configuration_name(diagnosis_head, epochs, diagnosis_lr,
         augmentation_preset=augmentation_preset, concept_loss_weight=concept_loss_weight,
-        lr=lr, weight_decay=weight_decay, image_size=image_size)
+        lr=lr, weight_decay=weight_decay, image_size=image_size) + concept_schema_suffix(concept_schema)
     return run_paths(PROJECT_ROOT, checkpoint_metric, "soft_cbm", configuration, seed,
                      threshold_metric=threshold_metric, backbone=DEFAULT_BACKBONE)
 
@@ -284,6 +298,7 @@ def _config_paths(config):
         weight_decay=config.get("weight_decay", DEFAULT_WEIGHT_DECAY),
         threshold_metric=threshold_metric_from_config(config),
         image_size=config.get("target_size", 224),
+        concept_schema=config.get("concept_schema_name"),
     )
 
 
@@ -345,9 +360,11 @@ def run_soft_cbm_experiment(
     if manifest_path is None:
         manifest_path = os.path.join(PROJECT_ROOT, "data", "manifest.csv")
     manifest_path = os.path.abspath(manifest_path)
+    schema_name = concept_schema_name(manifest_path, PROJECT_ROOT)
     checkpoint_path, results_path = prepare_training_outputs(
         _default_paths(seed, augmentation_preset, concept_loss_weight, checkpoint_metric,
-                       diagnosis_head, diagnosis_lr, epochs, lr, weight_decay, threshold_metric, image_hw),
+                       diagnosis_head, diagnosis_lr, epochs, lr, weight_decay, threshold_metric, image_hw,
+                       schema_name),
         checkpoint_path, results_path, overwrite, save_results,
     )
 
@@ -355,7 +372,7 @@ def run_soft_cbm_experiment(
     if save_results:
         runtime.prepare_output(results_path, overwrite)
 
-    print(f"Khởi động Soft CBM (EfficientNet-B0 -> 7 concept heads -> g {DIAGNOSIS_HEADS[diagnosis_head]})")
+    print(f"Khởi động Soft CBM (EfficientNet-B0 -> 7 concept heads -> g {diagnosis_head})")
     print(f"Thiết bị sử dụng: {device} | Random seed: {seed}")
     print(
         f"Cấu hình: Epochs={epochs}, Batch Size={batch_size}, LR={lr}, "
@@ -404,7 +421,7 @@ def run_soft_cbm_experiment(
         "protocol": SOFT_CBM_PROTOCOL,
         "backbone": "EfficientNet-B0",
         "pretrained_weights": "EfficientNet_B0_Weights.DEFAULT",
-        "diagnosis_head": DIAGNOSIS_HEADS[diagnosis_head],
+        "diagnosis_head": _head_label(diagnosis_head, schema["total_states"]),
         "concept_heads": "Linear(1280, Ki) per concept",
         "epochs": epochs,
         "batch_size": batch_size,
@@ -439,6 +456,8 @@ def run_soft_cbm_experiment(
     if diagnosis_head == "mlp128":
         config.update(diagnosis_hidden_dim=128, diagnosis_dropout=0.3,
                       diagnosis_normalization="LayerNorm")
+    if schema_name:
+        config["concept_schema_name"] = schema_name
     manifest_sha256 = runtime.file_sha256(manifest_path)
 
     print("\n--- Bắt đầu huấn luyện Soft CBM (Soft Joint CBM) ---")
@@ -538,7 +557,7 @@ def run_soft_cbm_experiment(
     )
 
     summary_text = (
-        f"Soft CBM (EfficientNet-B0 -> 7 concept heads -> g {DIAGNOSIS_HEADS[diagnosis_head]})\n"
+        f"Soft CBM (EfficientNet-B0 -> 7 concept heads -> g {config['diagnosis_head']})\n"
         f"Best Epoch: {best_epoch}/{epochs}\n"
         f"Training samples: 413, Valid: 203\n"
         f"Threshold selected on validation: {threshold:.6f}\n\n"
@@ -770,6 +789,7 @@ def main(argv=None):
         args.seed, args.augmentation_preset, args.concept_loss_weight, args.checkpoint_metric,
         args.diagnosis_head, args.diagnosis_lr, args.epochs, args.lr, args.weight_decay,
         args.threshold_metric, args.image_size,
+        concept_schema_name(args.manifest_path or os.path.join(PROJECT_ROOT, "data", "manifest.csv"), PROJECT_ROOT),
     )
 
     if args.mode == "train":

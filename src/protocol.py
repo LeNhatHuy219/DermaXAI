@@ -3,7 +3,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from .dataset import CONCEPT_NAMES, CONCEPT_NUM_CLASSES
+from .dataset import CONCEPT_NAMES, activate_concept_schema, concept_num_classes_from_mapping
 
 
 def prepare_training_outputs(default_paths, checkpoint_path=None, results_path=None,
@@ -111,26 +111,43 @@ def _schema_hash(schema):
                                     separators=(",", ":")).encode("utf-8")).hexdigest()
 
 
-def load_concept_schema(manifest_path, mapping_path=None):
+# Số trạng thái lấy từ label_mapping.json cạnh manifest: data/ (schema gốc, 28 trạng thái) hoặc data/d4a/ (19).
+# activate=True kích hoạt schema này cho cả tiến trình (xem dataset.activate_concept_schema).
+def load_concept_schema(manifest_path, mapping_path=None, activate=True):
     mapping_path = Path(mapping_path) if mapping_path else Path(manifest_path).resolve().parent / "label_mapping.json"
     mapping = json.loads(mapping_path.read_text(encoding="utf-8"))
     if set(mapping) != set(CONCEPT_NAMES):
         raise ValueError("Label mapping must define exactly the seven concept groups")
+    counts = concept_num_classes_from_mapping(mapping)
     offsets = {}
     offset = 0
     for name in CONCEPT_NAMES:
         values = list(mapping[name].values())
-        count = CONCEPT_NUM_CLASSES[name]
-        if (any(type(v) is not int for v in values) or
-                len(values) != count or sorted(values) != list(range(count))):
+        count = counts[name]
+        if (count < 2 or any(type(v) is not int for v in values) or
+                sorted(values) != list(range(count))):
             raise ValueError(f"Invalid contiguous state indices for {name}")
         offsets[name] = offset
         offset += count
     schema = {"version": 1, "concept_names": list(CONCEPT_NAMES),
-              "concept_num_classes": dict(CONCEPT_NUM_CLASSES), "offsets": offsets,
+              "concept_num_classes": counts, "offsets": offsets,
               "total_states": offset, "label_mapping": mapping}
     schema["sha256"] = _schema_hash(schema)
+    if activate:
+        activate_concept_schema(counts)
     return schema
+
+
+# Tên schema dùng làm hậu tố đường dẫn: None với data/manifest.csv, còn lại là tên thư mục (vd. "d4a").
+def concept_schema_name(manifest_path, project_root):
+    folder = Path(manifest_path).resolve().parent
+    if folder == (Path(project_root) / "data").resolve():
+        return None
+    return folder.name
+
+
+def concept_schema_suffix(name):
+    return f"_{name}" if name else ""
 
 
 def validate_concept_schema(checkpoint, manifest_path):

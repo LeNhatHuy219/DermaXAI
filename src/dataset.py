@@ -45,6 +45,30 @@ for name in CONCEPT_NAMES:
     CONCEPT_OFFSETS[name] = _offset
     _offset += CONCEPT_NUM_CLASSES[name]
 
+DEFAULT_CONCEPT_NUM_CLASSES: Dict[str, int] = dict(CONCEPT_NUM_CLASSES)
+
+
+# Số trạng thái của từng nhóm suy ra từ label_mapping.json (schema gốc: 28 trạng thái; D4a: 19).
+def concept_num_classes_from_mapping(label_mapping: Dict[str, Dict[str, int]]) -> Dict[str, int]:
+    return {name: len(label_mapping[name]) for name in CONCEPT_NAMES}
+
+
+# Kích hoạt schema concept cho cả tiến trình: sửa tại chỗ CONCEPT_NUM_CLASSES / CONCEPT_OFFSETS
+# để mọi module đã import hai dict này (runner, metrics, intervention) dùng đúng số trạng thái.
+# Gọi qua protocol.load_concept_schema; mỗi lần train/test đều nạp schema từ manifest của chính nó.
+def activate_concept_schema(concept_num_classes: Dict[str, int]) -> None:
+    global TOTAL_CONCEPT_STATES
+    if set(concept_num_classes) != set(CONCEPT_NAMES):
+        raise ValueError("Concept schema must define exactly the seven concept groups")
+    CONCEPT_NUM_CLASSES.clear()
+    CONCEPT_NUM_CLASSES.update({name: int(concept_num_classes[name]) for name in CONCEPT_NAMES})
+    CONCEPT_OFFSETS.clear()
+    offset = 0
+    for concept in CONCEPT_NAMES:
+        CONCEPT_OFFSETS[concept] = offset
+        offset += CONCEPT_NUM_CLASSES[concept]
+    TOTAL_CONCEPT_STATES = offset
+
 
 
 
@@ -88,6 +112,14 @@ class Derm7ptDataset(Dataset):
             )
             with open(mapping_file, "r") as f:
                 self.label_mapping = json.load(f)
+        # Offset one-hot lấy từ chính label mapping của dataset, không phụ thuộc schema đang kích hoạt.
+        self.concept_num_classes = concept_num_classes_from_mapping(self.label_mapping)
+        self.concept_offsets: Dict[str, int] = {}
+        offset = 0
+        for c_name in CONCEPT_NAMES:
+            self.concept_offsets[c_name] = offset
+            offset += self.concept_num_classes[c_name]
+        self.total_concept_states = offset
 
     def __len__(self) -> int:
         return len(self.df)
@@ -109,10 +141,10 @@ class Derm7ptDataset(Dataset):
         target_y = int(row["diagnosis_binary"])
         label_tensor = torch.tensor(target_y, dtype=torch.long)
 
-        # Trích xuất nhãn khái niệm: index số nguyên và vector one-hot 28 chiều
+        # Trích xuất nhãn khái niệm: index số nguyên và vector one-hot (28 chiều với schema gốc)
         concept_labels: Dict[str, torch.Tensor] = {}
         concept_indices_list: List[int] = []
-        concept_onehot = torch.zeros(TOTAL_CONCEPT_STATES, dtype=torch.float32)
+        concept_onehot = torch.zeros(self.total_concept_states, dtype=torch.float32)
 
         for c_name in CONCEPT_NAMES:
             c_str_val = row[c_name]
@@ -121,7 +153,7 @@ class Derm7ptDataset(Dataset):
             concept_indices_list.append(c_idx)
 
             # Đánh dấu bit 1 tại vị trí toàn cục của trạng thái
-            global_idx = CONCEPT_OFFSETS[c_name] + c_idx
+            global_idx = self.concept_offsets[c_name] + c_idx
             concept_onehot[global_idx] = 1.0
 
         concept_indices = torch.tensor(concept_indices_list, dtype=torch.long)
@@ -189,8 +221,8 @@ def compute_concept_statistics(
 
     statistics: Dict[str, Dict[str, Any]] = {}
     for concept_name in CONCEPT_NAMES:
-        num_classes = CONCEPT_NUM_CLASSES[concept_name]
         mapping = label_mapping[concept_name]
+        num_classes = len(mapping)
         indices = train_df[concept_name].map(mapping)
         if indices.isna().any():
             unknown_values = sorted(train_df.loc[indices.isna(), concept_name].astype(str).unique())

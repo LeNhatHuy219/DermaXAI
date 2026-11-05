@@ -30,7 +30,8 @@ from src.metrics import (compute_concept_metrics, compute_metrics,
                          print_concept_metrics_table, print_metrics_table)
 from src.cbm import get_hard_joint_cbm, make_diagnosis_head
 from src.protocol import (load_concept_schema, manifest_fingerprint, prepare_training_outputs,
-                          save_experiment_results, validate_concept_schema, validate_manifest)
+                          save_experiment_results, validate_concept_schema, validate_manifest,
+                          concept_schema_name, concept_schema_suffix)
 from src.transforms import get_transforms, image_size_config, image_size_hw
 from src.naming import DEFAULT_BACKBONE, canonical_model
 from src.selection import (DEFAULT_CHECKPOINT_METRIC, selection_name, selection_score,
@@ -41,6 +42,17 @@ from src.selection import (DEFAULT_CHECKPOINT_METRIC, selection_name, selection_
 HARD_CBM_MODEL = "hard_cbm"
 HARD_CBM_PROTOCOL = "hard_joint_st_state_weighted_v1"
 DIAGNOSIS_HEADS = {"linear": "Linear(28, 2)", "mlp128": "MLP(28, 128, 2)"}
+
+
+# Nhãn head theo số trạng thái của schema: 28 với schema gốc (trùng DIAGNOSIS_HEADS), 19 với D4a.
+def _head_label(preset, total_states=28):
+    labels = {"linear": f"Linear({int(total_states)}, 2)", "mlp128": f"MLP({int(total_states)}, 128, 2)"}
+    return labels[preset]
+
+
+def _config_total_states(config):
+    weights = config.get("concept_state_weights") if isinstance(config, dict) else None
+    return sum(len(v) for v in weights.values()) if isinstance(weights, dict) else 28
 HARD_CBM_VARIANTS = {
     "straight_through": {"model": HARD_CBM_MODEL, "protocol": HARD_CBM_PROTOCOL,
                          "gradient_estimator": "deterministic_softmax_straight_through"},
@@ -62,13 +74,13 @@ def _default_paths(seed=DEFAULT_SEED, augmentation_preset=DEFAULT_AUGMENTATION_P
                    diagnosis_lr=DEFAULT_DIAGNOSIS_LR, epochs=DEFAULT_EPOCHS, lr=DEFAULT_LR,
                    weight_decay=DEFAULT_WEIGHT_DECAY, diagnosis_head=DEFAULT_DIAGNOSIS_HEAD,
                    checkpoint_metric=DEFAULT_CHECKPOINT_METRIC, threshold_metric=DEFAULT_THRESHOLD_METRIC,
-                   image_size=224):
+                   image_size=224, concept_schema=None):
     _variant_metadata(gradient_mode)
     if diagnosis_head not in DIAGNOSIS_HEADS:
         raise ValueError("Unknown diagnosis head")
     configuration = configuration_name(diagnosis_head, epochs, diagnosis_lr,
         augmentation_preset=augmentation_preset, concept_loss_weight=concept_loss_weight,
-        lr=lr, weight_decay=weight_decay, image_size=image_size)
+        lr=lr, weight_decay=weight_decay, image_size=image_size) + concept_schema_suffix(concept_schema)
     return run_paths(ROOT, checkpoint_metric, "hard_cbm", configuration, seed, threshold_metric=threshold_metric,
                      backbone=DEFAULT_BACKBONE)
 
@@ -114,8 +126,8 @@ def _build_model(gradient_mode, concept_names, concept_num_classes, pretrained, 
 # Đọc head Linear/MLP128 từ config để test/intervention dựng đúng kiến trúc.
 def _head_preset(config):
     # Chỉ chấp nhận hai kiến trúc đã khai báo; checkpoint cũ giữ head Linear.
-    for preset, description in DIAGNOSIS_HEADS.items():
-        if config.get("diagnosis_head") == description:
+    for preset in DIAGNOSIS_HEADS:
+        if config.get("diagnosis_head") == _head_label(preset, _config_total_states(config)):
             return preset
     raise ValueError("Checkpoint is not the finalized Hard CBM hard/ST protocol: unknown diagnosis head")
 
@@ -147,7 +159,8 @@ def _config_paths(config, gradient_mode):
         diagnosis_lr=config.get("diagnosis_learning_rate"), epochs=config["epochs"],
         lr=config["learning_rate"], weight_decay=config["weight_decay"],
         diagnosis_head=_head_preset(config), checkpoint_metric=metric_from_config(config),
-        threshold_metric=threshold_metric_from_config(config), image_size=config.get("target_size", 224))
+        threshold_metric=threshold_metric_from_config(config), image_size=config.get("target_size", 224),
+        concept_schema=config.get("concept_schema_name"))
 
 
 # Lấy nhãn model để in kết quả phù hợp với variant đang đánh giá.
@@ -170,7 +183,8 @@ def validate_hard_cbm_config(config):
     expected = {**_variant_metadata(gradient_mode),
                 "bottleneck": "categorical_onehot",
                 "softmax_temperature": 1.0, "concept_weighting": "balanced",
-                "backbone": "EfficientNet-B0", "diagnosis_head": DIAGNOSIS_HEADS[head_preset]}
+                "backbone": "EfficientNet-B0",
+                "diagnosis_head": _head_label(head_preset, _config_total_states(config))}
     if not isinstance(config, dict) or not _matches(config, expected):
         raise ValueError("Checkpoint is not the finalized Hard CBM hard/ST protocol")
     # Kích thước ảnh: 224 như protocol chung, hoặc độ phân giải khác của thí nghiệm resolution.
@@ -295,10 +309,11 @@ def run_hard_cbm_experiment(manifest_path=None, epochs=DEFAULT_EPOCHS, batch_siz
     selection_name(checkpoint_metric)
     threshold_selection_name(threshold_metric)
     manifest_path = str(Path(manifest_path or ROOT / "data/manifest.csv").resolve())
+    schema_name = concept_schema_name(manifest_path, ROOT)
     checkpoint_path, results_path = prepare_training_outputs(
         _default_paths(seed, augmentation_preset, concept_loss_weight, gradient_mode,
                        diagnosis_lr, epochs, lr, weight_decay, diagnosis_head, checkpoint_metric,
-                       threshold_metric, image_hw), checkpoint_path,
+                       threshold_metric, image_hw, schema_name), checkpoint_path,
         results_path, overwrite, save_results)
     _protect_inputs([checkpoint_path, results_path],
                     [manifest_path, Path(manifest_path).parent / "label_mapping.json"])
@@ -327,7 +342,8 @@ def run_hard_cbm_experiment(manifest_path=None, epochs=DEFAULT_EPOCHS, batch_siz
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs, eta_min=1e-6)
     config = {**metadata, "bottleneck": "categorical_onehot", "softmax_temperature": 1.0,
         "backbone": "EfficientNet-B0", "pretrained_weights": "EfficientNet_B0_Weights.DEFAULT",
-        "diagnosis_head": DIAGNOSIS_HEADS[diagnosis_head], "concept_heads": "Linear(1280, Ki) per concept",
+        "diagnosis_head": _head_label(diagnosis_head, schema["total_states"]),
+        "concept_heads": "Linear(1280, Ki) per concept",
         "epochs": epochs, "batch_size": batch_size, "learning_rate": lr,
         "weight_decay": weight_decay, "concept_loss_weight": concept_loss_weight, "seed": seed,
         "device": str(device), "diagnosis_loss": "Weighted_CrossEntropy",
@@ -348,6 +364,8 @@ def run_hard_cbm_experiment(manifest_path=None, epochs=DEFAULT_EPOCHS, batch_siz
     if diagnosis_head == "mlp128":
         config.update(diagnosis_hidden_dim=128, diagnosis_dropout=0.3,
                       diagnosis_normalization="LayerNorm")
+    if schema_name:
+        config["concept_schema_name"] = schema_name
     validate_hard_cbm_config(config)
     fingerprint, raw_hash = manifest_fingerprint(manifest_path), runtime.file_sha256(manifest_path)
     best_score, history = -1., []
@@ -423,11 +441,12 @@ def evaluate_hard_cbm_test(checkpoint_path, manifest_path=None, device_name="aut
     device = runtime.get_device(device_name)
     checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=True)
     config = checkpoint.get("config")
+    # Kích hoạt schema của checkpoint trước, vì kiểm tra config dùng số trạng thái của schema.
+    validate_manifest(checkpoint, manifest_path)
+    schema = validate_concept_schema(checkpoint, manifest_path)
     validate_hard_cbm_config(config)
     _require_gradient_mode(config, expected_gradient_mode)
     gradient_mode = _gradient_mode_from_config(config)
-    validate_manifest(checkpoint, manifest_path)
-    schema = validate_concept_schema(checkpoint, manifest_path)
     threshold = float(checkpoint.get("decision_threshold", float("nan")))
     if not np.isfinite(threshold) or not 0 <= threshold <= 1:
         raise ValueError("Hard CBM checkpoint has no valid frozen validation threshold")
@@ -535,6 +554,7 @@ def run_hard_cbm_intervention(checkpoint_path, predictions_path, manifest_path=N
                                    Path(manifest_path).parent / "label_mapping.json"])
     runtime.prepare_output(results_path, overwrite)
     checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
+    validate_concept_schema(checkpoint, manifest_path)
     validate_hard_cbm_config(checkpoint.get("config"))
     if expected_gradient_mode is not None:
         _variant_metadata(expected_gradient_mode)
@@ -626,7 +646,8 @@ def run_cli(gradient_mode, argv=None):
         parser.error("--skip_test is only valid with --mode train")
     defaults = _default_paths(args.seed, args.augmentation_preset, args.concept_loss_weight, gradient_mode,
                              args.diagnosis_lr, args.epochs, args.lr, args.weight_decay, args.diagnosis_head,
-                             args.checkpoint_metric, args.threshold_metric, args.image_size)
+                             args.checkpoint_metric, args.threshold_metric, args.image_size,
+                             concept_schema_name(args.manifest_path or ROOT / "data/manifest.csv", ROOT))
     checkpoint_path, results_path = args.checkpoint_path or defaults[0], args.results_path or defaults[1]
     if args.mode == "train":
         validation = run_hard_cbm_experiment(manifest_path=args.manifest_path, epochs=args.epochs,
@@ -651,6 +672,7 @@ def run_cli(gradient_mode, argv=None):
     if args.no_save:
         parser.error("--no_save is not supported for intervention mode")
     checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
+    validate_concept_schema(checkpoint, args.manifest_path or ROOT / "data/manifest.csv")
     validate_hard_cbm_config(checkpoint.get("config"))
     config = checkpoint["config"]
     predictions_path = args.predictions_path or _config_paths(config, _gradient_mode_from_config(config))[1]
