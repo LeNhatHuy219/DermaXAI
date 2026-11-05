@@ -1,0 +1,37 @@
+{
+ "created": "2026-11-05",
+ "written_before_running": true,
+ "direction": "data-centric ở bước dự đoán (mục 2 của thầy: chất lượng thông tin ảnh)",
+ "question": "Lấy trung bình dự đoán trên các bản lật của ảnh (TTA) có làm chẩn đoán hoặc concept tốt hơn so với dự đoán trên một ảnh không?",
+ "models": {
+  "blackbox": "checkpoints/derm7pt/efficientnet_b0/linear_e50_headlr0.001/seed*.pth (224 chính thức)",
+  "hard_cbm": "checkpoints/derm7pt/hard_cbm/efficientnet_b0_mlp128_e50_headlr0.001_d4a/seed*.pth",
+  "soft_cbm": "checkpoints/derm7pt/soft_cbm/efficientnet_b0_mlp128_e50_headlr0.001_d4a/seed*.pth",
+  "ecbm": "checkpoints/derm7pt/ecbm/efficientnet_b0_unified_exact_e50_d4a/seed*.pth",
+  "seeds": [42, 123, 2026],
+  "training": "không train lại; chỉ suy luận trên validation (203 ca)"
+ },
+ "views": {
+  "primary_flip4": "ảnh gốc, lật ngang, lật dọc, lật cả hai (đúng các phép mô hình đã gặp khi train)",
+  "secondary_dihedral8": "flip4 + 4 bản chuyển vị (tương đương xoay 90°); chỉ để tham khảo vì viền letterbox đổi sang hai bên, kiểu ảnh chưa gặp khi train"
+ },
+ "aggregation": {
+  "blackbox": "trung bình xác suất melanoma",
+  "soft_cbm": "trung bình xác suất từng nhóm concept qua các bản, rồi đưa vector trung bình vào head chẩn đoán",
+  "hard_cbm": "trung bình xác suất từng nhóm concept, argmax thành one-hot, rồi đưa vào head chẩn đoán (concept hiển thị đúng là concept head dùng)",
+  "ecbm": "trung bình E_class và E_concept qua các bản, rồi suy luận chính xác một lần với trọng số suy luận của checkpoint (1/1/0.01)",
+  "threshold": "chọn lại trên validation bằng src.selection.select_threshold (f1_macro) cho từng nhánh, như quy trình chung"
+ },
+ "sanity_check": "nhánh 1 bản (không TTA) phải tái lập xác suất chẩn đoán validation đã lưu (sai khác tuyệt đối lớn nhất <= 1e-3); nếu không thì dừng",
+ "metrics": ["accuracy", "balanced_accuracy", "f1_macro", "roc_auc", "concept_accuracy (schema D4a)", "concept_f1_macro (train-observed, D4a)"],
+ "criteria": {
+  "useful": "so với không TTA, trung bình 3 seed: ROC-AUC tăng >= 0.005 HOẶC (mô hình concept) concept accuracy tăng >= 0.005, và tăng ở ít nhất 2/3 seed",
+  "guard": "không chỉ số nào trong accuracy, balanced_accuracy, f1_macro, concept_f1_macro giảm quá 0.01 (trung bình)",
+  "decision": "Dùng TTA flip4 trong cấu hình cuối cho mô hình nào đạt cả useful và guard. dihedral8 chỉ mô tả, không dùng để chọn."
+ },
+ "caveats": [
+  "Ngưỡng chọn và chấm trên cùng validation, như nhau cho cả hai nhánh",
+  "Mức tăng kỳ vọng nhỏ (y văn ISIC: khoảng +0.005 đến +0.02 AUC), có thể nằm trong dao động giữa seed",
+  "3 seed, không kiểm định thống kê"
+ ]
+}
