@@ -1,0 +1,61 @@
+{
+  "created": "2026-11-04",
+  "question": "Tách ECBM thành hai chế độ (tự động: λ=1/1/0.01; can thiệp: bộ trọng số khác) có giữ được concept hiển thị chính xác như λ paper mà vẫn giữ hiệu quả can thiệp như λ=1 không?",
+  "fixed": {
+    "checkpoints": {
+      "42": {
+        "path": "checkpoints/derm7pt/ecbm/efficientnet_b0_unified_exact_e50/seed42.pth",
+        "sha256": "9d84939f616d374cd91c32c97394277dd33ce05b3a1a3efc55057efd661eab94"
+      },
+      "123": {
+        "path": "checkpoints/derm7pt/ecbm/efficientnet_b0_unified_exact_e50/seed123.pth",
+        "sha256": "b6420f586b2f4165c13ea5297261a28c1dbf73f20a543e6dbd5d0b32e9bc667e"
+      },
+      "2026": {
+        "path": "checkpoints/derm7pt/ecbm/efficientnet_b0_unified_exact_e50/seed2026.pth",
+        "sha256": "3c2b51c8c0ea612800c02e1f84f0ccde16b2e4a243ede33b3c5f87fdd49f8855"
+      }
+    },
+    "split": "validation 203 ca; KHÔNG đọc test",
+    "inference": "exact enumeration 8.640 profiles × 2 nhãn (src/ecbm.py exact_inference)",
+    "concept_display": "argmax marginal của từng nhóm concept dưới trọng số của chế độ tự động",
+    "intervention": "thay nhóm concept được sửa bằng trạng thái GT; duyệt đủ 128 tổ hợp của 7 nhóm; m = số nhóm được sửa"
+  },
+  "mode_auto": {
+    "weights": [
+      1.0,
+      1.0,
+      0.01
+    ],
+    "threshold": "chọn trên validation ở m=0 (maximize Macro F1, hòa gần 0.5)"
+  },
+  "mode_intervention_candidates": {
+    "joint_lambda1": "exact inference trọng số 1/1/1 với concept đã sửa bị cố định",
+    "concept_only": "exact inference trọng số 0/1/1 (bỏ E_class) với concept đã sửa bị cố định",
+    "global_on_displayed": "p(y|c) = softmax(-3·E_global(c,·)); c = GT ở nhóm đã sửa, concept hiển thị của chế độ tự động ở nhóm còn lại. Xấp xỉ bước can thiệp trong GradientInference.py của tác giả (λ = 0/0/3, concept khởi tạo từ bước 1)"
+  },
+  "threshold_intervention": "mỗi ứng viên chọn ngưỡng riêng trên validation khi chạy ở m=0 (chưa sửa concept), rồi đóng băng cho m=1..7",
+  "two_mode_curve": "m=0 lấy từ chế độ tự động; m=1..7 lấy từ chế độ can thiệp (trung bình mọi tổ hợp); diện tích hình thang theo m/7",
+  "reference": "S0 = hệ thống hiện tại, một bộ trọng số 1/1/1 cho cả hai việc (đường cong và concept accuracy tính cùng cách)",
+  "selection_rule": {
+    "objective": "chọn ứng viên chế độ can thiệp có mean qua 3 seeds của diện tích đường cong Macro F1 (two_mode_curve) lớn nhất",
+    "tie": "chênh < 1e-4 thì ưu tiên theo thứ tự joint_lambda1, concept_only, global_on_displayed"
+  },
+  "success_criteria_vs_S0": {
+    "K1": "mean concept accuracy hiển thị ở chế độ tự động ≥ của S0 + 0.02",
+    "K2": "diện tích đường cong của hệ hai chế độ (ứng viên được chọn) ≥ của S0 - 0.005",
+    "K3": "mean Macro F1 tự động (m=0) ≥ của S0 - 0.01",
+    "decision": "ĐẠT nếu cả K1, K2, K3 đều đạt"
+  },
+  "report_only": [
+    "Macro F1 khi sửa đủ 7 nhóm",
+    "số ca đổi nhãn khi sửa đủ 7 nhóm",
+    "BAcc, ROC-AUC ở m=0",
+    "từng seed"
+  ],
+  "caveats": [
+    "validation dùng cho cả ngưỡng lẫn chọn ứng viên nên số lạc quan; chỉ 3 ứng viên",
+    "best epoch của checkpoint đã chọn với λ=0.01",
+    "global_on_displayed chỉ xấp xỉ suy luận gradient của tác giả, không tái hiện y hệt"
+  ]
+}

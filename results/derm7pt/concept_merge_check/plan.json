@@ -1,0 +1,39 @@
+{
+  "created": "2026-11-04",
+  "question": "Gộp trạng thái concept hiếm theo D4a có làm mất thông tin chẩn đoán đi qua concept không, và bao nhiêu lỗi concept hiện tại chỉ là nhầm trong cùng nhóm gộp?",
+  "merge_D4a": {
+    "pigmentation": {
+      "absent": "absent",
+      "diffuse regular": "regular",
+      "localized regular": "regular",
+      "diffuse irregular": "irregular",
+      "localized irregular": "irregular"
+    },
+    "regression_structures": {
+      "absent": "absent",
+      "blue areas": "present",
+      "white areas": "present",
+      "combinations": "present"
+    },
+    "vascular_structures": {
+      "absent": "absent",
+      "arborizing": "typical",
+      "comma": "typical",
+      "hairpin": "typical",
+      "wreath": "typical",
+      "dotted": "atypical",
+      "linear irregular": "atypical",
+      "within regression": "atypical"
+    },
+    "others": "pigment_network, streaks, dots_and_globules, blue_whitish_veil giữ nguyên"
+  },
+  "data": "dự đoán validation đã lưu của Hard CBM, Soft CBM, ECBM (224, quy trình chung, seed 42/123/2026); KHÔNG đọc test",
+  "collapse": "xác suất concept của mô hình gốc được cộng trong từng nhóm gộp rồi lấy argmax",
+  "diagnosis_via_concepts": "logistic regression (class_weight balanced, C=1) fit trên concept GT one-hot của 413 ca train; đánh giá trên validation với (i) concept GT, (ii) concept dự đoán one-hot của từng mô hình × seed; so schema gốc với D4a",
+  "criteria": {
+    "R1_information": "ROC-AUC validation của chẩn đoán qua concept, schema D4a ≥ schema gốc − 0.01, cho cả concept GT và trung bình 9 mô hình × seed dùng concept dự đoán",
+    "R2_within_group_errors": "chỉ báo cáo: tỉ lệ lỗi concept ở 3 nhóm bị gộp biến mất khi gộp dự đoán",
+    "decision": "Đáng train lại theo D4a nếu R1 đạt. Nếu R1 không đạt: gộp làm mất thông tin, không train lại."
+  },
+  "caveat": "concept accuracy trên schema gộp tăng một phần do ít lựa chọn hơn, không so trực tiếp với số trên schema gốc"
+}

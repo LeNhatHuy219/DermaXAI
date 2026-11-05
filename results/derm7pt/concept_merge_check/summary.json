@@ -1,0 +1,622 @@
+{
+  "test_read": false,
+  "oracle_gt_concepts": {
+    "original": {
+      "roc_auc": 0.9247864234587855,
+      "f1_macro_at_0.5": 0.8365857043719639
+    },
+    "D4a": {
+      "roc_auc": 0.9292888478411452,
+      "f1_macro_at_0.5": 0.8316191108161911
+    }
+  },
+  "predicted_concepts_mean_9_runs": {
+    "roc_auc": {
+      "original": 0.8181456681803022,
+      "D4a": 0.8158367325996048
+    },
+    "f1_macro_at_0.5": {
+      "original": 0.7337907083290827,
+      "D4a": 0.7159999265240505
+    }
+  },
+  "by_model": {
+    "Hard CBM": {
+      "original": {
+        "roc_auc": 0.814188409143385,
+        "f1_macro_at_0.5": 0.7341272981445881
+      },
+      "D4a": {
+        "roc_auc": 0.8112829985376742,
+        "f1_macro_at_0.5": 0.7199692055646515
+      }
+    },
+    "Soft CBM": {
+      "original": {
+        "roc_auc": 0.8212306626645117,
+        "f1_macro_at_0.5": 0.7510684726672068
+      },
+      "D4a": {
+        "roc_auc": 0.8250211652428231,
+        "f1_macro_at_0.5": 0.7240261488578442
+      }
+    },
+    "ECBM": {
+      "original": {
+        "roc_auc": 0.8190179327330102,
+        "f1_macro_at_0.5": 0.7161763541754528
+      },
+      "D4a": {
+        "roc_auc": 0.8112060340183175,
+        "f1_macro_at_0.5": 0.7040044251496559
+      }
+    }
+  },
+  "merged_group_accuracy": {
+    "pigmentation": {
+      "accuracy_original": 0.5675971538040504,
+      "accuracy_D4a": 0.5730706075533661
+    },
+    "regression_structures": {
+      "accuracy_original": 0.6316365626710454,
+      "accuracy_D4a": 0.6294471811713191
+    },
+    "vascular_structures": {
+      "accuracy_original": 0.636015325670498,
+      "accuracy_D4a": 0.6059113300492611
+    }
+  },
+  "concept_accuracy_mean": {
+    "original": 0.6493079990616937,
+    "D4a": 0.6454765814371726
+  },
+  "R2_errors_in_merged_groups": {
+    "total": 2128,
+    "fixed_by_merge": 433,
+    "fraction": 0.20347744360902256
+  },
+  "R1_information_kept": true,
+  "decision": "Đáng train lại theo D4a",
+  "runs": [
+    {
+      "model": "Hard CBM",
+      "seed": 42,
+      "per_group": {
+        "pigment_network": {
+          "accuracy_original": 0.5812807881773399,
+          "accuracy_D4a": 0.5812807881773399,
+          "errors_original": 85,
+          "errors_fixed_by_merge": 0
+        },
+        "streaks": {
+          "accuracy_original": 0.7044334975369458,
+          "accuracy_D4a": 0.7044334975369458,
+          "errors_original": 60,
+          "errors_fixed_by_merge": 0
+        },
+        "pigmentation": {
+          "accuracy_original": 0.5960591133004927,
+          "accuracy_D4a": 0.6108374384236454,
+          "errors_original": 82,
+          "errors_fixed_by_merge": 9
+        },
+        "regression_structures": {
+          "accuracy_original": 0.6206896551724138,
+          "accuracy_D4a": 0.6847290640394089,
+          "errors_original": 77,
+          "errors_fixed_by_merge": 21
+        },
+        "dots_and_globules": {
+          "accuracy_original": 0.5862068965517241,
+          "accuracy_D4a": 0.5862068965517241,
+          "errors_original": 84,
+          "errors_fixed_by_merge": 0
+        },
+        "blue_whitish_veil": {
+          "accuracy_original": 0.8669950738916257,
+          "accuracy_D4a": 0.8669950738916257,
+          "errors_original": 27,
+          "errors_fixed_by_merge": 0
+        },
+        "vascular_structures": {
+          "accuracy_original": 0.6699507389162561,
+          "accuracy_D4a": 0.6748768472906403,
+          "errors_original": 67,
+          "errors_fixed_by_merge": 10
+        }
+      },
+      "concept_accuracy_original": 0.6608022519352569,
+      "concept_accuracy_D4a": 0.6727656579873329,
+      "diagnosis_via_predicted_concepts": {
+        "original": {
+          "roc_auc": 0.8043177095359039,
+          "f1_macro_at_0.5": 0.7538598334815294
+        },
+        "D4a": {
+          "roc_auc": 0.7961209882244286,
+          "f1_macro_at_0.5": 0.7355154351352069
+        }
+      }
+    },
+    {
+      "model": "Hard CBM",
+      "seed": 123,
+      "per_group": {
+        "pigment_network": {
+          "accuracy_original": 0.5960591133004927,
+          "accuracy_D4a": 0.5960591133004927,
+          "errors_original": 82,
+          "errors_fixed_by_merge": 0
+        },
+        "streaks": {
+          "accuracy_original": 0.7142857142857143,
+          "accuracy_D4a": 0.7142857142857143,
+          "errors_original": 58,
+          "errors_fixed_by_merge": 0
+        },
+        "pigmentation": {
+          "accuracy_original": 0.6059113300492611,
+          "accuracy_D4a": 0.6157635467980296,
+          "errors_original": 80,
+          "errors_fixed_by_merge": 12
+        },
+        "regression_structures": {
+          "accuracy_original": 0.6403940886699507,
+          "accuracy_D4a": 0.6748768472906403,
+          "errors_original": 73,
+          "errors_fixed_by_merge": 26
+        },
+        "dots_and_globules": {
+          "accuracy_original": 0.6157635467980296,
+          "accuracy_D4a": 0.6157635467980296,
+          "errors_original": 78,
+          "errors_fixed_by_merge": 0
+        },
+        "blue_whitish_veil": {
+          "accuracy_original": 0.8423645320197044,
+          "accuracy_D4a": 0.8423645320197044,
+          "errors_original": 32,
+          "errors_fixed_by_merge": 0
+        },
+        "vascular_structures": {
+          "accuracy_original": 0.6650246305418719,
+          "accuracy_D4a": 0.6748768472906403,
+          "errors_original": 68,
+          "errors_fixed_by_merge": 9
+        }
+      },
+      "concept_accuracy_original": 0.6685432793807178,
+      "concept_accuracy_D4a": 0.6762843068261788,
+      "diagnosis_via_predicted_concepts": {
+        "original": {
+          "roc_auc": 0.8040290925883168,
+          "f1_macro_at_0.5": 0.7165413533834586
+        },
+        "D4a": {
+          "roc_auc": 0.7964673285615331,
+          "f1_macro_at_0.5": 0.6872274306008932
+        }
+      }
+    },
+    {
+      "model": "Hard CBM",
+      "seed": 2026,
+      "per_group": {
+        "pigment_network": {
+          "accuracy_original": 0.6059113300492611,
+          "accuracy_D4a": 0.6059113300492611,
+          "errors_original": 80,
+          "errors_fixed_by_merge": 0
+        },
+        "streaks": {
+          "accuracy_original": 0.729064039408867,
+          "accuracy_D4a": 0.729064039408867,
+          "errors_original": 55,
+          "errors_fixed_by_merge": 0
+        },
+        "pigmentation": {
+          "accuracy_original": 0.5911330049261084,
+          "accuracy_D4a": 0.6059113300492611,
+          "errors_original": 83,
+          "errors_fixed_by_merge": 10
+        },
+        "regression_structures": {
+          "accuracy_original": 0.6551724137931034,
+          "accuracy_D4a": 0.6650246305418719,
+          "errors_original": 70,
+          "errors_fixed_by_merge": 20
+        },
+        "dots_and_globules": {
+          "accuracy_original": 0.5615763546798029,
+          "accuracy_D4a": 0.5615763546798029,
+          "errors_original": 89,
+          "errors_fixed_by_merge": 0
+        },
+        "blue_whitish_veil": {
+          "accuracy_original": 0.8226600985221675,
+          "accuracy_D4a": 0.8226600985221675,
+          "errors_original": 36,
+          "errors_fixed_by_merge": 0
+        },
+        "vascular_structures": {
+          "accuracy_original": 0.6600985221674877,
+          "accuracy_D4a": 0.6847290640394089,
+          "errors_original": 69,
+          "errors_fixed_by_merge": 13
+        }
+      },
+      "concept_accuracy_original": 0.6608022519352569,
+      "concept_accuracy_D4a": 0.6678395496129487,
+      "diagnosis_via_predicted_concepts": {
+        "original": {
+          "roc_auc": 0.8342184253059339,
+          "f1_macro_at_0.5": 0.7319807075687764
+        },
+        "D4a": {
+          "roc_auc": 0.8412606788270607,
+          "f1_macro_at_0.5": 0.7371647509578544
+        }
+      }
+    },
+    {
+      "model": "Soft CBM",
+      "seed": 42,
+      "per_group": {
+        "pigment_network": {
+          "accuracy_original": 0.6108374384236454,
+          "accuracy_D4a": 0.6108374384236454,
+          "errors_original": 79,
+          "errors_fixed_by_merge": 0
+        },
+        "streaks": {
+          "accuracy_original": 0.6600985221674877,
+          "accuracy_D4a": 0.6600985221674877,
+          "errors_original": 69,
+          "errors_fixed_by_merge": 0
+        },
+        "pigmentation": {
+          "accuracy_original": 0.5763546798029556,
+          "accuracy_D4a": 0.5862068965517241,
+          "errors_original": 86,
+          "errors_fixed_by_merge": 9
+        },
+        "regression_structures": {
+          "accuracy_original": 0.6157635467980296,
+          "accuracy_D4a": 0.6059113300492611,
+          "errors_original": 78,
+          "errors_fixed_by_merge": 23
+        },
+        "dots_and_globules": {
+          "accuracy_original": 0.5615763546798029,
+          "accuracy_D4a": 0.5615763546798029,
+          "errors_original": 89,
+          "errors_fixed_by_merge": 0
+        },
+        "blue_whitish_veil": {
+          "accuracy_original": 0.8522167487684729,
+          "accuracy_D4a": 0.8522167487684729,
+          "errors_original": 30,
+          "errors_fixed_by_merge": 0
+        },
+        "vascular_structures": {
+          "accuracy_original": 0.6551724137931034,
+          "accuracy_D4a": 0.6305418719211823,
+          "errors_original": 70,
+          "errors_fixed_by_merge": 11
+        }
+      },
+      "concept_accuracy_original": 0.6474313863476425,
+      "concept_accuracy_D4a": 0.6439127375087966,
+      "diagnosis_via_predicted_concepts": {
+        "original": {
+          "roc_auc": 0.8007388593858232,
+          "f1_macro_at_0.5": 0.7264367816091954
+        },
+        "D4a": {
+          "roc_auc": 0.8190948972523667,
+          "f1_macro_at_0.5": 0.7190348105397852
+        }
+      }
+    },
+    {
+      "model": "Soft CBM",
+      "seed": 123,
+      "per_group": {
+        "pigment_network": {
+          "accuracy_original": 0.5862068965517241,
+          "accuracy_D4a": 0.5862068965517241,
+          "errors_original": 84,
+          "errors_fixed_by_merge": 0
+        },
+        "streaks": {
+          "accuracy_original": 0.645320197044335,
+          "accuracy_D4a": 0.645320197044335,
+          "errors_original": 72,
+          "errors_fixed_by_merge": 0
+        },
+        "pigmentation": {
+          "accuracy_original": 0.5467980295566502,
+          "accuracy_D4a": 0.5467980295566502,
+          "errors_original": 92,
+          "errors_fixed_by_merge": 14
+        },
+        "regression_structures": {
+          "accuracy_original": 0.6600985221674877,
+          "accuracy_D4a": 0.6403940886699507,
+          "errors_original": 69,
+          "errors_fixed_by_merge": 30
+        },
+        "dots_and_globules": {
+          "accuracy_original": 0.5862068965517241,
+          "accuracy_D4a": 0.5862068965517241,
+          "errors_original": 84,
+          "errors_fixed_by_merge": 0
+        },
+        "blue_whitish_veil": {
+          "accuracy_original": 0.8620689655172413,
+          "accuracy_D4a": 0.8620689655172413,
+          "errors_original": 28,
+          "errors_fixed_by_merge": 0
+        },
+        "vascular_structures": {
+          "accuracy_original": 0.6995073891625616,
+          "accuracy_D4a": 0.6354679802955665,
+          "errors_original": 61,
+          "errors_fixed_by_merge": 14
+        }
+      },
+      "concept_accuracy_original": 0.6551724137931034,
+      "concept_accuracy_D4a": 0.6432090077410274,
+      "diagnosis_via_predicted_concepts": {
+        "original": {
+          "roc_auc": 0.8122835372893097,
+          "f1_macro_at_0.5": 0.7557160048134777
+        },
+        "D4a": {
+          "roc_auc": 0.8050103902101131,
+          "f1_macro_at_0.5": 0.7219178082191782
+        }
+      }
+    },
+    {
+      "model": "Soft CBM",
+      "seed": 2026,
+      "per_group": {
+        "pigment_network": {
+          "accuracy_original": 0.6059113300492611,
+          "accuracy_D4a": 0.6059113300492611,
+          "errors_original": 80,
+          "errors_fixed_by_merge": 0
+        },
+        "streaks": {
+          "accuracy_original": 0.6748768472906403,
+          "accuracy_D4a": 0.6748768472906403,
+          "errors_original": 66,
+          "errors_fixed_by_merge": 0
+        },
+        "pigmentation": {
+          "accuracy_original": 0.5615763546798029,
+          "accuracy_D4a": 0.5467980295566502,
+          "errors_original": 89,
+          "errors_fixed_by_merge": 8
+        },
+        "regression_structures": {
+          "accuracy_original": 0.6403940886699507,
+          "accuracy_D4a": 0.645320197044335,
+          "errors_original": 73,
+          "errors_fixed_by_merge": 24
+        },
+        "dots_and_globules": {
+          "accuracy_original": 0.5763546798029556,
+          "accuracy_D4a": 0.5763546798029556,
+          "errors_original": 86,
+          "errors_fixed_by_merge": 0
+        },
+        "blue_whitish_veil": {
+          "accuracy_original": 0.8177339901477833,
+          "accuracy_D4a": 0.8177339901477833,
+          "errors_original": 37,
+          "errors_fixed_by_merge": 0
+        },
+        "vascular_structures": {
+          "accuracy_original": 0.6600985221674877,
+          "accuracy_D4a": 0.6748768472906403,
+          "errors_original": 69,
+          "errors_fixed_by_merge": 17
+        }
+      },
+      "concept_accuracy_original": 0.6481351161154116,
+      "concept_accuracy_D4a": 0.6488388458831809,
+      "diagnosis_via_predicted_concepts": {
+        "original": {
+          "roc_auc": 0.8506695913184023,
+          "f1_macro_at_0.5": 0.7710526315789473
+        },
+        "D4a": {
+          "roc_auc": 0.8509582082659894,
+          "f1_macro_at_0.5": 0.7311258278145696
+        }
+      }
+    },
+    {
+      "model": "ECBM",
+      "seed": 42,
+      "per_group": {
+        "pigment_network": {
+          "accuracy_original": 0.5862068965517241,
+          "accuracy_D4a": 0.5862068965517241,
+          "errors_original": 84,
+          "errors_fixed_by_merge": 0
+        },
+        "streaks": {
+          "accuracy_original": 0.7487684729064039,
+          "accuracy_D4a": 0.7487684729064039,
+          "errors_original": 51,
+          "errors_fixed_by_merge": 0
+        },
+        "pigmentation": {
+          "accuracy_original": 0.5320197044334976,
+          "accuracy_D4a": 0.541871921182266,
+          "errors_original": 95,
+          "errors_fixed_by_merge": 10
+        },
+        "regression_structures": {
+          "accuracy_original": 0.5763546798029556,
+          "accuracy_D4a": 0.5369458128078818,
+          "errors_original": 86,
+          "errors_fixed_by_merge": 30
+        },
+        "dots_and_globules": {
+          "accuracy_original": 0.5714285714285714,
+          "accuracy_D4a": 0.5714285714285714,
+          "errors_original": 87,
+          "errors_fixed_by_merge": 0
+        },
+        "blue_whitish_veil": {
+          "accuracy_original": 0.7635467980295566,
+          "accuracy_D4a": 0.7635467980295566,
+          "errors_original": 48,
+          "errors_fixed_by_merge": 0
+        },
+        "vascular_structures": {
+          "accuracy_original": 0.6354679802955665,
+          "accuracy_D4a": 0.6108374384236454,
+          "errors_original": 74,
+          "errors_fixed_by_merge": 18
+        }
+      },
+      "concept_accuracy_original": 0.6305418719211823,
+      "concept_accuracy_D4a": 0.6228008444757214,
+      "diagnosis_via_predicted_concepts": {
+        "original": {
+          "roc_auc": 0.8365850842761487,
+          "f1_macro_at_0.5": 0.7337883045630939
+        },
+        "D4a": {
+          "roc_auc": 0.8316785961671669,
+          "f1_macro_at_0.5": 0.7356770833333333
+        }
+      }
+    },
+    {
+      "model": "ECBM",
+      "seed": 123,
+      "per_group": {
+        "pigment_network": {
+          "accuracy_original": 0.5812807881773399,
+          "accuracy_D4a": 0.5812807881773399,
+          "errors_original": 85,
+          "errors_fixed_by_merge": 0
+        },
+        "streaks": {
+          "accuracy_original": 0.6896551724137931,
+          "accuracy_D4a": 0.6896551724137931,
+          "errors_original": 63,
+          "errors_fixed_by_merge": 0
+        },
+        "pigmentation": {
+          "accuracy_original": 0.4975369458128079,
+          "accuracy_D4a": 0.4876847290640394,
+          "errors_original": 102,
+          "errors_fixed_by_merge": 9
+        },
+        "regression_structures": {
+          "accuracy_original": 0.625615763546798,
+          "accuracy_D4a": 0.5123152709359606,
+          "errors_original": 76,
+          "errors_fixed_by_merge": 32
+        },
+        "dots_and_globules": {
+          "accuracy_original": 0.5812807881773399,
+          "accuracy_D4a": 0.5812807881773399,
+          "errors_original": 85,
+          "errors_fixed_by_merge": 0
+        },
+        "blue_whitish_veil": {
+          "accuracy_original": 0.7980295566502463,
+          "accuracy_D4a": 0.7980295566502463,
+          "errors_original": 41,
+          "errors_fixed_by_merge": 0
+        },
+        "vascular_structures": {
+          "accuracy_original": 0.42857142857142855,
+          "accuracy_D4a": 0.21674876847290642,
+          "errors_original": 116,
+          "errors_fixed_by_merge": 14
+        }
+      },
+      "concept_accuracy_original": 0.6002814919071077,
+      "concept_accuracy_D4a": 0.5524278676988037,
+      "diagnosis_via_predicted_concepts": {
+        "original": {
+          "roc_auc": 0.7921957977372432,
+          "f1_macro_at_0.5": 0.6801002350874473
+        },
+        "D4a": {
+          "roc_auc": 0.7871738628492265,
+          "f1_macro_at_0.5": 0.6507791944950415
+        }
+      }
+    },
+    {
+      "model": "ECBM",
+      "seed": 2026,
+      "per_group": {
+        "pigment_network": {
+          "accuracy_original": 0.6157635467980296,
+          "accuracy_D4a": 0.6157635467980296,
+          "errors_original": 78,
+          "errors_fixed_by_merge": 0
+        },
+        "streaks": {
+          "accuracy_original": 0.7487684729064039,
+          "accuracy_D4a": 0.7487684729064039,
+          "errors_original": 51,
+          "errors_fixed_by_merge": 0
+        },
+        "pigmentation": {
+          "accuracy_original": 0.6009852216748769,
+          "accuracy_D4a": 0.6157635467980296,
+          "errors_original": 81,
+          "errors_fixed_by_merge": 6
+        },
+        "regression_structures": {
+          "accuracy_original": 0.6502463054187192,
+          "accuracy_D4a": 0.6995073891625616,
+          "errors_original": 71,
+          "errors_fixed_by_merge": 22
+        },
+        "dots_and_globules": {
+          "accuracy_original": 0.6108374384236454,
+          "accuracy_D4a": 0.6108374384236454,
+          "errors_original": 79,
+          "errors_fixed_by_merge": 0
+        },
+        "blue_whitish_veil": {
+          "accuracy_original": 0.8275862068965517,
+          "accuracy_D4a": 0.8275862068965517,
+          "errors_original": 35,
+          "errors_fixed_by_merge": 0
+        },
+        "vascular_structures": {
+          "accuracy_original": 0.6502463054187192,
+          "accuracy_D4a": 0.6502463054187192,
+          "errors_original": 71,
+          "errors_fixed_by_merge": 12
+        }
+      },
+      "concept_accuracy_original": 0.6720619282195637,
+      "concept_accuracy_D4a": 0.681210415200563,
+      "diagnosis_via_predicted_concepts": {
+        "original": {
+          "roc_auc": 0.8282729161856385,
+          "f1_macro_at_0.5": 0.734640522875817
+        },
+        "D4a": {
+          "roc_auc": 0.8147656430385593,
+          "f1_macro_at_0.5": 0.7255569976205927
+        }
+      }
+    }
+  ]
+}
